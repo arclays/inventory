@@ -1,0 +1,175 @@
+{% extends "InvApp/layout.html" %}
+<title>{% block title %}Orders{% endblock %}</title>
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <h2>Orders for {{ selected_date }}</h2>
+
+    <!-- Date Picker -->
+    <form method="GET" action="{% url 'order_page' %}">
+        <div class="row align-items-center">
+            <div class="mb-3 col-md-3">
+                <label for="orderDate" class="form-label">Select Date</label>
+                <input type="date" class="form-control" id="orderDate" name="orderDate" value="{{ selected_date }}">
+            </div>
+            <div class="col-md-3 mt-3">
+                <button type="submit" class="btn btn-primary">View Orders</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="row mb-1">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-header">Total Customers</div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ total_customers }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-header">Total Orders</div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ total_orders }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-header">Total Quantity</div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ total_quantity }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-header">Total Earnings</div>
+                <div class="card-body">
+                    <h5 class="card-title">${{ total_cash_made }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Place Order Button and Modal Trigger -->
+    <button class="btn btn-success mb-1" data-bs-toggle="modal" data-bs-target="#placeOrderModal">Place New Order</button>
+
+    <!-- Order Table -->
+    <table class="table table-striped mt-3 text-center">
+        <thead class="table-header">
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Total Price</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.customer.name }}</td>
+                <td>{{ order.product.name }}</td>
+                <td>{{ order.quantity }}</td>
+                ,<td>{{ order.units}}</td>
+                <td>${{ order.total_price }}</td>
+                <td>{{ order.order_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Place Order Modal -->
+    <div class="modal fade" id="placeOrderModal" tabindex="-1" role="dialog" aria-labelledby="placeOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'place_order' %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="placeOrderModalLabel">Place Order</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label for="orderCustomer">Select Customer</label>
+                            <select id="orderCustomer" name="orderCustomer" class="form-control" required>
+                                {% for customer in customers %}
+                                    <option value="{{ customer.id }}">{{ customer.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+    
+                        <!-- Product Selection Section -->
+                        <div id="product-container">
+                            <div class="product-item mb-3 border p-3 rounded shadow-sm">
+                                <div class="row">
+                                    <!-- Product Selection -->
+                                    <div class="col-md-4">
+                                        <label>Select Product</label>
+                                        <select name="products[]" class="form-control" required>
+                                            {% for product in products %}
+                                                <option value="{{ product.product_id }}">{{ product.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+    
+                                    <!-- Quantity Input -->
+                                    <div class="col-md-3">
+
+                                        <input type="number" name="orderQuantity" id="orderQuantity" class="form-control" min="1" required />
+
+                                    </div>
+                                    <!-- Unit Selection -->
+                                    <div class="col-md-3">
+                                        <label>Unit</label>
+                                        <select name="units[]" class="form-control" required>
+                                            <option value="piece">Piece</option>
+                                            <option value="dozen">Dozen</option>
+                                            <option value="box">Box</option>
+                                            <option value="carton">Carton</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label>Total price</label>
+                                        <input type="number" id="totalprice" class="form-control" value="{{ order.total_price }}" readonly />
+                                    </div>
+                                    
+    
+                                    <!-- Remove Button -->
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-danger remove-product w-100">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <!-- Add More Products Button -->
+                        <button type="button" id="add-product" class="btn btn-success w-100 mb-3">+ Add Another Product</button>
+    
+                        {% if messages %}
+                            <div class="messages">
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }}">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Place Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+
+</div>
+{% endblock %}

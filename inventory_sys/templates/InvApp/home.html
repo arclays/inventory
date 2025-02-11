@@ -1,0 +1,149 @@
+f{% extends "InvApp/layout.html" %}
+<title>{% block title %} Dashboard {%endblock%}</title>
+{% block content %}
+  <!-- Main content -->
+  <div class="content">
+    <div class="pagetitle">
+      <h1>Dashboard</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+          <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+      </nav>
+    </div>
+    <!-- Stats Cards -->
+    <div class="row">
+      <div class="col-md-3">
+        <div class="card text-white bg-primary mb-3">
+          <div class="card-body">
+            <div class="card-title">
+              <h5>Total Sales</h5>
+            </div>
+            <h2>$12,000</h2>
+            <i class="fas fa-dollar-sign fa-3x"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-success mb-3">
+          <div class="card-body">
+            <div class="card-title">
+              <h5>Orders</h5>
+            </div>
+            <h2>total_orders</h2>
+            <i class="fas fa-box fa-3x"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-warning mb-3">
+          <div class="card-body">
+            <div class="card-title">
+              <h5>Users</h5>
+            </div>
+            <h2>1200</h2>
+            <i class="fas fa-users fa-3x"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-danger mb-3">
+          <div class="card-body">
+            <div class="card-title">
+              <h5>Earnings</h5>
+            </div>
+            <h2>${{ total_cash_made }}</h2>
+            <i class="fas fa-chart-line fa-3x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Sales Trends</h5>
+            <canvas id="salesChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Product Categories</h5>
+            <canvas id="categoriesChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders and To-Do List -->
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Recent Orders</h5>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th scope="col">Order ID</th>
+                  <th scope="col">Customer</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>#1234</td>
+                  <td>John Doe</td>
+                  <td>$120</td>
+                  <td><span class="badge bg-success">Completed</span></td>
+                </tr>
+                <tr>
+                  <td>#1235</td>
+                  <td>Jane Smith</td>
+                  <td>$250</td>
+                  <td><span class="badge bg-warning">Pending</span></td>
+                </tr>
+                <tr>
+                  <td>#1236</td>
+                  <td>Michael Brown</td>
+                  <td>$400</td>
+                  <td><span class="badge bg-danger">Cancelled</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-body">
+            <h5 class="card-title">To-Do List</h5>
+            <ul class="list-group">
+              <li class="list-group-item">
+                Update product inventory
+                <span class="badge bg-primary">Due Today</span>
+              </li>
+              <li class="list-group-item">
+                Prepare sales report
+                <span class="badge bg-warning">Due Tomorrow</span>
+              </li>
+              <li class="list-group-item">
+                Respond to customer inquiries
+                <span class="badge bg-danger">Overdue</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Footer -->
+<div class="footer">© 2024 Inventory Management System</div>
+</div>
+{% endblock %}

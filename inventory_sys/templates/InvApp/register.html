@@ -1,0 +1,171 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Register | Inventory</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      content="Premium Multipurpose Admin & Dashboard Template"
+      name="description"
+    />
+    <meta content="Themesbrand" name="author" />
+
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% static 'assets/images/favicon.ico' %}" />
+
+    <link
+      rel="stylesheet"
+      href="{% static 'assets/libs/chartist/chartist.min.css' %}"
+    />
+
+    <!-- Bootstrap Css -->
+    <link
+      rel="stylesheet"
+      id="bootstrap-style"
+      type="text/css"
+      href="{% static 'assets/css/bootstrap.min.css' %}"
+    />
+    <!-- Icons Css -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{% static 'assets/css/icons.min.css' %}"
+    />
+    <!-- App Css-->
+    <link
+      rel="stylesheet"
+      id="app-style"
+      type="text/css"
+      href="{% static 'assets/css/app.min.css' %}"
+    />
+  </head>
+  <body>
+    <div class="home-btn d-none d-sm-block">
+      <a href="{% url 'login' %}" class="text-dark"
+        ><i class="fas fa-home h2"></i
+      ></a>
+    </div>
+    <div class="account-pages my-5 pt-5">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-8 col-lg-6 col-xl-4">
+            <div class="card overflow-hidden">
+              <div class="bg-success">
+                <div class="text-primary text-center p-4">
+                  <h5 class="text-white font-size-20">
+                    Register and you work smart
+                  </h5>
+                  <p class="text-white-50">Get your self an account now.</p>
+                  <a href="{% url 'register' %}" class="logo logo-admin">
+                    <img
+                      src="static/assets/images/logo-sm.png"
+                      height="24"
+                      alt="logo"
+                    />
+                  </a>
+                </div>
+              </div>
+
+              <div class="card-body p-4">
+                <div class="p-3">
+                  <form class="mt-4" action="{% url 'login' %}">
+                    <div class="mb-3">
+                      <label class="form-label" for="useremail">Email</label>
+                      <input
+                        type="email"
+                        class="form-control"
+                        id="useremail"
+                        placeholder="Enter email"
+                      />
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label" for="username">Username</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="username"
+                        placeholder="Enter username"
+                      />
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label" for="userpassword"
+                        >Password</label
+                      >
+                      <input
+                        type="password"
+                        class="form-control"
+                        id="userpassword"
+                        placeholder="Enter password"
+                      />
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label" for="userpassword"
+                        >Confirm Password</label
+                      >
+                      <input
+                        type="password"
+                        class="form-control"
+                        id="userpassword"
+                        placeholder="confirm password"
+                      />
+                    </div>
+
+                    <div class="mb-3 row">
+                      <div class="col-12 text-end">
+                        <button
+                          class="btn btn-success w-md waves-effect waves-light"
+                          type="submit"
+                        >
+                          Register
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="mt-2 mb-0 row">
+                      <div class="col-12 mt-4">
+                        <p class="mb-0">
+                          By registering you agree to our
+                          <a href="#" class="text-primary">Terms of Use</a>
+                        </p>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-5 text-center">
+              <p>
+                Already have an account ?
+                <a href="{% url 'login' %}" class="fw-medium text-primary">
+                  Login
+                </a>
+              </p>
+              <p>
+                ©
+                <script>
+                  document.write(new Date().getFullYear());
+                </script>
+                Inventory. Crafted with
+                <i class="mdi mdi-heart text-danger"></i> by Themesbrand
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script src="{% static 'assets/libs/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'assets/libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'assets/libs/metismenu/metisMenu.min.js' %}"></script>
+    <script src="{% static 'assets/libs/simplebar/simplebar.min.js' %}"></script>
+    <script src="{% static 'assets/libs/node-waves/waves.min.js' %}"></script>
+    <script src="{% static 'assets/libs/peity/jquery.peity.min.js' %}"></script>
+
+    <script src="{% static 'assets/js/app.js' %}"></script>
+  </body>
+</html>
