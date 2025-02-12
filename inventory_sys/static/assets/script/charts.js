@@ -90,3 +90,37 @@ document.querySelectorAll(".deleteBtn").forEach((button) => {
     });
   });
 });
+
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const addProductBtn = document.getElementById("add-product");
+        const productContainer = document.getElementById("product-container");
+
+        addProductBtn.addEventListener("click", function () {
+            let productItem = document.querySelector(".product-item");
+            let newProductItem = productItem.cloneNode(true);
+
+            // Reset input fields inside the cloned product item
+            newProductItem.querySelector('select[name="products[]"]').value = "";
+            newProductItem.querySelector('input[name="orderQuantity"]').value = 1;
+            newProductItem.querySelector('select[name="units[]"]').value = "piece";
+            newProductItem.querySelector("#totalprice").value = "";
+
+            // Append new product item to container
+            productContainer.appendChild(newProductItem);
+
+            // Add event listener for remove button
+            newProductItem.querySelector(".remove-product").addEventListener("click", function () {
+                newProductItem.remove();
+            });
+        });
+
+        // Remove product on click
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("remove-product")) {
+                e.target.closest(".product-item").remove();
+            }
+        });
+    });
+

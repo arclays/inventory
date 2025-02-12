@@ -5,7 +5,7 @@ from django.utils import timezone
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True) 
     name = models.CharField(max_length=100, unique=True)
-    sku = models.CharField(max_length=50)
+    sku = models.CharField(max_length=100)
     category =models.CharField(max_length=10)
     price = models.FloatField()
     units = models.CharField(max_length=50, default='pcs') 

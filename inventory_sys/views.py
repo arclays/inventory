@@ -13,7 +13,7 @@ from django.urls import reverse
 from .models import Customer, Product, Order,User
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from .models import Order, Stock
+from .models import Order, Stock, Product
 from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -169,7 +169,7 @@ def place_order(request):
     if request.method == 'POST':
         customer_id = request.POST.get('orderCustomer')
         product_id = request.POST.get('orderProduct') 
-        quantity = int(request.POST.get('orderQuantity'))
+        quantity = (request.POST.get('orderQuantity'))
 
 
        
@@ -211,38 +211,42 @@ from django.contrib import messages
 
 def stock_view(request):
     stocks = Stock.objects.all()
-    return render(request, 'Invapp/stock.html', {'stocks': stocks})
+    products = Product.objects.all()
 
+    return render(request, 'Invapp/stock.html', {'stocks': stocks, 'products': products})
 
 def add_stock(request):
     if request.method == 'POST':
-        product_id = request.POST.get('productName')
-        new_stock = int(request.POST.get('newStock'))
+        product_id = request.POST.get('product_id')
+
+
+        new_stock = request.POST.get('newStock')
         expiry_date = request.POST.get('expiryDate')
 
-        product = get_object_or_404(Product, id=product_id)
+        # Ensure we use the correct field name
+        product = get_object_or_404(Product, product_id=product_id)  
 
-        initial_stock = product.quantity_in_stock
-        total_stock = initial_stock + new_stock
+        initial_stock = product.quantity_in_stock  
+        total_stock = int(initial_stock) + int(new_stock ) 
 
         product.quantity_in_stock = total_stock
         product.save()
 
+        # Save to Stock table
         Stock.objects.create(
             product=product,
             initial_stock=initial_stock,
             new_stock=new_stock,
-            total_stock=total_stock,
+            total_stock=total_stock,  
             stock_date=timezone.now().date(),
             expiry_date=expiry_date,
         )
 
         return redirect('stock')
 
+    # Fetch all products for dropdown
     products = Product.objects.all()
-    return render(request, 'InvApp/stock.html', {
-        'products': products,
-    })
+    return render(request, 'InvApp/stock.html', {'products': products})
 
 def stock_change (request):
     if request.method == 'POST':

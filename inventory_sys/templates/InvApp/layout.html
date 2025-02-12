@@ -18,7 +18,8 @@ id="app-style"
 type="text/css"
 href="{% static 'assets/styles.css' %}"
 />
-<script src="{% static 'js/scripts.js' %}"></script>
+<script src="{% static 'assets/js/scripts.js' %}"></script>
+<script src="{% static 'assets/js/app.js' %}"></script>
 
 </head>
 <body>
@@ -186,9 +187,9 @@ href="{% static 'assets/styles.css' %}"
   <div class="sidebar ">
     <a href="{% url 'home' %}">
     <i class="fas fa-tachometer-alt mt-5"></i> Dashboard</a>
+    <a href="{% url 'customer_list' %}"><i class="fas fa-users"></i> Customers</a>
     <a href="{% url 'product_list' %}"><i class="fas fa-cubes"></i> Products</a>
     <a href="{% url 'order_page' %}"><i class="fas fa-box"></i> Orders</a>
-    <a href="{% url 'customer_list' %}"><i class="fas fa-users"></i> Customers</a>
     <a href="#"><i class="fas fa-chart-line"></i> Reports</a>
     <a href="{% url 'stock' %}"><i class="fas fa-warehouse"></i> Stock</a> 
 

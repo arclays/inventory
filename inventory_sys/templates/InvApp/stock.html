@@ -8,10 +8,12 @@
     <div class="mb-3 pt-4">
         <button class="btn btn-primary mb-0" data-bs-toggle="modal" data-bs-target="#addStockModal">Add stock</button>
         <button class="btn btn-success"> Stock Transaction</button>
+        <button class="btn btn-secondary" onclick="printStockTable()">Print Stock Table</button>
+
         <button class="btn btn-primary mb-0 float-end" data-bs-toggle="modal" data-bs-target="#addStockModal"><a href="{% url 'stock_change' %} "> Stock Changes</a></button>
     </div>
-    <table class="table table-striped">
-        <thead>
+    <table class="table table-striped mt-3 text-center" id="stockTable">
+        <thead class="table-header">   
             <tr>
                 <th>No</th>
                 <th>Product Name</th>
@@ -40,6 +42,7 @@
             {% endfor %}
         </tbody>
     </table>
+    
     <nav aria-label="Page navigation">
         <ul class="pagination">
             <li class="page-item"><a class="page-link" href="#">Previous</a></li>
@@ -47,8 +50,7 @@
             <li class="page-item"><a class="page-link" href="#">Next</a></li>
         </ul>
     </nav>
-</div>
-<!-- Add Stock Modal -->
+ <!-- Add Stock Modal -->
 <div class="modal fade" id="addStockModal" tabindex="-1" role="dialog" aria-labelledby="addStockModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -59,52 +61,37 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div>
-                        <h1 class="modal-title mb-1">Add stock</h1>
+                    <h1 class="modal-title mb-1">Add stock</h1>
+
+                    <div class="form-group mb-3">
+                        <label for="productName">Product Name</label>
+                        <select id="productName" name="product_id" class="form-control" required>
+                            <option value="">Select a product</option>
+                            {% for product in products %}
+                                <option value="{{ product.product_id }}">{{ product.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <div class="modal-body">
-                        <div class="form-group mb-3">
-                            <label for="productName">Product Name</label>
-                            <select id="productName" name="productName" class="form-control" required onchange="fetchInitialStock(this.value)">
-                                <option value="">Select a product</option>
-                                {% for product in products %}
-                                    <option value="{{ product.id }}">{{ product.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="initialStock">Initial Stock</label>
-                            <input type="number" id="initialStock" name="initialStock" class="form-control" readonly>
-                        </div>
-                                            <div class="form-group mb-3">
+                    
+                    <div class="form-group mb-3">
                         <label for="newStock">New Stock</label>
                         <input type="number" id="newStock" name="newStock" class="form-control" required>
                     </div>
-                    <div class="form-group mb-3">
-                        <label for="category">Category</label>
-                        <select id="category" name="category" class="form-control" required>
-                            {% for x in products %}
-                                <option value="{{ x.id }}">{{ x.category }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="supplier">Supplier</label>
-                        <select id="supplier" name="supplier" class="form-control" required>
-                            {% for supplier in products %}
-                                <option value="{{ supplier.id }}">{{ supplier.supplier }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+
+
+                    
                     <div class="form-group mb-3">
                         <label for="stockDate">Stock Date</label>
-                        <input type="date" id="stockDate" name="stockDate" class="form-control"required>
+                        <input type="date" id="stockDate" name="stockDate" class="form-control" required>
                     </div>
+
+                    
                     <div class="form-group mb-3">
                         <label for="expiryDate">Expiry Date</label>
                         <input type="date" id="expiryDate" name="expiryDate" class="form-control" required>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Add Stock</button>
@@ -112,6 +99,8 @@
             </form>
         </div>
     </div>
+</div>
+
 </div>
 {% endblock %}
 

@@ -18,7 +18,7 @@ class ProductForm(forms.ModelForm):
             
         widgets = {
            'product_id': forms.NumberInput(attrs={ 'placeholder': 'e.g 1 ', 'class': 'form-control'}),
-           'sku': forms.NumberInput(attrs={ 'placeholder': 'e.g s12345 ', 'class': 'form-control'}),
+           'sku': forms.TextInput(attrs={ 'placeholder': 'e.g s12345 ', 'class': 'form-control'}),
            'units': forms.TextInput(attrs={ 'placeholder': 'e.g peice/dozen', 'class': 'form-control'}),
             'name': forms.TextInput(attrs={ 'placeholder': 'e.g skirt ', 'class': 'form-control'}),
             'price': forms.NumberInput(attrs={ 'placeholder': 'e.g $100.0 ', 'class': 'form-control'}),
