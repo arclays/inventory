@@ -66,7 +66,7 @@
         <td>{{ customer.email }}</td>
         <td>{{ customer.phone }}</td>
         <td>
-          <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#updateProductModal{{ product.product_id }}">
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateProductModal{{ product.product_id }}">
               Edit
           </button>
           <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteProductModal{{ product.product_id }}">
@@ -81,6 +81,35 @@
       {% endfor %}
     </tbody>
   </table>
+   <!-- Delete Customer Modal -->
+{% for customer in customers %}
+<div class="modal fade" id="deletecustomerModal{{ customer.customer_id }}" tabindex="-1" aria-labelledby="deletecustomerModalLabel{{ customer.customer_id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deletecustomerModalLabel{{ customer.customer_id }}">Delete Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the customer <strong>{{ customer.name }}</strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" action="{% url 'customer_confirm_delete' customer.customer_id %}">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% empty %}
+<tr>
+    <td colspan="7" class="text-center">No customers available.</td>
+</tr>
+{% endfor %}
+
+
 
   <!-- Pagination Controls -->
  <!-- Pagination Controls -->

@@ -135,3 +135,39 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
+document.addEventListener("DOMContentLoaded", function () {
+    function updateTotalPrice() {
+        let finalTotal = 0;
+
+        document.querySelectorAll(".product-item").forEach(item => {
+            let quantity = item.querySelector(".quantity").value;
+            let unitPrice = item.querySelector(".unit-price").value;
+            let totalPriceField = item.querySelector(".total-price");
+
+            let totalPrice = (quantity && unitPrice) ? (quantity * unitPrice) : 0;
+            totalPriceField.value = totalPrice.toFixed(2);
+
+            finalTotal += totalPrice;
+        });
+
+        let discount = document.getElementById("discount").value;
+        if (discount) {
+            finalTotal -= (finalTotal * discount / 100);
+        }
+
+        document.getElementById("finalTotal").value = finalTotal.toFixed(2);
+    }
+    // Event Listeners for quantity and unit price inputs
+    document.addEventListener("input", function (event) {
+        if (event.target.matches(".quantity, .unit-price")) {
+            updateTotalPrice();
+        }
+    });
+
+    // Event Listeners
+    document.addEventListener("input", function (event) {
+        if (event.target.matches(".quantity, .unit-price, #discount")) {
+            updateTotalPrice();
+        }
+    });
+});

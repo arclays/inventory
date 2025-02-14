@@ -4,7 +4,6 @@ from . import views
 
 
 urlpatterns = [
-    # Define your URL patterns here
     path('', views.home_view, name='home'),
     path('login/', views.login_view, name='login'), 
     path('logout/', views.logout_view, name='logout'),  
@@ -16,6 +15,8 @@ urlpatterns = [
     path('add-stock/', views.add_stock, name='add_stock'),
     path('products/', views.product_list, name='product_list'),
     path('products/update/<int:product_id>/', views.product_update, name='product_update'),
+    path('customers/edit/<int:customer_id>/', views.customer_Edit, name='customer_edit'),
+    path('customers/delete/<int:customer_id>/', views.customer_confirm_delete, name='customer_confirm_delete'),
     path('products/delete/<int:product_id>/', views.product_confirm_delete, name='product_confirm_delete'),
     path('order/', views.order_page, name='order_page'),
     path('place_order/', views.place_order, name='place_order'),

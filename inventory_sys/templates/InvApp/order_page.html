@@ -84,8 +84,7 @@
             {% endfor %}
         </tbody>
     </table>
-
-    <!-- Place Order Modal -->
+<!-- Place Order Modal -->
 <div class="modal fade" id="placeOrderModal" tabindex="-1" role="dialog" aria-labelledby="placeOrderModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -123,7 +122,7 @@
                                 <!-- Quantity Input -->
                                 <div class="col-md-2">
                                     <label>Quantity</label>
-                                    <input type="number" name="orderQuantity[]" class="form-control" min="1" required />
+                                    <input type="number" name="orderQuantity[]" class="form-control quantity" min="1" required />
                                 </div>
 
                                 <!-- Unit Selection -->
@@ -140,13 +139,13 @@
                                 <!-- Price Per Unit -->
                                 <div class="col-md-2">
                                     <label>Price Per Unit</label>
-                                    <input type="number" name="unitPrice[]" class="form-control" required />
+                                    <input type="number" name="unitPrice[]" class="form-control unit-price" required />
                                 </div>
 
-                                <!-- Total Price -->
+                                <!-- Total Price (Auto-Calculated) -->
                                 <div class="col-md-2">
                                     <label>Total Price</label>
-                                    <input type="number" name="totalPrice[]" class="form-control" readonly />
+                                    <input type="number" name="totalPrice[]" class="form-control total-price" readonly />
                                 </div>
 
                                 <!-- Remove Button -->
@@ -183,7 +182,7 @@
                         <input type="number" id="discount" name="discount" class="form-control" min="0" max="100">
                     </div>
 
-                    <!-- Final Total -->
+                    <!-- Final Total (Auto-Calculated) -->
                     <div class="form-group mb-2">
                         <label for="finalTotal">Final Total</label>
                         <input type="number" id="finalTotal" name="finalTotal" class="form-control" readonly>
@@ -209,9 +208,6 @@
         </div>
     </div>
 </div>
-
-    </div>
-    
 
 </div>
 {% endblock %}

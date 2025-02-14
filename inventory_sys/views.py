@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import ProductForm
+from .forms import ProductForm, CustomerForm
 from django.contrib.auth import authenticate, login, logout
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -13,7 +13,7 @@ from django.urls import reverse
 from .models import Customer, Product, Order,User
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from .models import Order, Stock, Product
+from .models import Order, Stock
 from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -97,8 +97,8 @@ def product_list(request):
     return render(request, 'Invapp/product_list.html', {'page_obj': page_obj, 'form': form})
 
 def customer_list(request):
-    customers = Customer.objects.all()  # Get all customers
-    paginator = Paginator(customers, 7)  # Show 10 customers per page
+    customers = Customer.objects.all()  
+    paginator = Paginator(customers, 7) 
 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -112,6 +112,27 @@ def customer_list(request):
     else:
         form = CustomerForm()
     return render(request, 'Invapp/customer_list.html', {'form': form, 'page_obj': page_obj})
+
+
+def customer_Edit(request, customer_id):
+    customer = get_object_or_404(Customer, customer_id=customer_id) 
+    if request.method == 'POST':
+        form = CustomerForm(request.POST, instance=customer) 
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Customer edited successfully!')
+            return redirect('customer_list')  
+    else:
+        form = CustomerForm(instance=customer)  
+    return render(request, 'Invapp/customer_update.html', {'form': form})
+
+def customer_confirm_delete(request, customer_id):
+    customer = get_object_or_404(Customer, customer_id=customer_id)
+    if request.method == 'POST':
+        customer.delete()
+        messages.success(request, 'Customer deleted successfully!')
+        return redirect('customer_list')
+    return render(request, 'Invapp/customer_confirm_delete.html', {'customer': customer})
 
 
 def product_update(request, product_id):
@@ -136,16 +157,15 @@ def product_confirm_delete(request, product_id):
 
 
 def order_page(request):
-    units = "pcs" 
+    units = "pcs"
     selected_date = request.GET.get('orderDate', str(date.today()))
 
-    orders = Order.objects.filter(order_date=selected_date).select_related('product')
+    orders = Order.objects.filter(order_date=selected_date).prefetch_related('items__product')
 
     total_customers = orders.values('customer').distinct().count()
     total_orders = orders.count()
-    total_cash_made = sum(order.total_price for order in orders)
-    total_quantity = orders.aggregate(total=Sum('quantity'))['total'] or 0
-
+    total_cash_made = sum(order.final_total for order in orders)
+    total_quantity = orders.aggregate(total=Sum('items__quantity'))['total'] or 0
 
     customers = Customer.objects.all()
     products = Product.objects.all()
@@ -158,7 +178,7 @@ def order_page(request):
         'selected_date': selected_date,
         'total_quantity': total_quantity,
         'customers': customers,
-        'units':units,
+        'units': units,
         'products': products,
     }
 
@@ -169,45 +189,61 @@ def place_order(request):
     if request.method == 'POST':
         customer_id = request.POST.get('orderCustomer')
         product_id = request.POST.get('orderProduct') 
-        quantity = (request.POST.get('orderQuantity'))
+        quantity = request.POST.get('orderQuantity')
 
+        # Ensure quantity is a valid integer
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                messages.error(request, "Quantity must be greater than zero.")
+                return redirect('order_page')
+        except ValueError:
+            messages.error(request, "Invalid quantity entered.")
+            return redirect('order_page')
 
-       
         customer = get_object_or_404(Customer, id=customer_id)
         product = get_object_or_404(Product, pk=product_id)
 
-
         units = request.POST.get('orderUnits') or product.units
 
-        print("Product ID received:", product_id)
-
-        if not product_id:
-            messages.error(request, "Please select a valid product.")
+        # Validate stock availability
+        if quantity > product.stock:
+            messages.error(request, f"Not enough stock for {product.name}. Only {product.stock} available.")
             return redirect('order_page')
 
-
-        if quantity > product.quantity_in_stock:
-            messages.error(request, f"Not enough stock for {product.name}. Only {product.quantity_in_stock} available.")
-            return redirect('order_page')
-
+        # Calculate total price
         total_price = product.price * quantity
 
-        Order.objects.create(
+        # Create Order if it doesn't exist for the customer today
+        order, created = Order.objects.get_or_create(
             customer=customer,
+            order_date=timezone.now(),
+            defaults={'total_amount': 0, 'final_total': 0}
+        )
+
+        # Create OrderItem
+        OrderItem.objects.create(
+            order=order,
             product=product,
             quantity=quantity,
-            units=units,
+            unit_price=product.price,
             total_price=total_price,
-            order_date=timezone.now() 
+            unit=units,
         )
-        product.quantity_in_stock -= quantity 
-        product.save()  
+
+        # Update Order totals
+        order.total_amount += total_price
+        order.final_total = order.total_amount  # You can apply discounts if needed
+        order.save()
+
+        # Deduct stock
+        product.stock -= quantity
+        product.save()
 
         messages.success(request, 'Order placed successfully!')
         return redirect('order_page')
 
     return redirect('order_page')
-from django.contrib import messages
 
 def stock_view(request):
     stocks = Stock.objects.all()
