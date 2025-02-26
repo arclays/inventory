@@ -1,0 +1,127 @@
+
+{% extends "InvApp/layout.html" %}
+<title>{% block title %}reports{% endblock %}</title>
+
+{% block content %}
+<div class="container mt-5 pt-5">
+<div class="container mt-4">
+    <h3>Report for {{ selected_date }}</h3>
+
+    <form method="GET" class="d-flex mb-3">
+        <input type="date" name="date" class="form-control w-25" value="{{ selected_date }}">
+        <button type="submit" class="btn btn-primary ms-2">View Report</button>
+    </form>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Total Customers</h5>
+                    <h3>{{ total_customers }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Total Orders</h5>
+                    <h3>{{ total_orders }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5>Total Quantity Ordered</h5>
+                    <h3>{{ total_quantity }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5>Total Earnings</h5>
+                    <h3>${{ total_earnings|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mt-4">Orders</h4>
+    <table class="table table-bordered">
+        <thead class="table-success">
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Units</th>
+                <th>Price per Unit</th>
+                <th>Total Price</th>
+                <th>Payment Method</th>
+                <th>Discount (%)</th>
+                <th>Final Total</th>
+                <th>Order Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.customer }}</td>
+                <td>{{ order.product }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>{{ order.units }}</td>
+                <td>${{ order.price_per_unit }}</td>
+                <td>${{ order.total_price }}</td>
+                <td>{{ order.payment_method }}</td>
+                <td>{{ order.discount }}%</td>
+                <td>${{ order.final_total }}</td>
+                <td>{{ order.order_date }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="11" class="text-center">No orders found for this date.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h4 class="mt-4">Stock</h4>
+    <table class="table table-bordered">
+        <thead class="table-dark text-white">
+            <tr>
+                <th>No</th>
+                <th>Product Name</th>
+                <th>Initial Stock</th>
+                <th>New Stock</th>
+                <th>Total Stock</th>
+                <th>Stock Date</th>
+                <th>Expiry Date</th>
+                <th>Supplier</th>
+                <th>Category</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock in stock_entries %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ stock.product_name }}</td>
+                <td>{{ stock.initial_stock }}</td>
+                <td>{{ stock.new_stock }}</td>
+                <td>{{ stock.total_stock }}</td>
+                <td>{{ stock.stock_date }}</td>
+                <td>{{ stock.expiry_date }}</td>
+                <td>{{ stock.supplier }}</td>
+                <td>{{ stock.category }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="text-center">No stock entries found for this date.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

@@ -8,15 +8,15 @@ from .forms import RegistrationForm
 from django.core.paginator import Paginator
 from django.contrib import messages
 from .forms import CustomerForm
-from datetime import date
+from datetime import datetime, date
 from django.urls import reverse
 from .models import Customer, Product, Order,User
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from .models import Order, Stock
 from django.db.models import Sum
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+
 
 
 
@@ -160,12 +160,12 @@ def order_page(request):
     units = "pcs"
     selected_date = request.GET.get('orderDate', str(date.today()))
 
-    orders = Order.objects.filter(order_date=selected_date).prefetch_related('items__product')
+    orders = Order.objects.filter(order_date=selected_date)
 
     total_customers = orders.values('customer').distinct().count()
     total_orders = orders.count()
     total_cash_made = sum(order.final_total for order in orders)
-    total_quantity = orders.aggregate(total=Sum('items__quantity'))['total'] or 0
+    total_quantity = orders.aggregate(total=Sum('quantity'))['total'] or 0
 
     customers = Customer.objects.all()
     products = Product.objects.all()
@@ -184,61 +184,72 @@ def order_page(request):
 
     return render(request, 'InvApp/order_page.html', context)
 
-
 def place_order(request):
     if request.method == 'POST':
+        # print(request.POST)
         customer_id = request.POST.get('orderCustomer')
-        product_id = request.POST.get('orderProduct') 
+        # product_id = request.POST.get('orderProduct') 
         quantity = request.POST.get('orderQuantity')
 
-        # Ensure quantity is a valid integer
-        try:
+        products = request.POST.getlist('products[]')
+        order_quantities = request.POST.getlist('orderQuantity[]')
+        units = request.POST.getlist('units[]')
+        unit_prices = request.POST.getlist('unitPrice[]')
+        total_prices = request.POST.getlist('totalPrice[]')
+
+
+        product_list = []
+        # total_amount=0
+        for i in range(len(products)):
+            order = {
+                'product_id': products[i],
+                'quantity': int(order_quantities[i]),
+                'unit': units[i],
+                'unit_price': float(unit_prices[i]),
+                'total_price': float(total_prices[i])
+            }
+            product_list.append(order)
+            # total_amount=total_amount+float(total_prices[i])
+        # print(product_list)
+
+
+
+        customer = Customer.objects.get(id=customer_id)
+
+        # order, created = Order.objects.get_or_create(
+        #             customer=customer,
+        #             total_amount=total_amount,
+        #             final_total=0,
+        #             order_date=timezone.now(),
+        #         )
+
+        # store items
+        for item in product_list:
+            product_id =item['product_id']
+            unit_id = item['unit']
+            unit_price = item['unit_price']
+            total_price = item['total_price']
+            quantity = item['quantity']
+            product = Product.objects.get(product_id=product_id)
             quantity = int(quantity)
-            if quantity <= 0:
-                messages.error(request, "Quantity must be greater than zero.")
-                return redirect('order_page')
-        except ValueError:
-            messages.error(request, "Invalid quantity entered.")
-            return redirect('order_page')
+            if quantity <= 0 or quantity > product.quantity_in_stock:
+                pass
+            else:
+                # Create Order Item
+                Order.objects.create(
+                    customer=customer,
+                    product=product,
+                    quantity=quantity,
+                    price_per_unit=unit_price,
+                    total_price=total_price,
+                    units=unit_id,
+                )
 
-        customer = get_object_or_404(Customer, id=customer_id)
-        product = get_object_or_404(Product, pk=product_id)
+                # Deduct from product stock
+                product.quantity_in_stock -= quantity
+                product.save()
 
-        units = request.POST.get('orderUnits') or product.units
 
-        # Validate stock availability
-        if quantity > product.stock:
-            messages.error(request, f"Not enough stock for {product.name}. Only {product.stock} available.")
-            return redirect('order_page')
-
-        # Calculate total price
-        total_price = product.price * quantity
-
-        # Create Order if it doesn't exist for the customer today
-        order, created = Order.objects.get_or_create(
-            customer=customer,
-            order_date=timezone.now(),
-            defaults={'total_amount': 0, 'final_total': 0}
-        )
-
-        # Create OrderItem
-        OrderItem.objects.create(
-            order=order,
-            product=product,
-            quantity=quantity,
-            unit_price=product.price,
-            total_price=total_price,
-            unit=units,
-        )
-
-        # Update Order totals
-        order.total_amount += total_price
-        order.final_total = order.total_amount  # You can apply discounts if needed
-        order.save()
-
-        # Deduct stock
-        product.stock -= quantity
-        product.save()
 
         messages.success(request, 'Order placed successfully!')
         return redirect('order_page')
@@ -246,20 +257,23 @@ def place_order(request):
     return redirect('order_page')
 
 def stock_view(request):
-    stocks = Stock.objects.all()
+    selected_date = request.GET.get('orderDate', str(date.today()))
+    stocks = Stock.objects.filter(stock_date=selected_date)
     products = Product.objects.all()
 
     return render(request, 'Invapp/stock.html', {'stocks': stocks, 'products': products})
 
 def add_stock(request):
+     
+
     if request.method == 'POST':
         product_id = request.POST.get('product_id')
-
-
         new_stock = request.POST.get('newStock')
         expiry_date = request.POST.get('expiryDate')
 
-        # Ensure we use the correct field name
+        
+
+    # Ensure we use the correct field name
         product = get_object_or_404(Product, product_id=product_id)  
 
         initial_stock = product.quantity_in_stock  
@@ -267,6 +281,11 @@ def add_stock(request):
 
         product.quantity_in_stock = total_stock
         product.save()
+
+        stock = Stock.objects.filter(product=product).first()
+        if stock:
+            stock.total_stock = total_stock
+            stock.save()
 
         # Save to Stock table
         Stock.objects.create(
@@ -295,10 +314,32 @@ def stock_change (request):
         return redirect('stock_view')
        
 
-def get_initial_stock(request):
-    product_id = request.GET.get('product_id')
-    if product_id:
-        product = get_object_or_404(Product, id=product_id)
-        return JsonResponse({'quantity_in_stock': product.quantity_in_stock})
-    return JsonResponse({'error': 'Product not found'}, status=404)
+def report(request):
+    selected_date = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
 
+    orders = Order.objects.filter(order_date=selected_date)
+    stock_entries = Stock.objects.filter(stock_date=selected_date)
+
+    # Orders summary
+    total_customers = orders.values('customer').distinct().count()
+    total_orders = orders.count()
+    total_quantity = sum(order.quantity for order in orders)
+    total_earnings = sum(order.final_total for order in orders)
+
+    # Stock summary
+    total_stock_items = stock_entries.count()
+    total_new_stock = sum(stock.new_stock for stock in stock_entries)
+
+    context = {
+        'orders': orders,
+        'stock_entries': stock_entries,
+        'selected_date': selected_date,
+        'total_customers': total_customers,
+        'total_orders': total_orders,
+        'total_quantity': total_quantity,
+        'total_earnings': total_earnings,
+        'total_stock_items': total_stock_items,
+        'total_new_stock': total_new_stock,
+    }
+
+    return render(request, 'Invapp/report.html', context)

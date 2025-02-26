@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container mt-5 pt-5">
-    <h2>Orders for {{ selected_date }}</h2>
+    <h2>Orders on {{ selected_date }}</h2>
 
     <!-- Date Picker -->
     <form method="GET" action="{% url 'order_page' %}">
@@ -65,9 +65,12 @@
                 <th>Product</th>
                 <th>Quantity</th>
                 <th>Units</th>
-                <th>price per Unit</th>
+                <th>Price per Unit</th>
                 <th>Total Price</th>
-                <th>OrderDate</th>
+                <th>Payment Method</th>
+                <th>Discount (%)</th>
+                <th>Final Total</th>
+                <th>Order Date</th>
             </tr>
         </thead>
         <tbody>
@@ -78,12 +81,17 @@
                 <td>{{ order.product.name }}</td>
                 <td>{{ order.quantity }}</td>
                 <td>{{ order.units }}</td>
+                <td>${{ order.price_per_unit }}</td>
                 <td>${{ order.total_price }}</td>
+                <td>{{ order.payment_method }}</td>
+                <td>{{ order.discount }}</td>
+                <td>${{ order.final_total }}</td>
                 <td>{{ order.order_date }}</td>
-            
+            </tr>
             {% endfor %}
         </tbody>
     </table>
+    
 <!-- Place Order Modal -->
 <div class="modal fade" id="placeOrderModal" tabindex="-1" role="dialog" aria-labelledby="placeOrderModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
