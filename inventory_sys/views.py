@@ -114,7 +114,7 @@ def customer_list(request):
     return render(request, 'Invapp/customer_list.html', {'form': form, 'page_obj': page_obj})
 
 
-def customer_Edit(request, customer_id):
+def customer_edit(request, customer_id):
     customer = get_object_or_404(Customer, customer_id=customer_id) 
     if request.method == 'POST':
         form = CustomerForm(request.POST, instance=customer) 
@@ -124,7 +124,7 @@ def customer_Edit(request, customer_id):
             return redirect('customer_list')  
     else:
         form = CustomerForm(instance=customer)  
-    return render(request, 'Invapp/customer_update.html', {'form': form})
+    return render(request, 'Invapp/customer_edit.html', {'form': form})
 
 def customer_confirm_delete(request, customer_id):
     customer = get_object_or_404(Customer, customer_id=customer_id)
@@ -216,12 +216,6 @@ def place_order(request):
 
         customer = Customer.objects.get(id=customer_id)
 
-        # order, created = Order.objects.get_or_create(
-        #             customer=customer,
-        #             total_amount=total_amount,
-        #             final_total=0,
-        #             order_date=timezone.now(),
-        #         )
 
         # store items
         for item in product_list:
@@ -343,3 +337,44 @@ def report(request):
     }
 
     return render(request, 'Invapp/report.html', context)
+
+
+def stock_transaction(request):
+    # Get stock data (Initial stock, Added stock)
+    stock_data = Stock.objects.values('product__name').annotate(
+        initial_stock=Sum('initial_stock'),
+        added_stock=Sum('new_stock')
+    )
+
+    # Get ordered stock per product
+    order_data = Order.objects.values('product__name').annotate(
+        ordered_stock=Sum('quantity')
+    )
+
+    # Get current stock (quantity in stock) from the Product table
+    product_data = Product.objects.values('name', 'quantity_stock')  # quantity_stock = Final stock before transactions
+
+    # Convert data to dictionaries for quick lookup
+    stock_dict = {stock["product__name"]: stock.get("added_stock", 0) for stock in stock_data}
+    order_dict = {order["product__name"]: order.get("ordered_stock", 0) for order in order_data}
+    product_dict = {product["name"]: product.get("quantity_stock", 0) for product in product_data}
+
+    # Merge data and calculate final stock
+    final_data = []
+    for product_name, quantity_stock in product_dict.items():
+        added_stock = stock_dict.get(product_name, 0)
+        ordered_stock = order_dict.get(product_name, 0)
+        
+        # Final Stock Calculation
+        final_stock = (quantity_stock + added_stock) - ordered_stock
+
+        final_data.append({
+            "product__name": product_name,
+            "initial_stock": quantity_stock,  # Before any transactions
+            "added_stock": added_stock,
+            "ordered_stock": ordered_stock,
+            "total_stock": quantity_stock + added_stock,  # Before orders
+            "final_stock": final_stock,  # After orders
+        })
+
+    return render(request, 'InvApp/stock.html', {'stock_transactions': final_data})

@@ -106,14 +106,14 @@
             {% for stock in stock_entries %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>{{ stock.product_name }}</td>
+                <td>{{ stock.product.name }}</td>
                 <td>{{ stock.initial_stock }}</td>
                 <td>{{ stock.new_stock }}</td>
                 <td>{{ stock.total_stock }}</td>
                 <td>{{ stock.stock_date }}</td>
                 <td>{{ stock.expiry_date }}</td>
-                <td>{{ stock.supplier }}</td>
-                <td>{{ stock.category }}</td>
+                <td>{{ stock.product.supplier }}</td>
+                <td>{{ stock.product.category }}</td>
             </tr>
             {% empty %}
             <tr>

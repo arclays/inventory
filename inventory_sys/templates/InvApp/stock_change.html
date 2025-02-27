@@ -2,7 +2,31 @@
 <title>{% block title %} stock_change {%endblock%}></title>
 {% blockcontent %}
 <div class="container mt-4 pt-4">
-    <h2>Stock Changes</h2>
-    <div class="row"></div> 
-</div>
+    <h2>Stock transaction Changes</h2>
+    <table class="table table-striped mt-3 text-center display nowrap" id="stockTable">
+        <thead class="table-header">   
+            <tr>
+                <th>No</th>
+                <th>Product Name</th>
+                <th>Initial Stock</th>
+                <th>added_stock</th>
+                <th>Ordered stock</th>
+                <th>Total Stock</th>
+                <th>final stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock in stocks %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ stock.product.name }}</td>
+                <td>{{ stock.initial_stock }}</td>
+                <td>{{ stock.new_stock }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>{{ stock.total_stock }}</td>
+                <td>{{ product.quantity_stock }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock%}

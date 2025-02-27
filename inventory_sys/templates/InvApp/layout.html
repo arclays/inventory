@@ -68,16 +68,6 @@ href="{% static 'assets/styles.css' %}"
               />
             </a>
           </li>
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              href="#"
-              data-bs-toggle="modal"
-              data-bs-target="#logoutModal"
-            >
-              <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-          </li>
         </ul>
       </div>
     </div>
@@ -190,8 +180,9 @@ href="{% static 'assets/styles.css' %}"
     <a href="{% url 'customer_list' %}"><i class="fas fa-users"></i> Customers</a>
     <a href="{% url 'product_list' %}"><i class="fas fa-cubes"></i> Products</a>
     <a href="{% url 'order_page' %}"><i class="fas fa-box"></i> Orders</a>
+    <a href="{% url 'stock' %}"><i class="fas fa-warehouse"></i> New Stock</a> 
     <a href="{% url 'report' %}"><i class="fas fa-chart-line"></i> Reports</a>
-    <a href="{% url 'stock' %}"><i class="fas fa-warehouse"></i> Stock</a> 
+    <a href="{% url 'logout'% }"><i class="fas fa-sign-out-alt"></i> Logout</a>
 
   </div>
   <div class="col-md-10">{% block content %}{% endblock %}</div>
@@ -202,6 +193,8 @@ href="{% static 'assets/styles.css' %}"
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{% static 'assets/js/script/chart.js' %}"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css">

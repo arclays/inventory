@@ -22,10 +22,12 @@
     >Stock</h2>
     <div>
         <button class="btn btn-primary mb-0" data-bs-toggle="modal" data-bs-target="#addStockModal">Add stock</button>
-        <button class="btn btn-success"> Stock Transaction</button>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#stockTransactionModal">
+            Stock Transaction
+        </button>
         <button class="btn btn-secondary" onclick="printStockTable()">Print Stock Table</button>
 
-        <button class="btn btn-primary mb-0 float-end" data-bs-toggle="modal" data-bs-target="#addStockModal"><a href="{% url 'stock_change' %} "> Stock Changes</a></button>
+        <!-- <button class="btn btn-primary mb-0 float-end" data-bs-toggle="modal" data-bs-target="#addStockModal"><a href="{% url 'stock_change' %} "> Stock Changes</a></button> -->
     </div>
     <table class="table table-striped mt-3 text-center display nowrap" id="stockTable">
         <thead class="table-header">   
@@ -115,6 +117,55 @@
         </div>
     </div>
 </div>
+
+<!-- Stock Transaction Modal -->
+<div class="modal fade" id="stockTransactionModal" tabindex="-1" aria-labelledby="stockTransactionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="stockTransactionModalLabel">Stock Transaction Changes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h2>Stock Transaction Changes</h2>
+                <table class="table table-striped mt-3 text-center display nowrap" id="stockTable">
+                    <thead class="table-header">
+                        <tr>
+                            <th>No</th>
+                            <th>Product Name</th>
+                            <th>Initial Stock</th>
+                            <th>Added Stock</th>
+                            <th>Ordered Stock</th>
+                            <th>Total Stock</th>
+                            <th>Final Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock in stock_transactions %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ stock.product_name }}</td>
+                            <td>{{ stock.initial_stock }}</td>
+                            <td>{{ stock.added_stock }}</td>
+                            <td>{{ stock.ordered_stock }}</td>
+                            <td>{{ stock.total_stock }}</td>
+                            <td>{{ stock.final_stock }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">No stock transactions found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Button to Open Modal -->
+
+
 
 </div>
 {% endblock %}
