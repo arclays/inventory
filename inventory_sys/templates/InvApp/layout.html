@@ -14,32 +14,27 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <link
 rel="stylesheet"
-id="app-style"
 type="text/css"
 href="{% static 'assets/styles.css' %}"
 />
+<link rel="stylesheet" href="{% static 'assets/style/style.css' %}">
 <script src="{% static 'assets/js/scripts.js' %}"></script>
 <script src="{% static 'assets/js/app.js' %}"></script>
 
 </head>
 <body>
    <!-- Navbar -->
+<div class="d-flex">
+</nav>
    <nav class="navbar navbar-expand-lg navbar-dark bg-success fixed-top py-3">
     <div class="container-fluid">
+     
       <a class="navbar-brand" href="{% url 'home' %}"
         ><i class="fas fa-home"></i> All stock</a
       >
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
+      <button id="fullscreen-btn" class="btn btn-outline-light ms-auto">
+        <i class="fas fa-expand"></i>
+    </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
@@ -174,7 +169,7 @@ href="{% static 'assets/styles.css' %}"
 <!-- Main wrapper -->
 <div class="wrapper">
   <!-- Sidebar -->
-  <div class="sidebar ">
+    <div class="sidebar" id="sidebar">
     <a href="{% url 'home' %}">
     <i class="fas fa-tachometer-alt mt-5"></i> Dashboard</a>
     <a href="{% url 'customer_list' %}"><i class="fas fa-users"></i> Customers</a>
@@ -184,8 +179,10 @@ href="{% static 'assets/styles.css' %}"
     <a href="{% url 'report' %}"><i class="fas fa-chart-line"></i> Reports</a>
     <a href="{% url 'logout'% }"><i class="fas fa-sign-out-alt"></i> Logout</a>
 
+
   </div>
   <div class="col-md-10">{% block content %}{% endblock %}</div>
+</div>
 </div>
 
 <!-- Bootstrap JS and Chart.js -->

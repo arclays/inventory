@@ -10,23 +10,20 @@ from django.contrib import messages
 from .forms import CustomerForm
 from datetime import datetime, date
 from django.urls import reverse
+from django.http import JsonResponse
 from .models import Customer, Product, Order,User
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from .models import Order, Stock
+from .models import Order, Stock, StockTransaction
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 
-
-
-
- 
 # CRUD
 # Home_view
-# @login_required   
+@login_required
 def home_view(request):
-    orders = Order.objects.all() 
-    return render(request, 'Invapp/home.html', {'orders': orders})  # Fixed .hmtl to .html
+    orders = Order.objects.all()
+    return render(request, 'Invapp/home.html', {'orders': orders})
 
 
 def register_view(request):
@@ -50,14 +47,11 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
-            #  home page if not specified
             next_url = request.POST.get('next') or request.GET.get('next') or reverse('home')
             return redirect(next_url)
         else:
-            # Pass the error message to the template if credentials are invalid
             return render(request, 'Invapp/login.html', {'error': 'Invalid credentials'})
 
-    # Handle GET requests and pass along any next parameter
     next_url = request.GET.get('next', '')
     return render(request, 'Invapp/login.html', {'next': next_url})
 
@@ -66,15 +60,13 @@ def logout_view(request):
     logout(request)
     return redirect('login') 
 
-      
-
-# Protected view
 class ProtectedView(LoginRequiredMixin, View):
-    login_url = '/Invapp/login/'  # Correct login URL
-    redirect_field_name = 'next'  # Correct field name
+    login_url = '/Invapp/login/'  # Ensure this matches your login route
+    redirect_field_name = 'next'
 
     def get(self, request):
-        return render(request, 'Invapp/products.html')
+        return render(request, 'Invapp/products.html')      
+
 
 # Create_view
 
@@ -170,8 +162,13 @@ def order_page(request):
     customers = Customer.objects.all()
     products = Product.objects.all()
 
+    paginator = Paginator(orders, 8)  # Show 10 orders per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        'orders': orders,
+        'orders': page_obj,  # Use paginated orders instead of full list
+        'page_obj': page_obj,  # Pass pagination object
         'total_customers': total_customers,
         'total_orders': total_orders,
         'total_cash_made': total_cash_made,
@@ -216,6 +213,17 @@ def place_order(request):
 
         customer = Customer.objects.get(id=customer_id)
 
+        # Retrieve payment method and discount from the form
+        payment_method = request.POST.get('paymentMethod', 'cash')  # Default to 'cash' if not provided
+        discount = request.POST.get('discount', '0.00')  # Default to '0' if not provided
+
+        # Convert discount to float (handles potential string input errors)
+        try:
+            discount = float(discount)
+        except ValueError:
+            discount = 0.0  # Fallback to 0.0 if conversion fails
+
+
 
         # store items
         for item in product_list:
@@ -224,39 +232,54 @@ def place_order(request):
             unit_price = item['unit_price']
             total_price = item['total_price']
             quantity = item['quantity']
+            
+
+            # Check if product has enough stock
             product = Product.objects.get(product_id=product_id)
             quantity = int(quantity)
             if quantity <= 0 or quantity > product.quantity_in_stock:
                 pass
             else:
                 # Create Order Item
-                Order.objects.create(
-                    customer=customer,
-                    product=product,
-                    quantity=quantity,
-                    price_per_unit=unit_price,
-                    total_price=total_price,
-                    units=unit_id,
-                )
+               Order.objects.create(
+                   customer=customer,
+                   product=product,
+                   quantity=quantity,
+                   price_per_unit=unit_price,
+                   total_price=total_price,
+                   units=unit_id,
+                   payment_method=payment_method,  # Ensure this is provided
+                   discount=discount,  # Ensure this is provided
+)
 
                 # Deduct from product stock
-                product.quantity_in_stock -= quantity
-                product.save()
+        product.quantity_in_stock -= quantity
+        product.save()
 
 
-
-        messages.success(request, 'Order placed successfully!')
         return redirect('order_page')
 
-    return redirect('order_page')
+    return render(request, 'Invapp/order_page.html')
 
 def stock_view(request):
+  
     selected_date = request.GET.get('orderDate', str(date.today()))
+    selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
     stocks = Stock.objects.filter(stock_date=selected_date)
+    
     products = Product.objects.all()
 
-    return render(request, 'Invapp/stock.html', {'stocks': stocks, 'products': products})
+    paginator = Paginator(stocks, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)                                                                                                                                        
 
+   
+    return render(request, 'Invapp/stock.html', {
+        'stocks': page_obj,  
+        'products': products,
+        'selected_date': selected_date,
+        'page_obj': page_obj  
+    })
 def add_stock(request):
      
 
@@ -337,11 +360,9 @@ def report(request):
     }
 
     return render(request, 'Invapp/report.html', context)
-
-
-def stock_transaction(request):
+def stock_transaction_api(request):
     # Get stock data (Initial stock, Added stock)
-    stock_data = Stock.objects.values('product__name').annotate(
+    stock_data = Stock.objects.values('product__name', 'product__id').annotate(
         initial_stock=Sum('initial_stock'),
         added_stock=Sum('new_stock')
     )
@@ -352,29 +373,42 @@ def stock_transaction(request):
     )
 
     # Get current stock (quantity in stock) from the Product table
-    product_data = Product.objects.values('name', 'quantity_stock')  # quantity_stock = Final stock before transactions
+    product_data = Product.objects.values('id', 'name', 'quantity_stock')
 
     # Convert data to dictionaries for quick lookup
-    stock_dict = {stock["product__name"]: stock.get("added_stock", 0) for stock in stock_data}
+    stock_dict = {stock["product__name"]: stock for stock in stock_data}
     order_dict = {order["product__name"]: order.get("ordered_stock", 0) for order in order_data}
-    product_dict = {product["name"]: product.get("quantity_stock", 0) for product in product_data}
+    product_dict = {product["name"]: {"id": product["id"], "quantity_stock": product["quantity_stock"]} for product in product_data}
 
-    # Merge data and calculate final stock
+    # Store stock transactions and prepare data for API response
     final_data = []
-    for product_name, quantity_stock in product_dict.items():
-        added_stock = stock_dict.get(product_name, 0)
+    for product_name, product_info in product_dict.items():
+        stock_entry = stock_dict.get(product_name, {"initial_stock": 0, "added_stock": 0})
+        initial_stock = stock_entry["initial_stock"]
+        added_stock = stock_entry["added_stock"]
         ordered_stock = order_dict.get(product_name, 0)
-        
+        product_id = product_info["id"]
+
         # Final Stock Calculation
-        final_stock = (quantity_stock + added_stock) - ordered_stock
+        final_stock = (product_info["quantity_stock"] + added_stock) - ordered_stock
+
+        # Save to StockTransaction model
+        StockTransaction.objects.create(
+            product_id=product_id,
+            initial_stock=initial_stock,
+            added_stock=added_stock,
+            ordered_stock=ordered_stock,
+            total_stock=initial_stock + added_stock,
+            final_stock=final_stock
+        )
 
         final_data.append({
-            "product__name": product_name,
-            "initial_stock": quantity_stock,  # Before any transactions
+            "product_name": product_name,
+            "initial_stock": initial_stock,
             "added_stock": added_stock,
             "ordered_stock": ordered_stock,
-            "total_stock": quantity_stock + added_stock,  # Before orders
+            "total_stock": initial_stock + added_stock,  # Before orders
             "final_stock": final_stock,  # After orders
         })
 
-    return render(request, 'InvApp/stock.html', {'stock_transactions': final_data})
+    return JsonResponse({"stock_transactions": final_data}, safe=False)

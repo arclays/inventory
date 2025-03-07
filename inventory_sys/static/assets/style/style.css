@@ -1,0 +1,64 @@
+
+body {
+  display: flex;
+  min-height: 100vh;
+} 
+
+
+.sidebar a {
+  padding: 16px;
+  text-decoration: none;
+  font-size: 18px;
+  color: #f8f9fa;
+  margin: 5px;
+
+}
+ .sidebar a i {
+  margin-right: 10px;
+}
+
+.sidebar a:hover {
+  background-color: #53ad6a;
+}  
+ 
+.content {
+  flex: 1;
+  padding: 20px;
+  padding-top: 50px;
+} 
+
+
+.navbar {
+  z-index: 1000; 
+} 
+
+.navbar-nav .nav-link {
+  display: flex;
+  align-items: center;
+} 
+
+.card-title {
+  font-size: 1.5rem;
+} 
+
+.table-header {
+    background-color: #3daf7c; 
+    color: white; 
+  } 
+  
+  /* Main content */
+  .content {
+    margin-left: 60px;
+    width: calc(100% - 60px);
+    transition: margin-left 0.3s ease;
+  }
+  
+  /* Navbar styling */
+  .navbar {
+    background-color: #5bc973;
+  }
+  
+  /* .navbar .btn {
+    color: white;
+  } */
+  

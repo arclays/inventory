@@ -2,6 +2,7 @@ f{% extends "InvApp/layout.html" %}
 <title>{% block title %} Dashboard {%endblock%}</title>
 {% block content %}
   <!-- Main content -->
+   
   <div class="content">
     <div class="pagetitle">
       <h1>Dashboard</h1>
@@ -20,7 +21,7 @@ f{% extends "InvApp/layout.html" %}
             <div class="card-title">
               <h5>Total Sales</h5>
             </div>
-            <h2>$12,000</h2>
+            <h2>${{ total_cash_made }}</h2>
             <i class="fas fa-chart-line fa-3x"></i>
           </div>
         </div>
@@ -31,7 +32,7 @@ f{% extends "InvApp/layout.html" %}
             <div class="card-title">
               <h5>Total Order</h5>
             </div>
-            <h2>111{{ total_orders }}</h2>
+            <h2>111{{ order.total_orders }}</h2>
             <i class="fas fa-box fa-3x"></i>
           </div>
         </div>
@@ -40,7 +41,7 @@ f{% extends "InvApp/layout.html" %}
         <div class="card text-white bg-warning mb-3">
           <div class="card-body">
             <div class="card-title">
-              <h5>Users</h5>
+              <h5>Total customers</h5>
             </div>
             <h2>1200</h2>
             <i class="fas fa-users fa-3x"></i>

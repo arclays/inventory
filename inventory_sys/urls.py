@@ -6,8 +6,9 @@ from . import views
 urlpatterns = [
     path('', views.home_view, name='home'),
     path('login/', views.login_view, name='login'), 
-    path('logout/', views.logout_view, name='logout'),  
-    path('register/', views.register_view, name='register'),
+    # path('logout/', views.logout_view, name='logout'),
+    path('Invapp/logout/', views.login_view, name='logout'),  
+    path('register/', views.register_view, name='register'), 
     path('protected/', views.ProtectedView.as_view(), name='protected'),
     path('customers/', views.customer_list, name='customer_list'),
     path('stock/', views.stock_view, name='stock'),
@@ -20,8 +21,9 @@ urlpatterns = [
     path('products/delete/<int:product_id>/', views.product_confirm_delete, name='product_confirm_delete'),
     path('order/', views.order_page, name='order_page'),
     path('place_order/', views.place_order, name='place_order'),
-     path('report/', views.report, name='report'),
-     path('stock-transaction/',views.stock_transaction, name='stock_transaction'),
+    path('report/', views.report, name='report'),
+    path('stock-transactions-api/', views.stock_transaction_api, name='stock_transaction_api'),
+   
 
    
 ] 

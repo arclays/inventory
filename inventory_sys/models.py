@@ -55,17 +55,27 @@ class Order(models.Model):
         return f"Order {self.id} by {self.customer.name}"
 
     def save(self, *args, **kwargs):
-        # Set price per unit based on the product's price
-        self.price_per_unit = self.product.price
-        
-        # Calculate total price
-        self.total_price = self.quantity * self.price_per_unit
+    # Ensure price per unit is greater than product price
+     if self.product:  # Ensure product exists
+        if self.price_per_unit <= self.product.price:
+            self.price_per_unit = self.product.price * 1.1  # Example: Set 10% higher than base price
 
-        # Apply discount
-        discount_amount = (self.total_price * self.discount) / 100
-        self.final_total = self.total_price - discount_amount
-        
-        super(Order, self).save(*args, **kwargs)
+      # Ensure discount is a valid float
+     try:
+        self.discount = float(self.discount) if self.discount else 0.00
+     except (ValueError, TypeError):
+        self.discount = 0.00  # Default to 0.00 if invalid      
+
+    # Calculate total price
+     self.total_price = self.quantity * self.price_per_unit
+
+    # Apply discount
+     discount_amount = (self.total_price * self.discount) / 100.00
+     self.final_total = self.total_price - discount_amount
+
+     super().save(*args, **kwargs)  # Call parent save method
+
+    
 
 
 class Stock(models.Model):
@@ -78,3 +88,15 @@ class Stock(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.total_stock}"
+    
+class StockTransaction(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    initial_stock = models.IntegerField()
+    added_stock = models.IntegerField(default=0)
+    ordered_stock = models.IntegerField(default=0)
+    total_stock = models.IntegerField(default=0)
+    final_stock = models.IntegerField()
+    transaction_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.transaction_date}"

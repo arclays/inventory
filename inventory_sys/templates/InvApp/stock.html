@@ -1,10 +1,11 @@
-
 {% extends "InvApp/layout.html" %}
-<title>{% block title %} stock {%endblock%}</title>
+
+{% block title %}Stock{% endblock %}
+
 {% block content %}
 <div class="container mt-5 pt-5">
 
-    <h5>stock updates on {{ selected_date }}</h5>
+    <h5>Stock updates on {{ selected_date }}</h5>
 
     <!-- Date Picker -->
     <form method="GET" action="{% url 'stock' %}">
@@ -14,159 +15,152 @@
                 <input type="date" class="form-control" id="orderDate" name="orderDate" value="{{ selected_date }}">
             </div>
             <div class="col-md-3 mt-3">
-                <button type="submit" class="btn btn-primary">View stock by date</button>
+                <button type="submit" class="btn btn-primary">View Stock by Date</button>
             </div>
         </div>
     </form>
-    <h2 class="mt-2 fw-bold"
-    >Stock</h2>
-    <div>
-        <button class="btn btn-primary mb-0" data-bs-toggle="modal" data-bs-target="#addStockModal">Add stock</button>
-        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#stockTransactionModal">
-            Stock Transaction
-        </button>
-        <button class="btn btn-secondary" onclick="printStockTable()">Print Stock Table</button>
 
-        <!-- <button class="btn btn-primary mb-0 float-end" data-bs-toggle="modal" data-bs-target="#addStockModal"><a href="{% url 'stock_change' %} "> Stock Changes</a></button> -->
-    </div>
-    <table class="table table-striped mt-3 text-center display nowrap" id="stockTable">
-        <thead class="table-header">   
-            <tr>
-                <th>No</th>
-                <th>Product Name</th>
-                <th>Initial Stock</th>
-                <th>New Stock</th>
-                <th>Total Stock</th>
-                <th>Stock Date</th>
-                <th>Expiry Date</th>
-                <th>Supplier</th>
-                <th>Category</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for stock in stocks %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ stock.product.name }}</td>
-                <td>{{ stock.initial_stock }}</td>
-                <td>{{ stock.new_stock }}</td>
-                <td>{{ stock.total_stock }}</td>
-                <td>{{ stock.stock_date }}</td>
-                <td>{{ stock.expiry_date}}</td>
-                <td>{{ stock.product.supplier }}</td>
-                <td>{{ stock.product.category }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h2 class="mt-2 fw-bold">Stock</h2>
     
+    <div class="mb-3">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStockModal">Add Stock</button>
+        <button class="btn btn-secondary" onclick="printStockTable()">Print Stock Table</button>
+        <button id="toggleStockView" class="btn btn-primary">View Stock Transactions</button>
+    </div>
+
+    <!-- Default Stock Table -->
+    <div id="defaultStockTable">
+        <table class="table mt-3 text-center" id="stockTable">
+            <thead class="table-header">   
+                <tr>
+                    <th>No</th>
+                    <th>Product Name</th>
+                    <th>Initial Stock</th>
+                    <th>New Stock</th>
+                    <th>Total Stock</th>
+                    <th>Stock Date</th>
+                    <th>Expiry Date</th>
+                    <th>Supplier</th>
+                    <th>Category</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stock in stocks %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ stock.product.name }}</td>
+                    <td>{{ stock.initial_stock }}</td>
+                    <td>{{ stock.new_stock }}</td>
+                    <td>{{ stock.total_stock }}</td>
+                    <td>{{ stock.stock_date }}</td>
+                    <td>{{ stock.expiry_date }}</td>
+                    <td>{{ stock.product.supplier }}</td>
+                    <td>{{ stock.product.category }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Stock Transactions Table (Initially Hidden) -->
+    <div id="stockTransactionTable" style="display: none;">
+        <h3>Stock Transactions</h3>
+        <table class="table table-bordered text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>No</th>
+                    <th>Product Name</th>
+                    <th>Initial Stock</th>
+                    <th>Added Stock</th>
+                    <th>Ordered Stock</th>
+                    <th>Total Stock</th>
+                    <th>Final Stock</th>
+                </tr>
+            </thead>
+            <tbody id="stockTransactionsBody">
+                <tr>
+                    <td colspan="7">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
     <nav aria-label="Page navigation">
-        <ul class="pagination">
-            <li class="page-item"><a class="page-link" href="#">Previous</a></li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">Next</a></li>
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+            {% endif %}
+            
+            <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                </li>
+            {% endif %}
         </ul>
     </nav>
- <!-- Add Stock Modal -->
-<div class="modal fade" id="addStockModal" tabindex="-1" role="dialog" aria-labelledby="addStockModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <form method="POST" action="{% url 'add_stock' %}">
-                {% csrf_token %}
-                <div class="modal-header">
-                    <h5 class="modal-title text-white" id="addStockModalLabel">Add Stock</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <h1 class="modal-title mb-1">Add stock</h1>
+    {% endif %}
 
-                    <div class="form-group mb-3">
-                        <label for="productName">Product Name</label>
-                        <select id="productName" name="product_id" class="form-control" required>
-                            <option value="">Select a product</option>
-                            {% for product in products %}
-                                <option value="{{ product.product_id }}">{{ product.name }}</option>
-                            {% endfor %}
-                        </select>
+    <!-- Add Stock Modal -->
+    <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'add_stock' %}">
+                    {% csrf_token %}
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="addStockModalLabel">Add Stock</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    
-                    <div class="form-group mb-3">
-                        <label for="newStock">New Stock</label>
-                        <input type="number" id="newStock" name="newStock" class="form-control" required>
+                    <div class="modal-body">
+                        <h1 class="modal-title mb-3">Add Stock</h1>
+
+                        <div class="form-group mb-3">
+                            <label for="productName">Product Name</label>
+                            <select id="productName" name="product_id" class="form-control" required>
+                                <option value="">Select a product</option>
+                                {% for product in products %}
+                                    <option value="{{ product.product_id }}">{{ product.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="newStock">New Stock</label>
+                            <input type="number" id="newStock" name="newStock" class="form-control" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="stockDate">Stock Date</label>
+                            <input type="date" id="stockDate" name="stockDate" class="form-control" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="expiryDate">Expiry Date</label>
+                            <input type="date" id="expiryDate" name="expiryDate" class="form-control" required>
+                        </div>
                     </div>
 
-
-                    
-                    <div class="form-group mb-3">
-                        <label for="stockDate">Stock Date</label>
-                        <input type="date" id="stockDate" name="stockDate" class="form-control" required>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add Stock</button>
                     </div>
-
-                    
-                    <div class="form-group mb-3">
-                        <label for="expiryDate">Expiry Date</label>
-                        <input type="date" id="expiryDate" name="expiryDate" class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Add Stock</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Stock Transaction Modal -->
-<div class="modal fade" id="stockTransactionModal" tabindex="-1" aria-labelledby="stockTransactionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="stockTransactionModalLabel">Stock Transaction Changes</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <h2>Stock Transaction Changes</h2>
-                <table class="table table-striped mt-3 text-center display nowrap" id="stockTable">
-                    <thead class="table-header">
-                        <tr>
-                            <th>No</th>
-                            <th>Product Name</th>
-                            <th>Initial Stock</th>
-                            <th>Added Stock</th>
-                            <th>Ordered Stock</th>
-                            <th>Total Stock</th>
-                            <th>Final Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for stock in stock_transactions %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ stock.product_name }}</td>
-                            <td>{{ stock.initial_stock }}</td>
-                            <td>{{ stock.added_stock }}</td>
-                            <td>{{ stock.ordered_stock }}</td>
-                            <td>{{ stock.total_stock }}</td>
-                            <td>{{ stock.final_stock }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7">No stock transactions found.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                </form>
             </div>
         </div>
     </div>
-</div>
-
-<!-- Button to Open Modal -->
-
-
 
 </div>
 {% endblock %}
-

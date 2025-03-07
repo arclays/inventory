@@ -1,7 +1,7 @@
 from django import forms
 from .models import Product
 from django.contrib.auth.models import User
-from .models import Customer
+from .models import Customer, Order
 
 class ProductForm(forms.ModelForm):
     class Meta:
@@ -51,6 +51,11 @@ class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
         fields = ['name', 'email', 'phone']
+
+class OrderForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = '__all__'        
 
         
 

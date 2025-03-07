@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'inventory_sys',
     'crispy_forms',
     'crispy_bootstrap5',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -51,7 +52,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
 
 ROOT_URLCONF = 'inventory.urls'
 
@@ -132,3 +135,7 @@ LOGIN_REDIRECT_URL = 'home'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
+CORS_ORIGIN_ALLOW_ALL = True 
+
+LOGIN_URL = 'login'
+LOGOUT_REDIRECT_URL = 'login'
