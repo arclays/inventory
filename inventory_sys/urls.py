@@ -12,7 +12,7 @@ urlpatterns = [
     path('protected/', views.ProtectedView.as_view(), name='protected'),
     path('customers/', views.customer_list, name='customer_list'),
     path('stock/', views.stock_view, name='stock'),
-    path('stockchange/', views.stock_change, name='stock_change'),
+    # path('stockchange/', views.stock_change, name='stock_change'),
     path('add-stock/', views.add_stock, name='add_stock'),
     path('products/', views.product_list, name='product_list'),
     path('products/update/<int:product_id>/', views.product_update, name='product_update'),
@@ -21,8 +21,9 @@ urlpatterns = [
     path('products/delete/<int:product_id>/', views.product_confirm_delete, name='product_confirm_delete'),
     path('order/', views.order_page, name='order_page'),
     path('place_order/', views.place_order, name='place_order'),
-    path('report/', views.report, name='report'),
-    path('stock-transactions-api/', views.stock_transaction_api, name='stock_transaction_api'),
+    path('report/', views.report_page, name='report'),
+    path('stock/add/', views.add_stock, name='add_stock'),
+    path('report/adjust/', views.adjust_stock, name='adjust_stock'),
    
 
    

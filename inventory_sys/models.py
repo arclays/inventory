@@ -10,6 +10,11 @@ class Product(models.Model):
     units = models.CharField(max_length=50, default='pcs') 
     quantity_in_stock = models.IntegerField()
     supplier = models.CharField(max_length=100)
+    reorder_level = models.PositiveIntegerField(default=40)  # Set a default reorder level
+    reorder_quantity = models.PositiveIntegerField(default=50) 
+
+    def is_low_stock(self):
+        return self.quantity_in_stock <= self.reorder_level
 
     def __str__(self):
         return self.name
@@ -89,14 +94,14 @@ class Stock(models.Model):
     def __str__(self):
         return f"{self.product.name} - {self.total_stock}"
     
-class StockTransaction(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    initial_stock = models.IntegerField()
-    added_stock = models.IntegerField(default=0)
-    ordered_stock = models.IntegerField(default=0)
-    total_stock = models.IntegerField(default=0)
-    final_stock = models.IntegerField()
-    transaction_date = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.product.name} - {self.transaction_date}"
+class StockAdjustment(models.Model):
+    ADJUSTMENT_TYPES = (
+        ('add', 'Addition'),
+        ('subtract', 'Subtraction')
+    )
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    adjustment_type = models.CharField(max_length=10, choices=ADJUSTMENT_TYPES)
+    quantity = models.IntegerField()
+    reason = models.TextField()
+    adjustment_date = models.DateField(default=timezone.now)

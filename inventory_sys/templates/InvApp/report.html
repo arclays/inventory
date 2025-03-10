@@ -1,127 +1,193 @@
 
+
 {% extends "InvApp/layout.html" %}
-<title>{% block title %}reports{% endblock %}</title>
+<title>{% block title %}Stock & Inventory Report{% endblock %}</title>
 
 {% block content %}
 <div class="container mt-5 pt-5">
-<div class="container mt-4">
-    <h3>Report for {{ selected_date }}</h3>
+    <h3>Stock & Inventory Report - {{ selected_date|default:"All Dates" }}</h3>
+    <p><strong>Generated on:</strong> {{ current_time }}</p>
 
+    <!-- Date Filter Form -->
     <form method="GET" class="d-flex mb-3">
         <input type="date" name="date" class="form-control w-25" value="{{ selected_date }}">
         <button type="submit" class="btn btn-primary ms-2">View Report</button>
-    </form>
-
+    
+    <button type="button" class="btn btn-warning px-3" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal">
+        Adjust Stock
+      </button></form>
+    <strong><p class="text-muted">Note: This report includes stock transactions for the selected date, if any.</p>
+    </strong>
+    <!-- Stock Summary -->
     <div class="row">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5>Total Customers</h5>
-                    <h3>{{ total_customers }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card bg-success text-white">
                 <div class="card-body">
-                    <h5>Total Orders</h5>
-                    <h3>{{ total_orders }}</h3>
+                    <h5>Stock In (Received)</h5>
+                    <h3>{{ total_stock_in }}</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <h5>Total Quantity Ordered</h5>
-                    <h3>{{ total_quantity }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card bg-danger text-white">
                 <div class="card-body">
-                    <h5>Total Earnings</h5>
-                    <h3>${{ total_earnings|floatformat:2 }}</h3>
+                    <h5>Stock Out (Used/Sold)</h5>
+                    <h3>{{ total_stock_out }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>Closing Stock</h5>
+                    <h3>{{ closing_stock }}</h3>
                 </div>
             </div>
         </div>
     </div>
-
-    <h4 class="mt-4">Orders</h4>
+    
+    <!-- Stock Details -->
+    <h4 class="mt-4">Stock Transactions</h4>
     <table class="table table-bordered">
-        <thead class="table-success">
+        <thead class="table-primary">
             <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
+                <th>No</th>
                 <th>Product</th>
-                <th>Quantity</th>
-                <th>Units</th>
-                <th>Price per Unit</th>
-                <th>Total Price</th>
-                <th>Payment Method</th>
-                <th>Discount (%)</th>
-                <th>Final Total</th>
-                <th>Order Date</th>
+                <th>Stock In</th>
+                <th>Stock Out</th>
+                <th>Opening Stock</th>
+                <th>Adjustments</th>
+                <th>Closing Stock</th>
             </tr>
         </thead>
         <tbody>
-            {% for order in orders %}
+            {% for entry in stock_entries %}
             <tr>
-                <td>{{ order.id }}</td>
-                <td>{{ order.customer }}</td>
-                <td>{{ order.product }}</td>
-                <td>{{ order.quantity }}</td>
-                <td>{{ order.units }}</td>
-                <td>${{ order.price_per_unit }}</td>
-                <td>${{ order.total_price }}</td>
-                <td>{{ order.payment_method }}</td>
-                <td>{{ order.discount }}%</td>
-                <td>${{ order.final_total }}</td>
-                <td>{{ order.order_date }}</td>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ entry.product_name }}</td>
+                <td>{{ entry.stock_in }}</td>
+                <td>{{ entry.stock_out }}</td>
+                <td>{{ entry.opening_stock }}</td>
+                <td>{{ entry.adjustments }}</td>
+                <td>{{ entry.closing_stock }}</td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="11" class="text-center">No orders found for this date.</td>
+                <td colspan="7" class="text-center">No stock transactions recorded for this date.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <h4 class="mt-4">Stock</h4>
+    <!-- Reorder Alerts -->
+    <h4 class="mt-4">Reorder Alerts</h4>
+    <table class="table table-bordered">
+        <thead class="table-warning">
+            <tr>
+                <th>Product</th>
+                <th>Current Stock</th>
+                <th>Reorder Level</th>
+                <th>Suggested Reorder Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in low_stock_items %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.quantity_in_stock }}</td>
+                <td>{{ item.reorder_level }}</td>
+                <td>{{ item.reorder_quantity }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">No low stock items.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+        
+    <!-- Sales Summary -->
+    <h4 class="mt-4">Sales Summary</h4>
+    <p><strong>Total Sales:</strong> ${{ total_orders }}</p>
+    <p><strong>Total Revenue:</strong> ${{ total_quantity }}</p>
+
+    <!-- Stock Adjustments -->
+    <h4 class="mt-4">Stock Adjustments</h4>
     <table class="table table-bordered">
         <thead class="table-dark text-white">
             <tr>
-                <th>No</th>
-                <th>Product Name</th>
-                <th>Initial Stock</th>
-                <th>New Stock</th>
-                <th>Total Stock</th>
-                <th>Stock Date</th>
-                <th>Expiry Date</th>
-                <th>Supplier</th>
-                <th>Category</th>
+                <th>Product</th>
+                <th>Adjustment Type</th>
+                <th>Quantity</th>
+                <th>Date</th>
+                <th>Reason</th>
             </tr>
         </thead>
         <tbody>
-            {% for stock in stock_entries %}
+            {% for adjustment in stock_adjustments %}
             <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ stock.product.name }}</td>
-                <td>{{ stock.initial_stock }}</td>
-                <td>{{ stock.new_stock }}</td>
-                <td>{{ stock.total_stock }}</td>
-                <td>{{ stock.stock_date }}</td>
-                <td>{{ stock.expiry_date }}</td>
-                <td>{{ stock.product.supplier }}</td>
-                <td>{{ stock.product.category }}</td>
+                <td>{{ adjustment.product_name }}</td>
+                <td>{{ adjustment.transaction_type }}</td>
+                <td>{{ adjustment.quantity }}</td>
+                <td>{{ adjustment.date }}</td>
+                <td>{{ adjustment.reason }}</td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="9" class="text-center">No stock entries found for this date.</td>
+                <td colspan="5" class="text-center">No stock adjustments recorded.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    <!-- Modal for Stock Adjustment -->
+    <div class="modal fade" id="stockAdjustmentModal" tabindex="-1" aria-labelledby="stockAdjustmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="stockAdjustmentModalLabel">Stock Adjustment</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form method="POST"  action="{% url 'adjust_stock' %}">
+                {% csrf_token %}
+                <div class="form-group mb-3">
+                    <label for="productName">Product Name </label>
+                    <select id="productName" name="product_id" class="form-control" required>
+                        <option value="">Select a product</option>
+                        {% for product in products %}
+                            <option value="{{ product.product_id }}">{{ product.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group mb-3">
+                  <label for="adjustment_type" class="form-label">Adjustment Type</label>
+                  <select class="form-select" id="adjustment_type" name="adjustment_type" required>
+                    <option value="add">Add Stock</option>
+                    <option value="subtract">Subtract Stock</option>
+                  </select>
+                </div>
+                <div class="form-group mb-3">
+                  <label for="quantity" class="form-label">Quantity</label>
+                  <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="adjustmentDate">Adjustment Date</label>
+                    <input type="date" id="adjustmentDate" name="adjustmentDate" class="form-control" required>
+                </div>
+                <div class="form-group mb-3">
+                  <label for="reason" class="form-label">Reason</label>
+                  <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Apply Adjustment</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
 </div>
-{% endblock %}
 
+{% endblock %}

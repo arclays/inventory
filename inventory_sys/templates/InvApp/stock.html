@@ -23,9 +23,8 @@
     <h2 class="mt-2 fw-bold">Stock</h2>
     
     <div class="mb-3">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStockModal">Add Stock</button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStockModal">Add New Stock</button>
         <button class="btn btn-secondary" onclick="printStockTable()">Print Stock Table</button>
-        <button id="toggleStockView" class="btn btn-primary">View Stock Transactions</button>
     </div>
 
     <!-- Default Stock Table -->
@@ -36,8 +35,8 @@
                     <th>No</th>
                     <th>Product Name</th>
                     <th>Initial Stock</th>
-                    <th>New Stock</th>
-                    <th>Total Stock</th>
+                    <th>New Stock</th> 
+                    <th>Total Stock</th> 
                     <th>Stock Date</th>
                     <th>Expiry Date</th>
                     <th>Supplier</th>
@@ -61,58 +60,6 @@
             </tbody>
         </table>
     </div>
-
-    <!-- Stock Transactions Table (Initially Hidden) -->
-    <div id="stockTransactionTable" style="display: none;">
-        <h3>Stock Transactions</h3>
-        <table class="table table-bordered text-center">
-            <thead class="table-dark">
-                <tr>
-                    <th>No</th>
-                    <th>Product Name</th>
-                    <th>Initial Stock</th>
-                    <th>Added Stock</th>
-                    <th>Ordered Stock</th>
-                    <th>Total Stock</th>
-                    <th>Final Stock</th>
-                </tr>
-            </thead>
-            <tbody id="stockTransactionsBody">
-                <tr>
-                    <td colspan="7">Loading...</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    {% if page_obj.has_other_pages %}
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1">First</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-                </li>
-            {% endif %}
-            
-            <li class="page-item disabled">
-                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-            </li>
-            
-            {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
 
     <!-- Add Stock Modal -->
     <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
@@ -161,6 +108,5 @@
             </div>
         </div>
     </div>
-
 </div>
 {% endblock %}
