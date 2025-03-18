@@ -2,14 +2,14 @@
 <title>{% block title %}Orders{% endblock %}</title>
 
 {% block content %}
-<div class="container mt-5 pt-5">
-    <h2>Orders on {{ selected_date }}</h2>
+<div class="container-fluid pt-5">
+    <h2 class="text-primary fw-bold">Orders on {{ selected_date }}</h2>
 
     <!-- Date Picker -->
     <form method="GET" action="{% url 'order_page' %}">
         <div class="row align-items-center">
             <div class="mb-3 col-md-3">
-                <label for="orderDate" class="form-label">Select Date</label>
+                <label for="orderDate" class="form-label fw-bold">Select Date</label>
                 <input type="date" class="form-control" id="orderDate" name="orderDate" value="{{ selected_date }}">
             </div>
             <div class="col-md-3 mt-3">
@@ -20,7 +20,7 @@
 
     <div class="row mb-1">
         <div class="col-md-3">
-            <div class="card text-white bg-primary mb-3">
+            <div class="card text-white bg-info mb-3">
                 <div class="card-header">Total Customers</div>
                 <div class="card-body">
                     <h5 class="card-title">{{ total_customers }}</h5>
@@ -28,7 +28,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-white bg-success mb-3">
+            <div class="card text-white bg-primary mb-3">
                 <div class="card-header">Total Orders</div>
                 <div class="card-body">
                     <h5 class="card-title">{{ total_orders }}</h5>
@@ -36,7 +36,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-white bg-warning mb-3">
+            <div class="card text-white bg-info mb-3">
                 <div class="card-header">Total Quantity</div>
                 <div class="card-body">
                     <h5 class="card-title">{{ total_quantity }}</h5>
@@ -54,7 +54,7 @@
     </div>
 
     <!-- Place Order Button and Modal Trigger -->
-    <button class="btn btn-success mb-1" data-bs-toggle="modal" data-bs-target="#placeOrderModal">Place New Order</button>
+    <button class="btn btn-primary mb-1" data-bs-toggle="modal" data-bs-target="#placeOrderModal">Place New Order</button>
 
     <!-- Order Table -->
     <table class="table table-striped mt-3 text-center">
@@ -165,7 +165,7 @@
                     </div>
 
                     <!-- Add More Products Button -->
-                    <button type="button" id="add-product" class="btn btn-success w-100 mb-3">+ Add Another Product</button>
+                    <button type="button" id="add-product" class="btn btn-primary w-100 mb-3">+ Add Another Product</button>
 
                     <!-- Order Date -->
                     <div class="form-group mb-2">

@@ -9,84 +9,53 @@
     <!-- App favicon -->
     <link rel="shortcut icon" href="{% static 'assets/images/favicon.ico' %}" />
 
-    <!-- CSS Files -->
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/styles.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/style/style.css' %}">
+
+    <!-- Bootstrap & Custom CSS -->
     <link rel="stylesheet" href="{% static 'assets/css/bootstrap.min.css' %}" />
     <link rel="stylesheet" href="{% static 'assets/css/icons.min.css' %}" />
     <link rel="stylesheet" href="{% static 'assets/css/app.min.css' %}" />
   </head>
 
   <body>
-    <div class="home-btn d-none d-sm-block">
-      <a href="{% url 'home' %}" class="text-dark">
-        <i class="fas fa-home h2"></i>
-      </a>
-    </div>
-    <div class="account-pages my-5 pt-5">
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-md-8 col-lg-6 col-xl-4">
-            <div class="card overflow-hidden">
-              <div class="bg-success">
-                <div class="text-center p-4">
-                  <h5 class="text-white font-size-20">Welcome Back!</h5>
-                  <p class="text-white-50">Sign in to continue!</p>
-                  <a href="{% url 'home' %}" class="logo">
-                    <img src="{% static 'assets/images/logo-sm.png' %}" height="24" alt="Logo" />
-                  </a>
-                </div>
-              </div>
+    <div class="login-container">
+      <div class="login-header">
+        <img src="{% static 'assets/images/logo-sm.png' %}" alt="Logo" height="40" />
+        <h3 class="text-primary fw-bold">Welcome Back</h3>
+        <p class="text-white-50">Sign in to continue</p>
+      </div>
 
-              <div class="card-body p-4">
-                <form action="{% url 'login' %}" method="POST" class="mt-4">
-                  {% csrf_token %}
-                  <input type="hidden" name="next" value="{% url 'home' %}" />
-                  <!-- <input type="hidden" name="next" value="{{ next }}" /> -->
+      <form action="{% url 'login' %}" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'home' %}" />
 
-                  
-                  <div class="mb-3">
-                    <label class="form-label" for="username">Username</label>
-                    <input type="text" name="username" class="form-control" id="username" placeholder="Enter username" required />
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label" for="userpassword">Password</label>
-                    <input type="password" name="password" class="form-control" id="userpassword" placeholder="Enter password" required />
-                  </div>
-
-                  {% if error %}
-                  <div class="error text-danger">{{ error }}</div>
-                  {% endif %}
-
-                  <div class="mb-2 row">
-                    <div class="col-sm-6 text-end">
-                      <button class="btn btn-success w-md waves-effect waves-light" type="submit">
-                        Log In
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="mt-2 mb-0 row">
-                    <div class="col-12 mt-2">
-                      <a href="" class="text-success">
-                        <i class="mdi mdi-lock"></i> Forgot your password?
-                      </a>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            <div class="mt-3 text-center">
-              <p>Don't have an account?
-                <a href="{% url 'register' %}" class="fw-medium text-success">
-                  Signup now
-                </a>
-              </p>
-            </div>
-          </div>
+        <div class="mb-3">
+          <label for="username" class="form-label text-white">Username</label>
+          <input type="text" name="username" class="form-control" id="username" placeholder="Enter username" required />
         </div>
+
+        <div class="mb-3">
+          <label for="userpassword" class="form-label text-white">Password</label>
+          <input type="password" name="password" class="form-control" id="userpassword" placeholder="Enter password" required />
+        </div>
+
+        {% if error %}
+        <div class="error text-danger text-center">{{ error }}</div>
+        {% endif %}
+
+        <button type="submit" class="btn-login">Log In</button>
+      </form>
+
+      <div class="forgot-password">
+        <a href="#">Forgot your password?</a>
+      </div>
+
+      <div class="register-link">
+        <p>Don't have an account? <a href="{% url 'register' %}">Signup now</a></p>
       </div>
     </div>
+
     <!-- JAVASCRIPT -->
     <script src="{% static 'assets/libs/jquery/jquery.min.js' %}"></script>
     <script src="{% static 'assets/libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>

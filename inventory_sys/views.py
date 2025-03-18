@@ -23,7 +23,13 @@ from django.shortcuts import get_object_or_404
 # @login_required
 def home_view(request):
     orders = Order.objects.all()
-    return render(request, 'Invapp/home.html', {'orders': orders})
+    products = Product.objects.all()
+    orders = Order.objects.all()
+    stocks = Stock.objects.all()
+    low_stock_items = Product.objects.filter(quantity_in_stock__lt=F('reorder_level')).values(
+        'name', 'quantity_in_stock','reorder_level','reorder_quantity'
+    )
+    return render(request, 'Invapp/home.html', {'orders': orders, 'products': products,'stocks': stocks, 'low_stock_items': low_stock_items})
 
 
 def register_view(request):
@@ -85,6 +91,7 @@ def product_list(request):
             return redirect('product_list')
     else:
         form = ProductForm()
+    
 
     return render(request, 'Invapp/product_list.html', {'page_obj': page_obj, 'form': form})
 
@@ -107,7 +114,7 @@ def customer_list(request):
 
 
 def customer_edit(request, customer_id):
-    customer = get_object_or_404(Customer, customer_id=customer_id) 
+    customer = get_object_or_404(Customer, id=customer_id) 
     if request.method == 'POST':
         form = CustomerForm(request.POST, instance=customer) 
         if form.is_valid():
@@ -119,7 +126,7 @@ def customer_edit(request, customer_id):
     return render(request, 'Invapp/customer_edit.html', {'form': form})
 
 def customer_confirm_delete(request, customer_id):
-    customer = get_object_or_404(Customer, customer_id=customer_id)
+    customer = get_object_or_404(Customer, id=customer_id)
     if request.method == 'POST':
         customer.delete()
         messages.success(request, 'Customer deleted successfully!')
@@ -162,13 +169,13 @@ def order_page(request):
     customers = Customer.objects.all()
     products = Product.objects.all()
 
-    paginator = Paginator(orders, 8)  # Show 10 orders per page
+    paginator = Paginator(orders, 8) 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     context = {
-        'orders': page_obj,  # Use paginated orders instead of full list
-        'page_obj': page_obj,  # Pass pagination object
+        'orders': page_obj, 
+        'page_obj': page_obj,  
         'total_customers': total_customers,
         'total_orders': total_orders,
         'total_cash_made': total_cash_made,
@@ -183,9 +190,7 @@ def order_page(request):
 
 def place_order(request):
     if request.method == 'POST':
-        # print(request.POST)
-        customer_id = request.POST.get('orderCustomer')
-        # product_id = request.POST.get('orderProduct') 
+        customer_id = request.POST.get('orderCustomer') 
         quantity = request.POST.get('orderQuantity')
 
         products = request.POST.getlist('products[]')
@@ -196,7 +201,6 @@ def place_order(request):
 
 
         product_list = []
-        # total_amount=0
         for i in range(len(products)):
             order = {
                 'product_id': products[i],
@@ -213,15 +217,13 @@ def place_order(request):
 
         customer = Customer.objects.get(id=customer_id)
 
-        # Retrieve payment method and discount from the form
-        payment_method = request.POST.get('paymentMethod', 'cash')  # Default to 'cash' if not provided
-        discount = request.POST.get('discount', '0.00')  # Default to '0' if not provided
-
-        # Convert discount to float (handles potential string input errors)
+        payment_method = request.POST.get('paymentMethod', 'cash')  
+        discount = request.POST.get('discount', '0.00') 
+        # Convert discount to float 
         try:
             discount = float(discount)
         except ValueError:
-            discount = 0.0  # Fallback to 0.0 if conversion fails
+            discount = 0.0 
 
 
 
@@ -234,13 +236,12 @@ def place_order(request):
             quantity = item['quantity']
             
 
-            # Check if product has enough stock
             product = Product.objects.get(product_id=product_id)
             quantity = int(quantity)
             if quantity <= 0 or quantity > product.quantity_in_stock:
                 pass
             else:
-                # Create Order Item
+                # Create Order 
                Order.objects.create(
                    customer=customer,
                    product=product,
@@ -248,11 +249,11 @@ def place_order(request):
                    price_per_unit=unit_price,
                    total_price=total_price,
                    units=unit_id,
-                   payment_method=payment_method,  # Ensure this is provided
-                   discount=discount,  # Ensure this is provided
+                   payment_method=payment_method, 
+                   discount=discount,  
 )
 
-                # Deduct from product stock
+                # Deduct  stock
         product.quantity_in_stock -= quantity
         product.save()
 
@@ -288,9 +289,7 @@ def add_stock(request):
         new_stock = request.POST.get('newStock')
         expiry_date = request.POST.get('expiryDate')
 
-        
 
-    # Ensure we use the correct field name
         product = get_object_or_404(Product, product_id=product_id)  
 
         initial_stock = product.quantity_in_stock  
@@ -304,7 +303,6 @@ def add_stock(request):
             stock.total_stock = total_stock
             stock.save()
 
-        # Save to Stock table
         Stock.objects.create(
             product=product,
             initial_stock=initial_stock,
@@ -313,22 +311,13 @@ def add_stock(request):
             stock_date=timezone.now().date(),
             expiry_date=expiry_date,
         )
-
         return redirect('stock')
+    
+    total_new_stock = Stock.objects.aggregate(total=Sum('new_stock'))['total'] or 0
 
-    # Fetch all products for dropdown
     products = Product.objects.all()
-    return render(request, 'InvApp/stock.html', {'products': products})
-
-def apply_adjustment(self):
-        """Updates the stock levels based on the adjustment."""
-        if self.adjustment_type == 'add':
-            self.product.quantity_in_stock += self.quantity
-        elif self.adjustment_type == 'subtract':
-            self.product.quantity_in_stock -= self.quantity
-            if self.product.quantity_in_stock < 0:
-                self.product.quantity_in_stock = 0  # Prevent negative stock
-        self.product.save()
+    return render(request, 'InvApp/stock.html', {'products': products, 'total_new_stock': total_new_stock})
+   
 
 def adjust_stock(request):
     if request.method == 'POST':
@@ -341,7 +330,7 @@ def adjust_stock(request):
         # Check if product_id is empty
         if not product_id:
             messages.error(request, "Please select a valid product.")
-            return redirect('stock')
+            return redirect('report')
 
         try:
             quantity = int(quantity)
@@ -353,22 +342,20 @@ def adjust_stock(request):
 
         if adjustment_type not in ["add", "subtract"]:
             messages.error(request, "Invalid adjustment type.")
-            return redirect('stock')
+            return redirect('report')
 
-        product = get_object_or_404(Product, id=product_id)
+        product = get_object_or_404(Product, product_id=product_id) 
 
-        # Ensure sufficient stock before subtracting
         if adjustment_type == "subtract" and product.quantity_in_stock < quantity:
             messages.error(request, "Not enough stock to subtract.")
             return redirect('stock')
 
-        # Convert adjustment_date to DateTime object if provided
         if adjustment_date:
             try:
                 adjustment_date = datetime.strptime(adjustment_date, "%Y-%m-%d").date()
             except ValueError:
                 messages.error(request, "Invalid date format.")
-                return redirect('stock')
+                return redirect('report')
         else:
             adjustment_date = datetime.today().date()
 
@@ -380,37 +367,82 @@ def adjust_stock(request):
             adjustment_date=adjustment_date
         )
 
-        # Apply the stock change
+        # Apply changes
         adjustment.apply_adjustment()
-
-        messages.success(request, "Stock adjustment applied successfully.")
-        return redirect('stock')
+        return redirect('report')
 
   
     products = Product.objects.all()
     return render(request, 'InvApp/adjust_stock.html', {'products': products})
 
+
+
 def report_page(request):
     selected_date = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
 
-    # Fetch orders and stock entries for the selected date
     orders = Order.objects.filter(order_date=selected_date)
+    
+    # Order 
+    total_customers = orders.values('customer').distinct().count()
+    total_orders = orders.count()
+    total_cash_made = sum(order.final_total for order in orders)
+    total_quantity = orders.aggregate(total=Sum('quantity'))['total'] or 0
+
+
     stock_entries = Stock.objects.filter(stock_date=selected_date)
-
-    # Fetch all products
-    products = Product.objects.all()
-
-    # Fetch products where current stock is below the reorder level
+    stock_adjustments = StockAdjustment.objects.filter(adjustment_date=selected_date)
+    
     low_stock_items = Product.objects.filter(quantity_in_stock__lt=F('reorder_level')).values(
         'name', 'quantity_in_stock', 'reorder_level', 'reorder_quantity'
     )
+
+    stock_transactions = []
+    products = Product.objects.all()
+
+    for product in products:
+
+        stock_in = stock_entries.filter(product=product).aggregate(Sum('new_stock'))['new_stock__sum'] or 0
+        stock_out = orders.filter(product=product).aggregate(Sum('quantity'))['quantity__sum'] or 0
+        adjustments = stock_adjustments.filter(product=product).aggregate(Sum('quantity'))['quantity__sum'] or 0
+        opening_stock= stock_entries.filter(product=product).aggregate(Sum('initial_stock'))['initial_stock__sum'] or 0
+        closing_stock = product.quantity_in_stock
+
+        total_new_stock = Stock.objects.aggregate(total=Sum('new_stock'))['total'] or 0
+        total_adjustments = StockAdjustment.objects.filter(adjustment_type='add').aggregate(total=Sum('quantity'))['total'] or 0
+        total_stock_in = total_new_stock + total_adjustments 
+        tol_adjustments = StockAdjustment.objects.filter(adjustment_type='subtract').aggregate(total=Sum('quantity'))['total'] or 0
+        stock_out = total_quantity + tol_adjustments
+
+        total_quantity_in_stock = Product.objects.aggregate(total_stock=Sum('quantity_in_stock'))['total_stock']
+
+        
+        stock_transactions.append({
+            'product_name': product.name,
+            'stock_in': stock_in,
+            'stock_out': stock_out,
+            'opening_stock': opening_stock,
+            'adjustments': adjustments,
+            'closing_stock': closing_stock,
+        })
 
     context = {
         'selected_date': selected_date,
         'orders': orders,
         'stock_entries': stock_entries,
+        'stock_out': stock_out,
         'products': products, 
-        'low_stock_items': low_stock_items
+        'total_customers': total_customers,
+        'total_orders': total_orders,
+        'total_cash_made': total_cash_made,
+        'total_quantity': total_quantity,
+        'stock_adjustments': stock_adjustments,
+        'low_stock_items': low_stock_items,
+        'stock_transactions': stock_transactions,
+        'total_new_stock': total_new_stock,
+        'total_quantity_in_stock': total_quantity_in_stock,
+        'total_adjustments': total_adjustments,
+        'total_stock_in': total_stock_in,
     }
+
 
     return render(request, 'InvApp/report.html', context)

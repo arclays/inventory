@@ -1,8 +1,8 @@
 {% extends "InvApp/layout.html" %}
 <title>{% block title %} Products {% endblock %}</title>
 {% block content %}
-<div class="container" style="margin-top: 80px">
-  <h2>Product List</h2>
+<div class="container-fluid pt-5">
+  <h2 class="text-primary fw-bold">Product List</h2>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
         Add Product
     </button>
@@ -33,7 +33,6 @@
                 <tr>
                     <th>Product_ID</th>
                     <th>ProductName</th>
-                    <th>SKU</th>
                     <th>Price</th>
                     <th> Available stock</th>
                     <th>Supplier</th>
@@ -47,7 +46,6 @@
                 <tr>
                     <td>{{ product.product_id }}</td>
                     <td>{{ product.name }}</td>
-                    <td>{{ product.sku }}</td>
                     <td>{{ product.price }}</td>   
                     <td>{{ product.quantity_in_stock }}</td>
                     <td>{{ product.supplier }}</td>

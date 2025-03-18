@@ -1,10 +1,11 @@
 from django.db import models
 from django.utils import timezone
+from django.db.models import F
+from django.db import transaction
 
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True) 
     name = models.CharField(max_length=100, unique=True)
-    sku = models.CharField(max_length=100)
     category = models.CharField(max_length=10)
     price = models.FloatField()
     units = models.CharField(max_length=50, default='pcs') 
@@ -101,7 +102,27 @@ class StockAdjustment(models.Model):
         ('subtract', 'Subtraction')
     )
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    adjustment_type = models.CharField(max_length=10, choices=ADJUSTMENT_TYPES)
+    adjustment_type = models.CharField(max_length=20, choices=ADJUSTMENT_TYPES)
     quantity = models.IntegerField()
     reason = models.TextField()
     adjustment_date = models.DateField(default=timezone.now)
+
+
+
+    def apply_adjustment(self):
+        """Update product stock based on adjustment type"""
+        with transaction.atomic(): 
+         self.product.refresh_from_db() 
+
+        if self.adjustment_type == 'add':
+            self.product.quantity_in_stock = F('quantity_in_stock') + self.quantity
+        elif self.adjustment_type == 'subtract':
+            if self.product.quantity_in_stock >= self.quantity:
+                self.product.quantity_in_stock = F('quantity_in_stock') - self.quantity
+            else:
+                raise ValueError("Insufficient stock to subtract")
+
+        self.product.save(update_fields=['quantity_in_stock'])
+
+    def __str__(self):
+        return f"{self.adjustment_type} {self.quantity} of {self.product.name}"    

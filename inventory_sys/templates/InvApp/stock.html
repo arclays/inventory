@@ -3,15 +3,15 @@
 {% block title %}Stock{% endblock %}
 
 {% block content %}
-<div class="container mt-5 pt-5">
+<div class="container-fluid pt-5">
 
-    <h5>Stock updates on {{ selected_date }}</h5>
+    <h5 class="text-primary fw-bold ">Stock updates on {{ selected_date }}</h5>
 
     <!-- Date Picker -->
     <form method="GET" action="{% url 'stock' %}">
         <div class="row align-items-center">
             <div class="mb-2 col-md-2">
-                <label for="orderDate" class="form-label">Select Date</label>
+                <label for="orderDate" class="form-label fw-bold">Select Date</label>
                 <input type="date" class="form-control" id="orderDate" name="orderDate" value="{{ selected_date }}">
             </div>
             <div class="col-md-3 mt-3">
@@ -96,7 +96,7 @@
 
                         <div class="form-group mb-3">
                             <label for="expiryDate">Expiry Date</label>
-                            <input type="date" id="expiryDate" name="expiryDate" class="form-control" required>
+                            <input type="date" id="expiryDate" name="expiryDate" class="form-control" required=False >
                         </div>
                     </div>
 
