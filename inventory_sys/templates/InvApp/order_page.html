@@ -2,8 +2,8 @@
 <title>{% block title %}Orders{% endblock %}</title>
 
 {% block content %}
-<div class="container-fluid pt-5">
-    <h2 class="text-primary fw-bold">Orders on {{ selected_date }}</h2>
+<div class="container">
+    <h2 class="text-primary fw-bold mt-4">Orders on {{ selected_date }}</h2>
 
     <!-- Date Picker -->
     <form method="GET" action="{% url 'order_page' %}">

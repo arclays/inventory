@@ -8,7 +8,9 @@ class Product(models.Model):
     name = models.CharField(max_length=100, unique=True)
     category = models.CharField(max_length=10)
     price = models.FloatField()
+    selling_price = models.FloatField()
     units = models.CharField(max_length=50, default='pcs') 
+    manufacturer_date = models.DateField(null=True, blank=True)
     quantity_in_stock = models.IntegerField()
     supplier = models.CharField(max_length=100)
     reorder_level = models.PositiveIntegerField(default=40)  # Set a default reorder level

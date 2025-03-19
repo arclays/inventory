@@ -3,16 +3,18 @@
 {% block content %}
 <div class="container-fluid pt-5">
   <h2 class="text-primary fw-bold">Product List</h2>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-        Add Product
+    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+       + Add Product
     </button>
-
+   
+                <!-- Add Product Modal -->
+                 
     <!-- Add Product Modal -->
-    <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+    <div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addProductModalLabel">Add Product</h5>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Add Product</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -26,31 +28,39 @@
         </div>
     </div>
 
-    <!-- Products Table -->
-    <div class="mt-3">
-        <table id="datatable" class="table table-bordered text-center ">
-            <thead class="table-header">
+    <!-- Product Table -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle shadow-sm border rounded text-center">
+            <thead class="table-primary">
                 <tr>
-                    <th>Product_ID</th>
-                    <th>ProductName</th>
-                    <th>Price</th>
-                    <th> Available stock</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Buying Price</th>
+                    <th>Stock</th>
                     <th>Supplier</th>
-                    <th>Unit_Price</th>
-                    <th>category</th>
+                    <th>Unit Price</th>
+                    <th>Category</th>
+                    <th>Selling price</th>
+                    <th>Manufacture Date</th>
+                    <th>ReorderQTy</th>
+                    <th>Reorder Level</th>
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody id="productTableBody">
+            <tbody>
                 {% for product in page_obj %}
                 <tr>
                     <td>{{ product.product_id }}</td>
                     <td>{{ product.name }}</td>
-                    <td>{{ product.price }}</td>   
+                    <td>{{ product.price }}</td>
                     <td>{{ product.quantity_in_stock }}</td>
                     <td>{{ product.supplier }}</td>
-                    <td>{{ product.units}}</td>
+                    <td>{{ product.units }}</td>
                     <td>{{ product.category }}</td>
+                    <td>{{ product.selling_price }}</td>
+                    <td>{{ product.manufacture_date }}</td>
+                    <td>{{ product.reorder_quantity }}</td>
+                    <td>{{ product.reorder_level }}</td>
                     <td>
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateProductModal{{ product.product_id }}">
                             Update
@@ -59,7 +69,8 @@
                             Delete
                         </button>
                     </td>
-                </tr>
+                    </tr>
+                    </tbody>
 
                 <!-- Update Product Modal -->
                 <div class="modal fade" id="updateProductModal{{ product.product_id }}" tabindex="-1" aria-labelledby="updateProductModalLabel{{ product.product_id }}" aria-hidden="true">

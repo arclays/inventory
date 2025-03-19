@@ -13,19 +13,19 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
   <!-- Custom Styles -->
-  <link rel="stylesheet" type="text/css" href="{% static 'assets/styles.css' %}">
-  <link rel="stylesheet" type="text/css" href="{% static 'assets/style/style.css' %}">
+  <!-- <link rel="stylesheet" type="text/css" href="{% static 'styles.css' %}"> -->
+  <link rel="stylesheet" type="text/css" href="{% static 'style/style.css' %}">
 
   <!-- JavaScript Files -->
-  <script src="{% static 'assets/js/scripts.js' %}"></script>
-  <script src="{% static 'assets/js/app.js' %}"></script>
+  <script src="{% static 'js/scripts.js' %}"></script>
+  <script src="{% static 'js/app.js' %}"></script>
 </head>
 <body>
 
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
   <div class="container-fluid">
-    <a class="navbar-brand" href="{% url 'home' %}">
+    <a class="navbar-brand fs-2" href="{% url 'home' %}">
       <i class="fas fa-home"></i> All Stock
     </a>
     <button id="fullscreen-btn" class="btn btn-outline-light ms-auto">
@@ -41,7 +41,7 @@
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">
-            <img src="{% static 'assets/images/hiladah.png' %}" alt="Profile" class="rounded-circle me-1" style="width: 40px; height: 30px;">
+            <img src="{% static 'images/hiladah.png' %}" alt="Profile" class="rounded-circle me-1" style="width: 40px; height: 30px;">
           </a>
         </li>
       </ul>
@@ -49,28 +49,29 @@
   </div>
 </nav>
 
-<div class="sidebar fw-bold" style="margin-top: 30px;">
+<div class="sidebar fw-bold fs-2" style="margin-top: 80px;">
 
-  <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-      <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
-  </a>
-  <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">
+  <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %} fs-5 d-flex align-items-center gap-2">
+    <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
+</a>
+
+  <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}active{% endif %} fs-5  d-flex align-items-center gap-2">
       <i class="fas fa-cubes"></i> <span>Products</span>
   </a>
-  <a href="{% url 'order_page' %}" class="{% if request.resolver_match.url_name == 'order_page' %}active{% endif %}">
+  <a href="{% url 'order_page' %}" class="{% if request.resolver_match.url_name == 'order_page' %}active{% endif %} fs-5  d-flex align-items-center gap-2">
       <i class="fas fa-box"></i> <span>Orders</span>
   </a>
-  <a href="{% url 'stock' %}" class="{% if request.resolver_match.url_name == 'stock' %}active{% endif %}">
+  <a href="{% url 'stock' %}" class="{% if request.resolver_match.url_name == 'stock' %}active{% endif %} fs-5  d-flex align-items-center gap-2">
       <i class="fas fa-warehouse"></i> <span>Stock</span>
   </a>
-  <a href="{% url 'report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %}">
+  <a href="{% url 'report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %} fs-5  d-flex align-items-center gap-2">
       <i class="fas fa-chart-line"></i> <span>Reports</span>
   </a>
-  <a href="{% url 'customer_list' %}" class="{% if request.resolver_match.url_name == 'customer_list' %}active{% endif %}">
+  <a href="{% url 'customer_list' %}" class="{% if request.resolver_match.url_name == 'customer_list' %}active{% endif %} fs-5  d-flex align-items-center gap-2">
     <i class="fas fa-users"></i> <span>Customers</span>
 </a>
-  <a href="{% url 'logout' %}">
-      <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+  <a href="{% url 'logout' %} ">
+      <i class="fas fa-sign-out-alt fs-5"></i> <span class="fs-5  d-flex align-items-center gap-2">Logout</span>
   </a>
 </div>
 
