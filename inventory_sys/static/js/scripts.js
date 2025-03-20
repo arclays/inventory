@@ -235,3 +235,14 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+$(document).ready(function() {
+    $('#daterange').daterangepicker({
+        opens: 'right',
+        autoUpdateInput: false,
+        locale: {
+            cancelLabel: 'Clear'
+        }
+    }, function(start, end) {
+        $('#daterange').val(start.format('YYYY-MM-DD') + ' - ' + end.format('YYYY-MM-DD'));
+    });
+});

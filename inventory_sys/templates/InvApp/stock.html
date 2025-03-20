@@ -5,13 +5,13 @@
 {% block content %}
 <div class="container-fluid pt-5">
 
-    <h5 class="text-primary fw-bold ">Stock updates on {{ selected_date }}</h5>
+    <h5 class="text-primary fw-bold fs-2">Stock updates on {{ selected_date }}</h5>
 
     <!-- Date Picker -->
     <form method="GET" action="{% url 'stock' %}">
         <div class="row align-items-center">
             <div class="mb-2 col-md-2">
-                <label for="orderDate" class="form-label fw-bold">Select Date</label>
+                <label for="orderDate" class="form-label fw-bold ">Select Date</label>
                 <input type="date" class="form-control" id="orderDate" name="orderDate" value="{{ selected_date }}">
             </div>
             <div class="col-md-3 mt-3">
@@ -22,10 +22,13 @@
 
     <h2 class="mt-2 fw-bold">Stock</h2>
     
-    <div class="mb-3">
-        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addStockModal">+Add New Stock</button>
-        <button class="btn btn-secondary" onclick="printStockTable()">Print Stock Table</button>
+    <div class="mb-3 d-flex justify-content-end gap-2">
+        <button class="btn btn-outline-dark px-3 py-2" data-bs-toggle="modal" data-bs-target="#addStockModal">
+            <i class="bi bi-plus-circle me-2"></i>Add New Stock
+        </button>
+        <button class="btn btn-secondary px-3 py-2" onclick="printStockTable()">Print Stock Table</button>
     </div>
+    
 
     <!-- Default Stock Table -->
     <div id="defaultStockTable">

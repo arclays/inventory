@@ -1,0 +1,80 @@
+{% extends "InvApp/layout.html" %}
+{% block title %} Reorder Alerts {% endblock %}
+
+{% block content %}
+<div class="container-fluid pt-5">
+    <h2 class="text-primary fw-bold">Reorder Alerts</h2>
+
+    <section class="mt-4">
+        <h4 class="text-secondary">Overview</h4>
+        <p>
+            This page provides an overview of products that are below their reorder levels. 
+            Keeping track of these items ensures that we maintain optimal stock levels and avoid stockouts.
+        </p>
+    </section>
+
+    <section class="mt-4">
+        <h4 class="text-secondary">Key Metrics</h4>
+        <ul class="list-group">
+            <li class="list-group-item">Total Products: {{ total_products }}</li>
+            <li class="list-group-item">Low Stock Items: {{ low_stock_count }}</li>
+            <li class="list-group-item">Average Reorder Quantity: {{ average_reorder_quantity }}</li>
+        </ul>
+    </section>
+
+    <!-- Reorder Alerts Section -->
+    <section class="mt-4">
+        <h4 class="text-secondary">Low Stock Items</h4>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Current Stock</th>
+                    <th>Reorder Level</th>
+                    <th>Suggested Reorder Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in low_stock_items %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.quantity_in_stock }}</td>
+                    <td>{{ item.reorder_level }}</td>
+                    <td>{{ item.reorder_quantity }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No low stock items.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Actionable Insights Section -->
+    <section class="mt-4">
+        <h4 class="text-secondary">Actionable Insights</h4>
+        <p>
+            Based on the current stock levels, consider the following actions:
+        </p>
+        <ul class="list-group">
+            <li class="list-group-item">Review supplier lead times for critical items.</li>
+            <li class="list-group-item">Place orders for low stock items to avoid disruptions.</li>
+            <li class="list-group-item">Analyze sales trends to adjust reorder levels accordingly.</li>
+        </ul>
+    </section>
+
+    <!-- Contact Information Section -->
+    <section class="mt-4">
+        <h4 class="text-secondary">Contact Information</h4>
+        <p>
+            For any inquiries regarding inventory management, please contact:
+        </p>
+        <ul class="list-group">
+            <li class="list-group-item">John Doe - Inventory Manager</li>
+            <li class="list-group-item">Email: johndoe@example.com</li>
+            <li class="list-group-item">Phone: (123) 456-7890</li>
+        </ul>
+    </section>
+</div>
+{% endblock %}

@@ -11,13 +11,20 @@ body {
 .card-title {
   font-size: 1.5rem;
 } 
-
-  .content {
-    margin-left: 60px;
-    width: calc(100% - 60px);
-    transition: margin-left 0.3s ease;
+.table-header {
+  background-color: #72a08b; 
+  color: white; 
+} 
+.content {
+  margin-left: 250px; /* Match sidebar width */
+  flex-grow: 1;
+  padding: 50px;
+  width: calc(100% - 250px); /* Ensure correct width */
+  background-color: rgb(248, 249, 250);
+  transition: margin-left 0.3s ease;
     font-family: 'Times New Roman', Times, serif;
-  }
+}
+
  
   
   form.d-flex .btn {
@@ -27,11 +34,11 @@ body {
 .navbar {
   background-color: #69b4e6 !important;
   border-bottom: 3px solid black;
-  padding: 15px;
+  padding: 0px;
 }
 
 .navbar-brand {
-  font-size: 20px;
+  font-size: 10px;
   font-weight: bold;
   color: white !important;
 }
@@ -66,6 +73,7 @@ body {
   align-items: center;
   padding: 12px;
   font-size: 16px;
+  text-align: center;
   text-decoration: none;
   color: black;
   border-left: 4px solid transparent;
@@ -82,14 +90,6 @@ body {
   
 }
 
-.content {
-  margin-left: 250px; /* Match sidebar width */
-  flex-grow: 1;
-  padding: 50px;
-  width: calc(100% - 250px); /* Ensure correct width */
-  background-color: rgb(248, 249, 250);
-}
-
 .sidebar a:hover {
   background: rgba(11, 7, 233, 0.1); 
   border-left: 5px solid #ffc107; 
@@ -98,7 +98,7 @@ body {
 
 .sidebar a.active {
   background: rgba(64, 147, 255, 0.2); 
-  border-left: 10px solid #050505; 
+  border-left: 10px solid #f80a0a; 
 }
 
 .sidebar::-webkit-scrollbar {
@@ -114,90 +114,4 @@ body {
   background: #f80606;
 }
 
-    body {
-    background: url("{% static 'assets/images/bg.jpg' %}") no-repeat center center fixed;
-    background-size: cover;
-    display: flex; 
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-}
-
-.login-container {
-    max-width: 500px;
-    width: 100%;
-    background: rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.login-header {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.login-header h3 {
-    color: blue;
-    font-weight: 600;
-    font-size: 42px;
-}
-
-.form-control {
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: #fff;
-    font-size: 18px;
-}
-
-.form-control::placeholder {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 15px; 
-    opacity: 1; 
-    margin: 10px;
-    padding: 10px;
-}
-
-.btn-login {
-    width: 100%;
-    border-radius: 8px;
-    background: blue;
-    border: none;
-    color: white;
-    padding: 20px;
-    transition: all 0.3s ease;
-}
-
-.btn-login:hover {
-    background: darkblue;
-}
-
-.forgot-password {
-    text-align: center;
-    margin-top: 10px;
-}
-
-.forgot-password a {
-    color: #fff;
-    text-decoration: none;
-}
-
-.forgot-password a:hover {
-    text-decoration: underline;
-}
-
-.register-link {
-    text-align: center;
-    margin-top: 15px;
-    color: #fff;
-}
-
-.register-link a {
-    color: rgb(0, 0, 0);
-    font-weight: 600;
-}
-
-    
-  
+   

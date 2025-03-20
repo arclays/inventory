@@ -24,6 +24,8 @@ urlpatterns = [
     path('report/', views.report_page, name='report'),
     path('stock/add/', views.add_stock, name='add_stock'),
     path('report/adjust/', views.adjust_stock, name='adjust_stock'),
+    path('reorder/', views.reorder_alerts, name='reorder_alerts'),
+    path('stock-adjustments/', views.stock_adjustments, name='stock_adjustments'),
    
 
    

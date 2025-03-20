@@ -5,16 +5,16 @@
 
 {% block content %}
 <div class="container-fluid pt-5">
-    <h3 class="text-primary fw-bold">Stock & Inventory Report - {{ selected_date|default:"All Dates" }}</h3>
+    <h3 class="fw-bold ">Stock & Inventory Report - {{ selected_date|default:"All Dates" }}</h3>
     <p><strong>Generated on:</strong> {{ current_time }}</p>
 
     <!-- Date Filter Form -->
     <form method="GET" class="d-flex mb-3">
         <div class="d-flex align-items-center">
           <input type="date" name="date" class="form-control w-25" value="{{ selected_date }}">
-          <button type="submit" class="btn btn-primary ms-2">View Report</button>
+          <button type="submit" class="btn btn-outline-dark ms-2">View Report</button>
         </div>
-        <button type="button" class="btn btn-primary text-white px-3 ms-auto" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal">
+        <button type="button" class="btn btn-outline-dark px-3 ms-auto" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal">
           Adjust Stock
         </button>
       </form>
@@ -22,7 +22,7 @@
     <!-- Stock Summary -->
     <div class="row">
         <div class="col-md-4">
-            <div class="card bg-info text-white">
+            <div class="card bg-outline-info ">
                 <div class="card-body">
                     <h5>Stock In </h5>
                     <h3>{{ total_stock_in }}</h3>
@@ -30,7 +30,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-danger text-white">
+            <div class="card bg-outline-dark">
                 <div class="card-body">
                     <h5>Stock Out </h5>
                     <h3>{{ stock_out }}</h3>
@@ -38,7 +38,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-info text-white">
+            <div class="card bg-outline-info ">
                 <div class="card-body">
                     <h5>Closing Stock</h5>
                     <h3>{{ total_quantity_in_stock}}</h3>
@@ -48,9 +48,9 @@
     </div>
     
     <!-- Stock Details -->
-    <h4 class="mt-4 text-primary">Stock Transactions</h4>
-    <table class="table table-bordered">
-        <thead>
+    <h4 >Stock Transactions</h4>
+    <table class="table table-bordered ">
+        <thead >
             <tr>
                 <th>No</th>
                 <th>Product</th>
@@ -79,9 +79,9 @@
     </table>
 
     <!-- Reorder Alerts -->
-    <h4 class="mt-4 text-primary">Reorder Alerts</h4>
+    <h4 class="mt-4 ">Reorder Alerts</h4>
     <table class="table table-bordered">
-        <thead >
+        <thead>
             <tr>
                 <th>Product</th>
                 <th>Current Stock</th>
@@ -109,7 +109,7 @@
     
     <div class="container mt-5">
         <!-- Sales Summary -->
-        <h4 class="mb-0 text-primary">Sales Summary</h4>
+        <h4 class="mb-0 ">Sales Summary</h4>
         <p class="mb-0">
             <i class="fas fa-users"></i> <strong class="text-primary">Total Customers:</strong> {{ total_customers }} 
             |     <i class="fas fa-shopping-cart"></i> <strong class="text-primary">Total Sales:</strong> ${{ total_orders }} 
@@ -121,7 +121,7 @@
     <!-- Stock Adjustments -->
     <h4 class="mt-4 text-primary">Stock Adjustments</h4>
     <table class="table table-bordered">
-        <thead >
+        <thead class="table-header">
             <tr>
                 <th>Product</th>
                 <th>Adjustment Type</th>

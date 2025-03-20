@@ -15,7 +15,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from .models import Order, Stock, StockAdjustment
 from django.db.models import Sum
-from django.db.models import F
+from django.db.models import F, Avg
 from django.shortcuts import get_object_or_404
 
 # CRUD
@@ -445,4 +445,79 @@ def report_page(request):
     }
 
 
-    return render(request, 'InvApp/report.html', context)
+    return render(request, 'InvApp/report.html', context) 
+
+def reorder_alerts(request):
+
+    low_stock_items = Product.objects.filter(quantity_in_stock__lt=F('reorder_level')).values(
+        'name', 'quantity_in_stock', 'reorder_level', 'reorder_quantity'
+    )
+    
+    total_products = Product.objects.count()  
+    low_stock_count = low_stock_items.count()  
+    average_reorder_quantity = Product.objects.aggregate(Avg('reorder_quantity'))['reorder_quantity__avg'] or 0  # Average reorder quantity
+
+  
+    return render(request, 'InvApp/reorder.html', {
+        'low_stock_items': low_stock_items,
+        'total_products': total_products,
+        'low_stock_count': low_stock_count,
+        'average_reorder_quantity': average_reorder_quantity,
+    })
+
+
+def stock_adjustments(request):
+    stock_adjustments_qs = StockAdjustment.objects.all().select_related('product')
+    orders = Order.objects.all().select_related('product')
+
+    
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if start_date and end_date:
+        try:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+            stock_adjustments_qs = stock_adjustments_qs.filter(adjustment_date__range=(start_date, end_date))
+        except ValueError:
+            messages.error(request, "Invalid date format. Please use YYYY-MM-DD.")
+            return redirect('stock_adjustments')
+
+    total_quantity = orders.aggregate(total=Sum('quantity'))['total'] or 0
+
+    stock_entries = Stock.objects.filter(stock_date__range=(start_date, end_date)) if start_date and end_date else Stock.objects.all()
+    
+    products = Product.objects.all()
+    stock_adjustments_list = []
+
+    for product in products:
+        stock_in = stock_entries.filter(product=product).aggregate(Sum('new_stock'))['new_stock__sum'] or 0
+        stock_out = stock_adjustments_qs.filter(product=product, adjustment_type='subtract').aggregate(Sum('quantity'))['quantity__sum'] or 0
+        adjustments = stock_adjustments_qs.filter(product=product).aggregate(Sum('quantity'))['quantity__sum'] or 0
+         
+        total_new_stock = Stock.objects.aggregate(total=Sum('new_stock'))['total'] or 0
+        total_adjustments = StockAdjustment.objects.filter(adjustment_type='add').aggregate(total=Sum('quantity'))['total'] or 0
+        total_stock_in = total_new_stock + total_adjustments 
+        tol_adjustments = StockAdjustment.objects.filter(adjustment_type='subtract').aggregate(total=Sum('quantity'))['total'] or 0
+        stock_out = total_quantity + tol_adjustments
+
+        stock_adjustments_list.append({
+            'product_name': product.name,
+            'stock_in': stock_in,
+            'stock_out': stock_out,
+            'adjustments': adjustments,
+        })
+
+    context = {
+        'stock_adjustments': stock_adjustments_list,
+        'products': products,
+        'start_date': start_date,
+        'end_date': end_date,
+        'total_quantity': total_quantity,
+        'total_new_stock': total_new_stock,
+        'total_adjustments': total_adjustments,
+        'total_stock_in': total_stock_in,
+        'tol_adjustments': tol_adjustments,
+    }
+
+    return render(request, 'InvApp/adjust.html', context)

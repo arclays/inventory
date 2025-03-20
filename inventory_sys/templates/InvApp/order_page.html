@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container">
-    <h2 class="text-primary fw-bold mt-4">Orders on {{ selected_date }}</h2>
+    <h2 class="text-primary fw-bold  mt-4">Orders on {{ selected_date }}</h2>
 
     <!-- Date Picker -->
     <form method="GET" action="{% url 'order_page' %}">
@@ -54,10 +54,12 @@
     </div>
 
     <!-- Place Order Button and Modal Trigger -->
-    <button class="btn btn-primary mb-1" data-bs-toggle="modal" data-bs-target="#placeOrderModal">Place New Order</button>
-
+    <button class="btn btn-outline-dark mb-1" data-bs-toggle="modal" data-bs-target="#placeOrderModal">
+        <i class="fas fa-shopping-cart"></i> New Order
+    </button>
+    
     <!-- Order Table -->
-    <table class="table table-striped mt-3 text-center">
+    <table class="table table-striped mt-3 text-center ">
         <thead class="table-header">
             <tr>
                 <th>Order ID</th>
