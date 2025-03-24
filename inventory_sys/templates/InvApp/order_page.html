@@ -2,7 +2,7 @@
 <title>{% block title %}Orders{% endblock %}</title>
 
 {% block content %}
-<div class="container">
+<div class="container-fluid pt-5">
     <h2 class="text-primary fw-bold  mt-4">Orders on {{ selected_date }}</h2>
 
     <!-- Date Picker -->
@@ -59,7 +59,7 @@
     </button>
     
     <!-- Order Table -->
-    <table class="table table-striped mt-3 text-center ">
+    <table class="table mt-3 text-center align-middle table-striped-columns table-white">
         <thead class="table-header">
             <tr>
                 <th>Order ID</th>
@@ -120,7 +120,7 @@
                         <div class="product-item mb-3 border p-3 rounded shadow-sm">
                             <div class="row">
                                 <!-- Product Selection -->
-                                <div class="col-md-2">
+                                <div class="col-md-3">
                                     <label>Select Product</label>
                                     <select name="products[]" class="form-control" required>
                                         {% for product in products %}
@@ -130,13 +130,13 @@
                                 </div>
 
                                 <!-- Quantity Input -->
-                                <div class="col-md-2">
+                                <div class="col-md-3">
                                     <label>Quantity</label>
                                     <input type="number" name="orderQuantity[]" class="form-control quantity" min="1" required />
                                 </div>
 
                                 <!-- Unit Selection -->
-                                <div class="col-md-2">
+                                <div class="col-md-3">
                                     <label>Unit</label>
                                     <select name="units[]" class="form-control" required>
                                         <option value="piece">Piece</option>
@@ -147,19 +147,24 @@
                                 </div>
 
                                 <!-- Price Per Unit -->
-                                <div class="col-md-2">
+                                <div class="col-md-3">
                                     <label>Price Per Unit</label>
-                                    <input type="number" name="unitPrice[]" class="form-control unit-price" required />
+                                    <input type="number" name="price_per_unit[]" class="form-control price_per_unit" required />
                                 </div>
+
+                                 <!-- Discount Input -->
+                                <div class="col-md-3">
+                                    <label>Discount (%)</label>
+                                    <input type="number" name="productDiscount[]" id="discount" class="form-control product-discount" min="0" max="100" value="0" />
+                                     </div>
 
                                 <!-- Total Price (Auto-Calculated) -->
-                                <div class="col-md-2">
-                                    <label>Total Price</label>
-                                    <input type="number" name="totalPrice[]" class="form-control total-price" readonly />
+                                <div class="col-md-3">
+                                    <label label for="totalPrice">Total Price</label>
+                                    <input type="number" id="totalPrice" name="totalPrice" class="form-control total-price" readonly />
                                 </div>
-
                                 <!-- Remove Button -->
-                                <div class="col-md-2 d-flex align-items-end">
+                                <div class="col-md-3 d-flex align-items-end">
                                     <button type="button" class="btn btn-danger remove-product w-100">Remove</button>
                                 </div>
                             </div>
@@ -184,12 +189,6 @@
                             <option value="mobile_money">Mobile Money</option>
                             <option value="bank_transfer">Bank Transfer</option>
                         </select>
-                    </div>
-
-                    <!-- Discount -->
-                    <div class="form-group mb-2">
-                        <label for="discount">Discount (%)</label>
-                        <input type="number" id="discount" name="discount" class="form-control" min="0" max="100">
                     </div>
 
                     <!-- Final Total (Auto-Calculated) -->

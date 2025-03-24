@@ -1,13 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import ProductForm, CustomerForm
 from django.contrib.auth import authenticate, login, logout
 from django.views import View
+from .forms import RegistrationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from .forms import RegistrationForm
 from django.core.paginator import Paginator
 from django.contrib import messages
-from .forms import CustomerForm
 from datetime import datetime, date
 from django.urls import reverse
 from .models import Customer, Product, Order,User
@@ -78,52 +76,68 @@ class ProtectedView(LoginRequiredMixin, View):
 
 def product_list(request):
     products = Product.objects.all()
-    paginator = Paginator(products, 7) 
-
+    paginator = Paginator(products, 7)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     if request.method == 'POST':
-        form = ProductForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Product added successfully!')
-            return redirect('product_list')
-    else:
-        form = ProductForm()
-    
+        product_name = request.POST.get('name')
+        buying_price = request.POST.get('buying_price')
+        quantity_in_stock = request.POST.get('quantity_in_stock')
+        supplier = request.POST.get('supplier')
+        units = request.POST.get('units')
+        category = request.POST.get('category')
+        selling_price = request.POST.get('selling_price')
+        manufacture_date = request.POST.get('manufacture_date')
+        reorder_quantity = request.POST.get('reorder_quantity')
+        reorder_level = request.POST.get('reorder_level')
 
-    return render(request, 'Invapp/product_list.html', {'page_obj': page_obj, 'form': form})
+        Product.objects.create(
+            name=product_name,
+            buying_price=buying_price,
+            quantity_in_stock=quantity_in_stock,
+            supplier=supplier,
+            units=units,
+            category=category,
+            selling_price=selling_price,
+            manufacture_date=manufacture_date,
+            reorder_quantity=reorder_quantity,
+            reorder_level=reorder_level
+        )
+        messages.success(request, 'Product added successfully!')
+        return redirect('product_list')
+
+    return render(request, 'Invapp/product_list.html', {'page_obj': page_obj})
 
 def customer_list(request):
-    customers = Customer.objects.all()  
-    paginator = Paginator(customers, 7) 
-
+    customers = Customer.objects.all()
+    paginator = Paginator(customers, 7)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     if request.method == 'POST':
-        form = CustomerForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Customer added successfully!')
-            return redirect('customer_list')
-    else:
-        form = CustomerForm()
-    return render(request, 'Invapp/customer_list.html', {'form': form, 'page_obj': page_obj})
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
+        
+        Customer.objects.create(name=name, email=email, phone=phone, address=address)
+        messages.success(request, 'Customer added successfully!')
+        return redirect('customer_list')
 
+    return render(request, 'Invapp/customer_list.html', {'page_obj': page_obj})
 
 def customer_edit(request, customer_id):
-    customer = get_object_or_404(Customer, id=customer_id) 
+    customer = get_object_or_404(Customer, id=customer_id)
     if request.method == 'POST':
-        form = CustomerForm(request.POST, instance=customer) 
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Customer edited successfully!')
-            return redirect('customer_list')  
-    else:
-        form = CustomerForm(instance=customer)  
-    return render(request, 'Invapp/customer_edit.html', {'form': form})
+        customer.name = request.POST.get('name')
+        customer.email = request.POST.get('email')
+        customer.phone = request.POST.get('phone')
+        customer.address = request.POST.get('address')
+        customer.save()
+        messages.success(request, 'Customer edited successfully!')
+        return redirect('customer_list')
+    return render(request, 'Invapp/customer_edit.html', {'customer': customer})
 
 def customer_confirm_delete(request, customer_id):
     customer = get_object_or_404(Customer, id=customer_id)
@@ -133,18 +147,20 @@ def customer_confirm_delete(request, customer_id):
         return redirect('customer_list')
     return render(request, 'Invapp/customer_confirm_delete.html', {'customer': customer})
 
-
 def product_update(request, product_id):
-    product = get_object_or_404(Product, product_id=product_id)
+    product = get_object_or_404(Product, id=product_id)
     if request.method == 'POST':
-        form = ProductForm(request.POST, instance=product)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Product updated successfully!')
-            return redirect('product_list')
-    else:
-        form = ProductForm(instance=product)
-    return render(request, 'Invapp/product_update.html', {'form': form})
+        fields = ['name', 'buying_price', 'quantity_in_stock', 'supplier', 'units', 
+                  'category', 'selling_price', 'manufacture_date', 'reorder_quantity', 'reorder_level']
+
+        update_data = {field: request.POST.get(field) for field in fields if request.POST.get(field) is not None}
+
+        Product.objects.filter(id=product_id).update(**update_data)
+
+        messages.success(request, 'Product updated successfully!')
+        return redirect('product_list')
+
+    return render(request, 'Invapp/product_update.html', {'product': product})
 
 def product_confirm_delete(request, product_id):
     product = get_object_or_404(Product, product_id=product_id)
@@ -521,3 +537,52 @@ def stock_adjustments(request):
     }
 
     return render(request, 'InvApp/adjust.html', context)
+
+from django.shortcuts import render
+from django.db.models import Sum, F
+from .models import Order, Product, Stock, StockAdjustment
+
+def dashboard_view(request):
+    # Aggregated Data
+    orders = Order.objects.all()
+    
+    total_orders = Order.objects.count()
+    total_customers = Order.objects.values('customer').distinct().count()
+    total_cash_made = Order.objects.aggregate(Sum('final_total'))['final_total__sum'] or 0
+    total_quantity = Order.objects.aggregate(Sum('quantity'))['quantity__sum'] or 0
+    total_products = Product.objects.count()
+    
+    # Stock Data
+    total_stock_in = Stock.objects.aggregate(Sum('new_stock'))['new_stock__sum'] or 0
+    total_stock_out = StockAdjustment.objects.filter(adjustment_type='subtract').aggregate(Sum('quantity'))['quantity__sum'] or 0
+    total_quantity_in_stock = Product.objects.aggregate(Sum('quantity_in_stock'))['quantity_in_stock__sum'] or 0
+    low_stock_items = Product.objects.filter(quantity_in_stock__lt=F('reorder_level'))
+
+    # Recent Orders
+    recent_orders = Order.objects.order_by('-order_date')[:5].select_related('customer')
+
+    # Monthly Orders and Cash Made for Graphs
+    monthly_orders = Order.objects.extra({'month': 'DATE_TRUNC(\'month\', order_date)'}).values('month').annotate(total_orders=Sum('id')).order_by('month')
+    monthly_cash = Order.objects.extra({'month': 'DATE_TRUNC(\'month\', order_date)'}).values('month').annotate(total_cash=Sum('final_total')).order_by('month')
+
+    months = [entry['month'].strftime('%Y-%m') for entry in monthly_orders]
+    order_counts = [entry['total_orders'] for entry in monthly_orders]
+    cash_counts = [entry['total_cash'] for entry in monthly_cash]
+
+    context = {
+        'total_orders': total_orders,
+        'total_customers': total_customers,
+        'total_cash_made': total_cash_made,
+        'total_quantity': total_quantity,
+        'total_products': total_products,
+        'total_stock_in': total_stock_in,
+        'total_stock_out': total_stock_out,
+        'total_quantity_in_stock': total_quantity_in_stock,
+        'low_stock_items': low_stock_items,
+        'recent_orders': recent_orders,
+        'months': months,
+        'order_counts': order_counts,
+        'cash_counts': cash_counts,
+    }
+
+    return render(request, 'InvApp/dashboard.html', context)

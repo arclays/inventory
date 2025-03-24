@@ -1,20 +1,21 @@
 from django.db import models
 from django.utils import timezone
 from django.db.models import F
+from datetime import date
 from django.db import transaction
 
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True) 
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100, unique=True) 
     category = models.CharField(max_length=10)
-    price = models.FloatField()
     selling_price = models.FloatField()
     units = models.CharField(max_length=50, default='pcs') 
-    manufacturer_date = models.DateField(null=True, blank=True)
+    manufacture_date = models.DateField(null=True, blank=True, default=date.today)
     quantity_in_stock = models.IntegerField()
     supplier = models.CharField(max_length=100)
-    reorder_level = models.PositiveIntegerField(default=40)  # Set a default reorder level
-    reorder_quantity = models.PositiveIntegerField(default=50) 
+    reorder_quantity = models.PositiveIntegerField(default=0) 
+    reorder_level = models.PositiveIntegerField(default=0)  # 
+    buying_price = models.FloatField() 
 
     def is_low_stock(self):
         return self.quantity_in_stock <= self.reorder_level
@@ -34,12 +35,13 @@ class Customer(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20)
+    address = models.CharField(max_length=40)
 
     def __str__(self):
         return self.name
 
 
-# ✅ Updated Order Model 
+
 class Order(models.Model):
     PAYMENT_METHODS = [
         ("cash", "Cash"),
@@ -51,37 +53,32 @@ class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, to_field="product_id", on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
-    units = models.CharField(max_length=50, default='pcs')  # Changed from IntegerField to CharField
-    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Added for clarity
+    units = models.CharField(max_length=50, default='pcs')  
+    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00) 
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default="cash")  # Added Payment Method
-    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)  # Added Discount
-    final_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Added Final Total
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default="cash") 
+    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00) 
+    final_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00) 
     order_date = models.DateField(default=timezone.now)
 
     def __str__(self):
         return f"Order {self.id} by {self.customer.name}"
 
     def save(self, *args, **kwargs):
-    # Ensure price per unit is greater than product price
-     if self.product:  # Ensure product exists
-        if self.price_per_unit <= self.product.price:
-            self.price_per_unit = self.product.price * 1.1  # Example: Set 10% higher than base price
+     if self.product:
+        if not self.price_per_unit or self.price_per_unit == 0.00:
+            self.price_per_unit = self.product.selling_price 
 
-      # Ensure discount is a valid float
      try:
         self.discount = float(self.discount) if self.discount else 0.00
      except (ValueError, TypeError):
-        self.discount = 0.00  # Default to 0.00 if invalid      
+        self.discount = 0.00  
 
-    # Calculate total price
-     self.total_price = self.quantity * self.price_per_unit
+     self.total_price = (self.quantity * self.price_per_unit ) - ((self.quantity * self.price_per_unit) * ( self.discount/ 100.00))
 
-    # Apply discount
-     discount_amount = (self.total_price * self.discount) / 100.00
-     self.final_total = self.total_price - discount_amount
+     self.final_total += self.total_price  
 
-     super().save(*args, **kwargs)  # Call parent save method
+     super().save(*args, **kwargs)
 
     
 

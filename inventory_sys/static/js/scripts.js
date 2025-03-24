@@ -1,35 +1,9 @@
 
 
-function fetchInitialStock(productId) {
-    if (productId) {
-        $.ajax({
-            url: "{% url 'get_initial_stock' %}",
-            data: {
-                'product_id': productId
-            },
-            dataType: 'json',
-            success: function (data) {
-                if (data.quantity_in_stock !== undefined) {
-                    $('#initialStock').val(data.quantity_in_stock);
-                } else {
-                    $('#initialStock').val('');
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error('Error fetching initial stock:', error);
-                $('#initialStock').val('');
-            }
-        });
-    } else {
-        $('#initialStock').val('');
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function () {
     const productContainer = document.getElementById('product-container');
     const addProductBtn = document.getElementById('add-product');
 
-    // Function to add a new product block
     addProductBtn.addEventListener('click', function () {
         const productItem = document.querySelector('.product-item');
         const clone = productItem.cloneNode(true);
@@ -40,8 +14,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         productContainer.appendChild(clone);
     });
-
-    // Remove product item when clicking the "Remove" button
     productContainer.addEventListener('click', function (e) {
         if (e.target.classList.contains('remove-product')) {
             const items = document.querySelectorAll('.product-item');
@@ -57,23 +29,6 @@ document.addEventListener("DOMContentLoaded", function () {
     let totalPrice = "{{ order.total_price }}"; // Fetch from Django context
     document.getElementById("totalprice").value = totalPrice;
 });
-
-
-
-    function fetchInitialStock(productId) {
-        if (productId) {
-            fetch(`/get-initial-stock/${productId}/`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('initialStock').value = data.initial_stock;
-                })
-                .catch(error => console.error('Error fetching initial stock:', error));
-        } else {
-            document.getElementById('initialStock').value = '';
-        }
-    }
-
-
    
     document.addEventListener("DOMContentLoaded", function () {
         const addProductBtn = document.getElementById("add-product");
@@ -134,58 +89,68 @@ document.addEventListener("DOMContentLoaded", function () {
         newWindow.document.close();
     }
 
-
-document.addEventListener("DOMContentLoaded", function () {
-    function updateTotalPrice() {
-        let finalTotal = 0;
-
-        document.querySelectorAll(".product-item").forEach(item => {
-            let quantity = item.querySelector(".quantity").value;
-            let unitPrice = item.querySelector(".unit-price").value;
-            let totalPriceField = item.querySelector(".total-price");
-
-            let totalPrice = (quantity && unitPrice) ? (quantity * unitPrice) : 0;
-            totalPriceField.value = totalPrice.toFixed(2);
-
-            finalTotal += totalPrice;
+    document.addEventListener("DOMContentLoaded", function () {
+        function updateTotalPrice() {
+            let finalTotal = 0;
+    
+            document.querySelectorAll(".product-item").forEach(item => {
+                let quantity = parseFloat(item.querySelector(".quantity").value);
+                let pricePerUnitField = item.querySelector(".price_per_unit");
+                let totalPriceField = item.querySelector(".total-price");
+                let discount = parseFloat(document.getElementById("discount").value) || 0;
+    
+                // Ensure unit price is set to the selling price if it's empty or zero
+                if (!pricePerUnitField.value || parseFloat(pricePerUnitField.value) === 0) {
+                    let selectedProduct = item.querySelector("select[name='products[]']").value;
+                    let sellingPrice = getSellingPrice(selectedProduct);
+                    pricePerUnitField.value = sellingPrice;
+                }
+    
+                let pricePerUnit = parseFloat(pricePerUnitField.value) || 0;
+    
+                // Calculate total price: (quantity * unit price) - discount(quantity * unit price)
+                let totalPrice = (quantity * pricePerUnit) - ((quantity * pricePerUnit) * (discount / 100));
+                totalPriceField.value = totalPrice.toFixed(2);
+    
+                 finalTotal += totalPrice;
+            });
+    
+            // Update final total
+            document.getElementById("finalTotal").value = finalTotal.toFixed(2);
+        }
+    
+        // Function to fetch selling price based on product selection (Mockup Example)
+        function getSellingPrice(productId) {
+            let sellingPrices = {
+                "1": 5000,  // Example Product ID and Price
+                "2": 7000,
+                "3": 12000
+            };
+            return sellingPrices[productId] || 0;
+        }
+    
+        // Event Listeners for input changes
+        document.addEventListener("input", function (event) {
+            if (event.target.matches(".quantity, price_per_unit, #discount, select[name='products[]']")) {
+                updateTotalPrice();
+            }
         });
-
-        let discount = document.getElementById("discount").value;
-        if (discount) {
-            finalTotal -= (finalTotal * discount / 100);
-        }
-
-        document.getElementById("finalTotal").value = finalTotal.toFixed(2);
-    }
-    // Event Listeners for quantity and unit price inputs
-    document.addEventListener("input", function (event) {
-        if (event.target.matches(".quantity, .unit-price")) {
-            updateTotalPrice();
-        }
+    
+        // Fullscreen Toggle Button
+        document.getElementById('fullscreen-btn')?.addEventListener('click', function () {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        });
+    
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     });
-
-    // Event Listeners
-    document.addEventListener("input", function (event) {
-        if (event.target.matches(".quantity, .unit-price, #discount")) {
-            updateTotalPrice();
-        }
-    });
-});
-document.getElementById('fullscreen-btn').addEventListener('click', function () {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-    } else {
-        document.exitFullscreen();
-    }
-});
-
-// Enable Bootstrap Tooltips
-document.addEventListener("DOMContentLoaded", function () {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-});
+    
 document.getElementById('fullscreen-btn').addEventListener('click', function () {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
@@ -233,16 +198,5 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             sidebar.classList.remove("expanded");
         }
-    });
-});
-$(document).ready(function() {
-    $('#daterange').daterangepicker({
-        opens: 'right',
-        autoUpdateInput: false,
-        locale: {
-            cancelLabel: 'Clear'
-        }
-    }, function(start, end) {
-        $('#daterange').val(start.format('YYYY-MM-DD') + ' - ' + end.format('YYYY-MM-DD'));
     });
 });
