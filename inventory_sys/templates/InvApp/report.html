@@ -5,7 +5,8 @@
 
 {% block content %}
 <div class="container-fluid pt-5">
-    <h3 class="fw-bold ">Stock & Inventory Report - {{ selected_date|default:"All Dates" }}</h3>
+    <div class="shadow-sm p-2 mb-3 bg-body-tertiary rounded">
+    <h3 class="fw-bold text-primary ">Stock & Inventory Report - {{ selected_date|default:"All Dates" }}</h3>
     <p><strong>Generated on:</strong> {{ current_time }}</p>
 
     <!-- Date Filter Form -->
@@ -14,41 +15,48 @@
           <input type="date" name="date" class="form-control w-25" value="{{ selected_date }}">
           <button type="submit" class="btn btn-outline-dark ms-2">View Report</button>
         </div>
-        <button type="button" class="btn btn-outline-dark px-3 ms-auto" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal">
-          Adjust Stock
-        </button>
       </form>
+    </div>
       
     <!-- Stock Summary -->
     <div class="row">
+        <!-- Stock In -->
         <div class="col-md-4">
-            <div class="card bg-outline-info ">
-                <div class="card-body">
-                    <h5>Stock In </h5>
-                    <h3>{{ total_stock_in }}</h3>
+            <div class="card shadow-lg border-left-dark">
+                <div class="card-body text-center">
+                    <i class="fas fa-plus-square fa-2x text-success mb-2"></i>
+                    <h6 class="text-muted fw-bold">Stock In</h6>
+                    <h3 class="fw-bold">{{ total_stock_in }}</h3>
                 </div>
             </div>
         </div>
+    
+        <!-- Stock Out -->
         <div class="col-md-4">
-            <div class="card bg-outline-dark">
-                <div class="card-body">
-                    <h5>Stock Out </h5>
-                    <h3>{{ stock_out }}</h3>
+            <div class="card shadow-lg border-left-danger">
+                <div class="card-body text-center">
+                    <i class="fas fa-minus-square fa-2x text-danger mb-2"></i>
+                    <h6 class="text-muted fw-bold">Stock Out</h6>
+                    <h3 class="fw-bold">{{ stock_out }}</h3>
                 </div>
             </div>
         </div>
+    
+        <!-- Closing Stock -->
         <div class="col-md-4">
-            <div class="card bg-outline-info ">
-                <div class="card-body">
-                    <h5>Closing Stock</h5>
-                    <h3>{{ total_quantity_in_stock}}</h3>
+            <div class="card shadow-lg border-left-info">
+                <div class="card-body text-center">
+                    <i class="fas fa-boxes fa-2x text-primary mb-2"></i>
+                    <h6 class="text-muted fw-bold">Closing Stock</h6>
+                    <h3 class="fw-bold">{{ closing_stock}}</h3>
                 </div>
             </div>
         </div>
     </div>
     
+    
     <!-- Stock Details -->
-    <h4 >Stock Transactions</h4>
+    <h4  class="text-primary mt-3">Stock Transactions</h4>
     <table class="table table-bordered ">
         <thead >
             <tr>
@@ -57,7 +65,6 @@
                 <th>Stock In</th>
                 <th>Stock Out</th>
                 <th>Adjustments</th>
-                <th>Closing Stock</th>
             </tr>
         </thead>
         <tbody>
@@ -68,7 +75,6 @@
                 <td>{{ entry.stock_in }}</td>
                 <td>{{ entry.stock_out }}</td>
                 <td>{{ entry.adjustments }}</td>
-                <td>{{ entry.closing_stock }}</td>
             </tr>
             {% empty %}
             <tr>
@@ -77,34 +83,6 @@
             {% endfor %}
         </tbody>
     </table>
-
-    <!-- Reorder Alerts -->
-    <h4 class="mt-4 ">Reorder Alerts</h4>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Current Stock</th>
-                <th>Reorder Level</th>
-                <th>Suggested Reorder Quantity</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in low_stock_items %}
-            <tr>
-                <td>{{ item.name }}</td>
-                <td>{{ item.quantity_in_stock }}</td>
-                <td>{{ item.reorder_level }}</td>
-                <td>{{ item.reorder_quantity }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="4" class="text-center">No low stock items.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    
    
     
     <div class="container mt-5">
@@ -116,84 +94,6 @@
             |     <i class="fas fa-dollar-sign"></i> <strong class="text-primary">Total Revenue:</strong> ${{ total_cash_made }}
         </p>
     </div>
-    
-
-    <!-- Stock Adjustments -->
-    <h4 class="mt-4 text-primary">Stock Adjustments</h4>
-    <table class="table table-bordered">
-        <thead class="table-header">
-            <tr>
-                <th>Product</th>
-                <th>Adjustment Type</th>
-                <th>Quantity</th>
-                <th>Date</th>
-                <th>Reason</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for adjustment in stock_adjustments %}
-            <tr>
-                <td>{{ adjustment.product.name }}</td>
-                <td>{{ adjustment.adjustment_type }}</td>
-                <td>{{ adjustment.quantity }}</td>
-                <td>{{ adjustment.adjustment_date }}</td>
-                <td>{{ adjustment.reason }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" class="text-center">No stock adjustments recorded.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <!-- Modal for Stock Adjustment -->
-    <div class="modal fade" id="stockAdjustmentModal" tabindex="-1" aria-labelledby="stockAdjustmentModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="stockAdjustmentModalLabel">Stock Adjustment</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <form method="POST"  action="{% url 'adjust_stock' %}">
-                {% csrf_token %}
-                <div class="form-group mb-3">
-                    <label for="productName">Product Name </label>
-                    <select id="productName" name="product_id" class="form-control" required>
-                        <option value="">Select a product</option>
-                        {% for product in products %}
-                            <option value="{{ product.product_id }}">{{ product.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group mb-3">
-                  <label for="adjustment_type" class="form-label">Adjustment Type</label>
-                  <select class="form-select" id="adjustment_type" name="adjustment_type" required>
-                    <option value="add">Add Stock</option>
-                    <option value="subtract">Subtract Stock</option>
-                  </select>
-                </div>
-                <div class="form-group mb-3">
-                  <label for="quantity" class="form-label">Quantity</label>
-                  <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
-                </div>
-                <div class="form-group mb-3">
-                    <label for="adjustmentDate">Adjustment Date</label>
-                    <input type="date" id="adjustmentDate" name="adjustmentDate" class="form-control" required>
-                </div>
-                <div class="form-group mb-3">
-                  <label for="reason" class="form-label">Reason</label>
-                  <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button type="submit" class="btn btn-primary">Apply Adjustment</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
 </div>
 
 {% endblock %}

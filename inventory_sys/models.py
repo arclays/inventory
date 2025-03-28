@@ -7,12 +7,12 @@ from django.db import transaction
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True) 
     name = models.CharField(max_length=100, unique=True) 
-    category = models.CharField(max_length=10)
+    category = models.ForeignKey('Category', on_delete=models.CASCADE) 
     selling_price = models.FloatField()
     units = models.CharField(max_length=50, default='pcs') 
     manufacture_date = models.DateField(null=True, blank=True, default=date.today)
     quantity_in_stock = models.IntegerField()
-    supplier = models.CharField(max_length=100)
+    supplier = models.ForeignKey('Supplier', on_delete=models.CASCADE)
     reorder_quantity = models.PositiveIntegerField(default=0) 
     reorder_level = models.PositiveIntegerField(default=0)  # 
     buying_price = models.FloatField() 
@@ -74,9 +74,9 @@ class Order(models.Model):
      except (ValueError, TypeError):
         self.discount = 0.00  
 
-     self.total_price = (self.quantity * self.price_per_unit ) - ((self.quantity * self.price_per_unit) * ( self.discount/ 100.00))
-
-     self.final_total += self.total_price  
+     self.total_price = float((self.quantity * self.price_per_unit ) - ((self.quantity * self.price_per_unit) * ( self.discount/ 100.00)))
+     self.final_total = 0  # Initialize final_total to 0
+     self.final_total = + float(self.total_price)  
 
      super().save(*args, **kwargs)
 
@@ -114,14 +114,43 @@ class StockAdjustment(models.Model):
          self.product.refresh_from_db() 
 
         if self.adjustment_type == 'add':
-            self.product.quantity_in_stock = F('quantity_in_stock') + self.quantity
+           self.product.quantity_in_stock = F('quantity_in_stock') + int(self.quantity)  
         elif self.adjustment_type == 'subtract':
-            if self.product.quantity_in_stock >= self.quantity:
-                self.product.quantity_in_stock = F('quantity_in_stock') - self.quantity
-            else:
-                raise ValueError("Insufficient stock to subtract")
+         if self.product.quantity_in_stock >= int(self.quantity):  
+          self.product.quantity_in_stock = F('quantity_in_stock') - int(self.quantity)
+
+        else:
+         raise ValueError("Insufficient stock to subtract")
 
         self.product.save(update_fields=['quantity_in_stock'])
 
-    def __str__(self):
+def __str__(self):
         return f"{self.adjustment_type} {self.quantity} of {self.product.name}"    
+    
+
+CATEGORY_TYPES = [
+    ('raw_material', 'Raw Material'),
+    ('finished_goods', 'Finished Goods'),
+    ('wip', 'Work-in-Progress'),
+    ('consumable', 'Consumable'),
+    ('service', 'Service'),
+]
+
+class Category(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True, null=True)
+    category_type = models.CharField(max_length=20, choices=CATEGORY_TYPES, default='finished_goods')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class Supplier(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    contact_person = models.CharField(max_length=255)
+    phone = models.CharField(max_length=20)
+    email = models.EmailField()
+    address = models.TextField()
+
+    def __str__(self):
+        return self.name

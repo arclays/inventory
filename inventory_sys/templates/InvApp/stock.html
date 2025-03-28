@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container-fluid pt-5">
-
+    <div class="shadow-sm p-3 mb-5 bg-body-tertiary rounded">
     <h5 class="text-primary fw-bold fs-2">Stock updates on {{ selected_date }}</h5>
 
     <!-- Date Picker -->
@@ -20,7 +20,8 @@
         </div>
     </form>
 
-    <h2 class="mt-2 fw-bold">Stock</h2>
+    <h2 class="mt-2 fw-bold ">Stock</h2>
+    </div>
     
     <div class="mb-3 d-flex justify-content-end gap-2">
         <button class="btn btn-outline-dark px-3 py-2" data-bs-toggle="modal" data-bs-target="#addStockModal">
@@ -32,7 +33,7 @@
 
     <!-- Default Stock Table -->
     <div id="defaultStockTable">
-        <table class="table mt-3 text-center" id="stockTable">
+        <table class="table mt-3 text-center" id="stockTable text-center align-middle table-striped-columns table-white">
             <thead class="table-header">   
                 <tr>
                     <th>No</th>
@@ -46,7 +47,7 @@
                     <th>Category</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="table-group-divider">
                 {% for stock in stocks %}
                 <tr>
                     <td>{{ forloop.counter }}</td>

@@ -5,8 +5,8 @@
 {% block content %}
 <!-- Main content -->
 <div class="container-fluid pt-5">
-    <div class="pagetitle">
-        <h1>Dashboard</h1>
+    <div class="shadow-sm p-3 mb-5 bg-body-tertiary rounded">
+        <h1 class="text-primary">Dashboard</h1>
         <nav>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
@@ -15,71 +15,98 @@
         </nav>
     </div>
     <!-- Stats Cards -->
-    <div class="row">
-      <div class="col-lg-3 col-md-6 mb-4">
-          <div class="card border-left-primary shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Orders</div>
-                          <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_orders }}</div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      <div class="col-lg-3 col-md-6 mb-4">
-          <div class="card border-left-success shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Customers</div>
-                          <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_customers }}</div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fas fa-users fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      <div class="col-lg-3 col-md-6 mb-4">
-          <div class="card border-left-info shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Cash Made</div>
-                          <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_cash_made|floatformat:2 }}</div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      <div class="col-lg-3 col-md-6 mb-4">
-          <div class="card border-left-warning shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Low Stock Items</div>
-                          <div class="h5 mb-0 font-weight-bold text-gray-800">{{ low_stock_items }}</div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-  </div>
+    <div class="row mb-3">
+        <!-- Total Orders -->
+        <div class="col-md-3">
+            <div class="card shadow-lg border-left-primary">
+                <div class="card-body text-center">
+                    <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
+                    <h6 class="text-muted">Total Orders</h6>
+                    <h4 class="fw-bold">{{ total_orders }}</h4>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Total Customers -->
+        <div class="col-md-3">
+            <div class="card shadow-lg border-left-success">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x text-success mb-2"></i>
+                    <h6 class="text-muted">Total Customers</h6>
+                    <h4 class="fw-bold">{{ total_customers }}</h4>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Total Cash Made -->
+        <div class="col-md-3">
+            <div class="card shadow-lg border-left-info">
+                <div class="card-body text-center">
+                    <i class="fas fa-dollar-sign fa-2x text-info mb-2"></i>
+                    <h6 class="text-muted">Total Cash Made</h6>
+                    <h4 class="fw-bold">{{ total_cash_made }}</h4>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Low Stock Items -->
+        <div class="col-md-3">
+            <div class="card shadow-lg border-left-warning">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                    <h6 class="text-muted">Low Stock Items</h6>
+                    <h4 class="fw-bold">{{ low_stock_count }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <!-- Total Products -->
+        <div class="col-md-3">
+            <div class="card shadow-lg border-left-dark">
+                <div class="card-body text-center">
+                    <i class="fas fa-box fa-2x text-dark mb-2"></i>
+                    <h6 class="text-muted">Total Products</h6>
+                    <h4 class="fw-bold">{{ total_products }}</h4>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Total Categories -->
+        <div class="col-md-3">
+            <div class="card shadow-lg border-left-secondary">
+                <div class="card-body text-center">
+                    <i class="fas fa-layer-group fa-2x text-secondary mb-2"></i>
+                    <h6 class="text-muted">Total Categories</h6>
+                    <h4 class="fw-bold">{{ categories }}</h4>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Adjustments -->
+        <div class="col-md-3">
+            <div class="card shadow-lg border-left-primary">
+                <div class="card-body text-center">
+                    <i class="fas fa-tools fa-2x text-primary mb-2"></i>
+                    <h6 class="text-muted">Adjustments</h6>
+                    <h4 class="fw-bold">{{ average_adjustments }}</h4>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Stock In -->
+        <div class="col-md-3">
+            <div class="card shadow-lg border-left-success">
+                <div class="card-body text-center">
+                    <i class="fas fa-warehouse fa-2x text-success mb-2"></i>
+                    <h6 class="text-muted">Stock In</h6>
+                    <h4 class="fw-bold">{{80 }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 
     <!-- Charts Section -->
     <div class="row">
@@ -94,8 +121,8 @@
         <div class="col-md-4">
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Product Categories</h5>
-                    <canvas id="categoriesChart"></canvas>
+                    <h5 class="card-title">Products Trends</h5>
+                    <canvas id="stockChart"></canvas>
                 </div>
             </div>
         </div>
@@ -112,17 +139,17 @@
                             <tr>
                                 <th scope="col">Order ID</th>
                                 <th scope="col">Customer</th>
+                                <th scope="col">Qty</th>
                                 <th scope="col">Amount</th>
-                                <th scope="col">Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for order in recent_orders %}
                             <tr>
                                 <td>#{{ order.id }}</td>
-                                <td>{{ order.customer.username }}</td>
+                                <td>{{ order.customer.name }}</td>
+                                <td>{{ order.quantity }}</td>
                                 <td>${{ order.final_total|floatformat:2 }}</td>
-                                <td><span class="badge bg-success">Completed</span></td>
                             </tr>
                             {% empty %}
                             <tr>

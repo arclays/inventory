@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="container-fluid pt-5">
-  <h2 class="text-primary fw-bold text-center">Product List</h2>
+  <div class="shadow-sm p-3 mb-5 bg-body-tertiary rounded text-primary fw-bold fs-1 text-center">Product List</div>
 
   <!-- Button to trigger modal -->
   <div class="d-flex justify-content-end">
@@ -16,7 +16,7 @@
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="productModalLabel">Product Details</h5>
+          <h5 class="modal-title" id="productModalLabel"> Add Product Details</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -37,22 +37,33 @@
                 <label for="quantity_in_stock" class="form-label">Stock</label>
                 <input type="number" class="form-control" id="quantity_in_stock" name="quantity_in_stock" value="{{ product.quantity_in_stock|default_if_none:0 }}" min="0" required>
               </div>
-
-              <div class="col-md-6 mb-3">
-                <label for="supplier" class="form-label">Supplier</label>
-                <input type="text" class="form-control" id="supplier" name="supplier" value="{{ product.supplier|default_if_none:'' }}" required>
-              </div>
+                            
+              <div class="form-group col-md-6 mb-3">
+                <label for="suppliername">Supplier</label>
+                <select id="suppliername" name="supplier_id" class="form-control" required>
+                    <option value="">Select a product</option>
+                    {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                    {% endfor %}
+                </select>
+             </div>
 
               <div class="col-md-6 mb-3">
                 <label for="units" class="form-label">Units</label>
                 <input type="text" class="form-control" id="units" name="units" value="{{ product.units|default_if_none:'' }}" required>
               </div>
-
-              <div class="col-md-6 mb-3">
-                <label for="category" class="form-label">Category</label>
-                <input type="text" class="form-control" id="category" name="category" value="{{ product.category|default_if_none:'' }}" required>
+              
+              <div class=" col-md-6 mb-3">
+                  <label for="categoryname">category</label>
+                  <select id="categoryname" name="category_id" class="form-control" required>
+                      <option value="">Select a product</option>
+                      {% for category in categories %}
+                          <option value="{{ category.id }}">{{ category.name }}</option>
+                      {% endfor %}
+                  </select>
               </div>
-
+              
+              
               <div class="col-md-6 mb-3">
                 <label for="selling_price" class="form-label">Selling Price</label>
                 <input type="number" step="0.01" class="form-control" id="selling_price" name="selling_price" value="{{ product.selling_price|default_if_none:0 }}" required>
@@ -108,9 +119,9 @@
           <td>{{ product.name }}</td>
           <td>{{ product.buying_price }}</td>
           <td>{{ product.quantity_in_stock }}</td>
-          <td>{{ product.supplier }}</td>
+          <td>{{ product.supplier.name }}</td>
           <td>{{ product.units }}</td>
-          <td>{{ product.category }}</td>
+          <td>{{ product.category.name }}</td>
           <td>{{ product.selling_price }}</td>
           <td>{{ product.manufacture_date }}</td>
           <td>{{ product.reorder_quantity }}</td>

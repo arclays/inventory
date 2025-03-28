@@ -90,20 +90,28 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        function updateTotalPrice() {
+         function updateTotalPrice() {
             let finalTotal = 0;
     
-            document.querySelectorAll(".product-item").forEach(item => {
+             document.querySelectorAll(".product-item").forEach(item => {
                 let quantity = parseFloat(item.querySelector(".quantity").value);
                 let pricePerUnitField = item.querySelector(".price_per_unit");
                 let totalPriceField = item.querySelector(".total-price");
-                let discount = parseFloat(document.getElementById("discount").value) || 0;
+                let discount = parseFloat(document.getElementById("discount").value) || 0.0;
     
                 // Ensure unit price is set to the selling price if it's empty or zero
                 if (!pricePerUnitField.value || parseFloat(pricePerUnitField.value) === 0) {
                     let selectedProduct = item.querySelector("select[name='products[]']").value;
-                    let sellingPrice = getSellingPrice(selectedProduct);
-                    pricePerUnitField.value = sellingPrice;
+                    let sellingPrice = 0;  
+                    fetch(`/get-selling-price/${selectedProduct}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        sellingPrice= data.selling_price || 0;
+                         pricePerUnitField.value = sellingPrice;
+
+    
+                    // alert(sellingPrice)
+                })
                 }
     
                 let pricePerUnit = parseFloat(pricePerUnitField.value) || 0;
@@ -119,17 +127,8 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("finalTotal").value = finalTotal.toFixed(2);
         }
     
-        // Function to fetch selling price based on product selection (Mockup Example)
-        function getSellingPrice(productId) {
-            let sellingPrices = {
-                "1": 5000,  // Example Product ID and Price
-                "2": 7000,
-                "3": 12000
-            };
-            return sellingPrices[productId] || 0;
-        }
-    
-        // Event Listeners for input changes
+  
+        
         document.addEventListener("input", function (event) {
             if (event.target.matches(".quantity, price_per_unit, #discount, select[name='products[]']")) {
                 updateTotalPrice();
@@ -160,20 +159,110 @@ document.getElementById('fullscreen-btn').addEventListener('click', function () 
 });
 
 // Sales Chart
+// var salesCtx = document.getElementById('salesChart').getContext('2d');
+// var salesChart = new Chart(salesCtx, {
+//     type: 'line',
+//     data: {
+//         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+//         datasets: [{
+//             label: 'Sales ($)',
+//             data: [5000, 7000, 8000, 12000, 15000, 20000],
+//             borderColor: 'blue',
+//             borderWidth: 2,
+//             fill: false
+//         }]
+//     }
+// });
+var stockCtx = document.getElementById('stockChart').getContext('2d');
+var stockChart = new Chart(stockCtx, {
+    type: 'pie',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'Stock Levels',
+            data: [],
+            backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40']
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Product Stock Levels',
+                font: { size: 18 }
+            }
+        }
+    }
+});
+
+// Fetch stock data from Django view
+function updateStockChart() {
+    fetch('/get-stock-data/')
+        .then(response => response.json())
+        .then(data => {
+            stockChart.data.labels = data.labels;
+            stockChart.data.datasets[0].data = data.data;
+            stockChart.update();
+        })
+        .catch(error => console.error('Error fetching stock data:', error));
+}
+
+// Update stock chart every 5 seconds (or on page load)
+setInterval(updateStockChart, 5000);
+updateStockChart();
+
 var salesCtx = document.getElementById('salesChart').getContext('2d');
 var salesChart = new Chart(salesCtx, {
     type: 'line',
     data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        labels: [],  // Initially empty
         datasets: [{
-            label: 'Sales ($)',
-            data: [5000, 7000, 8000, 12000, 15000, 20000],
-            borderColor: 'blue',
+            label: 'Total Orders',
+            data: [],
+            borderColor: '#007bff',
             borderWidth: 2,
-            fill: false
+            fill: false,
+            tension: 0.4
         }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Monthly Sales Quantity',
+                font: { size: 18 }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Total Quantity Ordered'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Months'
+                }
+            }
+        }
     }
 });
+
+// Fetch data from Django view
+fetch('/get-sales-data/')
+    .then(response => response.json())
+    .then(data => {
+        salesChart.data.labels = data.labels;
+        salesChart.data.datasets[0].data = data.data;
+        salesChart.update();
+    })
+    .catch(error => console.error('Error fetching data:', error));
+
 
 // Stock Chart
 var stockCtx = document.getElementById('stockChart').getContext('2d');
@@ -199,4 +288,9 @@ document.addEventListener("DOMContentLoaded", function () {
             sidebar.classList.remove("expanded");
         }
     });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    let today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    document.getElementById("orderDate").value = today;
 });

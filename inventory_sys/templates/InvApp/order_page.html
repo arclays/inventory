@@ -2,13 +2,14 @@
 <title>{% block title %}Orders{% endblock %}</title>
 
 {% block content %}
-<div class="container-fluid pt-5">
+<div class="container-fluid pt-3">
+    <div class="shadow-sm p-3 mb-5 bg-body-tertiary rounded">
     <h2 class="text-primary fw-bold  mt-4">Orders on {{ selected_date }}</h2>
 
     <!-- Date Picker -->
     <form method="GET" action="{% url 'order_page' %}">
         <div class="row align-items-center">
-            <div class="mb-3 col-md-3">
+            <div class="mb-2 col-md-3">
                 <label for="orderDate" class="form-label fw-bold">Select Date</label>
                 <input type="date" class="form-control" id="orderDate" name="orderDate" value="{{ selected_date }}">
             </div>
@@ -17,42 +18,52 @@
             </div>
         </div>
     </form>
-
-    <div class="row mb-1">
+    </div>
+    <div class="row mb-2">
+        <!-- Total Customers -->
         <div class="col-md-3">
-            <div class="card text-white bg-info mb-3">
-                <div class="card-header">Total Customers</div>
-                <div class="card-body">
-                    <h5 class="card-title">{{ total_customers }}</h5>
+            <div class="card shadow-lg border-left-warning">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                    <h6 class="text-muted">Total Customers</h6>
+                    <h4 class="fw-bold">{{ total_customers }}</h4>
                 </div>
             </div>
         </div>
+    
+        <!-- Total Orders -->
         <div class="col-md-3">
-            <div class="card text-white bg-primary mb-3">
-                <div class="card-header">Total Orders</div>
-                <div class="card-body">
-                    <h5 class="card-title">{{ total_orders }}</h5>
+            <div class="card shadow-lg border-left-success">
+                <div class="card-body text-center">
+                    <i class="fas fa-shopping-cart fa-2x text-success mb-2"></i>
+                    <h6 class="text-muted">Total Orders</h6>
+                    <h4 class="fw-bold">{{ total_orders }}</h4>
                 </div>
             </div>
         </div>
+    
+        <!-- Total Quantity -->
         <div class="col-md-3">
-            <div class="card text-white bg-info mb-3">
-                <div class="card-header">Total Quantity</div>
-                <div class="card-body">
-                    <h5 class="card-title">{{ total_quantity }}</h5>
+            <div class="card shadow-lg border-left-info">
+                <div class="card-body text-center">
+                    <i class="fas fa-boxes fa-2x text-info mb-2"></i>
+                    <h6 class="text-muted">Total Quantity</h6>
+                    <h4 class="fw-bold">{{ total_quantity }}</h4>
                 </div>
             </div>
         </div>
+    
+        <!-- Total Earnings -->
         <div class="col-md-3">
-            <div class="card text-white bg-danger mb-3">
-                <div class="card-header">Total Earnings</div>
-                <div class="card-body">
-                    <h5 class="card-title">${{ total_cash_made }}</h5>
+            <div class="card shadow-lg border-left-danger">
+                <div class="card-body text-center">
+                    <i class="fas fa-dollar-sign fa-2x text-danger mb-2"></i>
+                    <h6 class="text-muted">Total Earnings</h6>
+                    <h4>{{ total_cash_made }}</h4>
                 </div>
             </div>
         </div>
     </div>
-
     <!-- Place Order Button and Modal Trigger -->
     <button class="btn btn-outline-dark mb-1" data-bs-toggle="modal" data-bs-target="#placeOrderModal">
         <i class="fas fa-shopping-cart"></i> New Order
@@ -83,8 +94,8 @@
                 <td>{{ order.product.name }}</td>
                 <td>{{ order.quantity }}</td>
                 <td>{{ order.units }}</td>
-                <td>${{ order.price_per_unit }}</td>
-                <td>${{ order.total_price }}</td>
+                <td>{{ order.price_per_unit }}</td>
+                <td>{{ order.total_price }}</td>
                 <td>{{ order.payment_method }}</td>
                 <td>{{ order.discount }}</td>
                 <td>${{ order.final_total }}</td>
@@ -155,14 +166,15 @@
                                  <!-- Discount Input -->
                                 <div class="col-md-3">
                                     <label>Discount (%)</label>
-                                    <input type="number" name="productDiscount[]" id="discount" class="form-control product-discount" min="0" max="100" value="0" />
+                                    <input type="number" name="productDiscount[]" id="discount" class="form-control product-discount" min="0.0" max="100.0" value="0.0" />
                                      </div>
 
                                 <!-- Total Price (Auto-Calculated) -->
                                 <div class="col-md-3">
                                     <label label for="totalPrice">Total Price</label>
-                                    <input type="number" id="totalPrice" name="totalPrice" class="form-control total-price" readonly />
+                                    <input type="number" name="totalPrice[]" class="form-control total-price" readonly />
                                 </div>
+                                
                                 <!-- Remove Button -->
                                 <div class="col-md-3 d-flex align-items-end">
                                     <button type="button" class="btn btn-danger remove-product w-100">Remove</button>

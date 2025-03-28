@@ -1,0 +1,144 @@
+{% extends "InvApp/layout.html" %}
+{% block title %} Catalog{% endblock %}
+{% block content %}
+<div class="container-fluid pt-5"> 
+    <div class="shadow-sm p-3 mb-5 bg-body-tertiary rounded text-primary fw-bold fs-1 text-center">   
+    Catalog</div>
+
+    <div class="mb-3 d-flex justify-content-end gap-2">
+    <button class="btn btn-outline-dark mb-3" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+        <i class="bi bi-plus-circle me-2"></i>Add Category
+    </button>
+    <button class="btn btn-outline-dark mb-3" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+        <i class="bi bi-plus-circle me-2"> Add Supplier
+    </button>
+   </div>
+
+    <!-- Category Table -->
+    <h3>Categories</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td>{{ category.name }}</td>
+                <td>{{ category.description }}</td>
+                <td>{{ category.get_category_type_display }}</td>
+                <td>{{ category.created_at }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">No categories added yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Supplier Table -->
+    <h3>Suppliers</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Contact Person and Role</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for supplier in suppliers %}
+            <tr>
+                <td>{{ supplier.name }}</td>
+                <td>{{ supplier.contact_person }}</td>
+                <td>{{ supplier.phone }}</td>
+                <td>{{ supplier.email }}</td>
+                <td>{{ supplier.address }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No suppliers added yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">Add Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Category Name</label>
+                        <input type="text" name="category_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="category_description" class="form-control"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category Type</label>
+                        <select name="category_type" class="form-control" required>
+                            <option value="raw_material">Raw Material</option>
+                            <option value="finished_goods">Finished Goods</option>
+                            <option value="wip">Work-in-Progress</option>
+                            <option value="consumable">Consumable</option>
+                            <option value="service">Service</option>
+                        </select>
+                    </div>
+                    <button type="submit" name="add_category" class="btn btn-primary">Save Category</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Supplier Modal -->
+<div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSupplierModalLabel">Add Supplier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Supplier Name</label>
+                        <input type="text" name="supplier_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Person</label>
+                        <input type="text" name="supplier_contact" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="supplier_phone" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="supplier_email" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea name="supplier_address" class="form-control"></textarea>
+                    </div>
+                    <button type="submit" name="add_supplier" class="btn btn-success">Save Supplier</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

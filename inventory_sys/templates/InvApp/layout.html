@@ -43,10 +43,21 @@
   <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %} fs-5 d-flex align-items-center gap-2">
     <i class="fas fa-tachometer-alt px-4"></i> <span>Dashboard</span>
   </a>
+  <!-- Product with Collapse -->
+<a class="fs-5 d-flex align-items-center gap-2" data-bs-toggle="collapse" href="#productsCollapse" role="button">
+  <i class="fas fa-cubes px-4"></i> <span>Product</span>
+  <i class="fas fa-chevron-down ms-auto"></i>
+</a>
 
-  <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}active{% endif %} fs-5  d-flex align-items-center gap-2">
-      <i class="fas fa-cubes px-4"></i> <span>Products</span>
+<!-- Collapsible Product Items -->
+<div class="collapse {% if request.resolver_match.url_name == 'product_list' or request.resolver_match.url_name == 'Catalog' %}show{% endif %}" id="productsCollapse">
+  <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}active{% endif %} fs-5 d-flex align-items-center gap-2 ps-4">
+    <i class="fas fa-plus-square px-4"></i> <span>Add Product</span>
   </a>
+  <a href="{% url 'catalog' %}" class="{% if request.resolver_match.url_name == 'catalog' %}active{% endif %}fs-6 fw-bold d-flex align-items-center gap-2 ps-4">
+    <i class="fas fa-list-alt px-4"></i>  Add Catalog
+  </a>
+</div>
 
   <a href="{% url 'order_page' %}" class="{% if request.resolver_match.url_name == 'order_page' %}active{% endif %} fs-5  d-flex align-items-center gap-2">
     <i class="fas fa-shopping-cart px-4"></i> <span>Orders</span>
@@ -62,15 +73,15 @@
   </a>
   
   <!-- Collapsible Reports Items -->
-  <div class="collapse {% if request.resolver_match.url_name in 'stock_report, transaction_report, adjustments_report' %}show{% endif %}" id="reportsCollapse">
-      <a href="{% url 'report' %}" class="fs-6 d-flex align-items-center gap-2 ps-4 {% if request.resolver_match.url_name == 'stock_report' %}active{% endif %}">
+  <div class="collapse {% if request.resolver_match.url_name in 'Reorder, stock_transaction_report, adjustments_report' %}show{% endif %}" id="reportsCollapse">
+      <a href="{% url 'report' %}" class="fs-6 d-flex align-items-center gap-2 ps-4 {% if request.resolver_match.url_name == 'stock_report' %}active{% endif %} display-1">
           <i class="bi bi-box-seam px-4"></i> StockTransaction
       </a>
-<a href="{% url 'reorder_alerts' %}" class="fs-6 d-flex align-items-center gap-2 ps-4 {% if request.resolver_match.url_name == 'transaction_report' %}active{% endif %}">
+<a href="{% url 'reorder_alerts' %}" class="fs-6 d-flex align-items-center gap-2 ps-4 {% if request.resolver_match.url_name == 'transaction_report' %}active{% endif %} display-3">
           <i class="bi bi-receipt px-4"></i> Reorder Alerts
       </a>
-      <a href="{% url 'stock_adjustments' %}" class="fs-6 d-flex align-items-center gap-2 ps-4 {% if request.resolver_match.url_name == 'adjustments_report' %}active{% endif %}">
-          <i class="bi bi-pencil-square px-4"></i> Adjustments 
+      <a href="{% url 'stock_adjustments' %}" class="fs-6 d-flex align-items-center gap-2 ps-4 {% if request.resolver_match.url_name == 'adjustments_report' %}active{% endif %} display-5">
+          <i class="bi bi-pencil-square px-4"></i> Adjust stock 
       </a>
   </div>
 
@@ -114,5 +125,7 @@
   <!-- JavaScript Files -->
   <script src="{% static 'js/scripts.js' %}"></script>
   <script src="{% static 'js/app.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/sales_chart.js' %}"></script>
 </body>
 </html>

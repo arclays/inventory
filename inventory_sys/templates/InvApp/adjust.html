@@ -65,14 +65,14 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form method="POST" action="{% url 'adjust_stock' %}">
+                    <form method="POST" action="{% url 'stock_adjustments' %}">
                         {% csrf_token %}
                         <div class="form-group mb-3">
                             <label for="productName">Product Name</label>
                             <select id="productName" name="product_id" class="form-control" required>
                                 <option value="">Select a product</option>
                                 {% for product in products %}
-                                    <option value="{{ product.id }}">{{ product.name }}</option>
+                                    <option value="{{ product.product_id }}">{{ product.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
