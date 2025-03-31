@@ -1,68 +1,128 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Login</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - All StocK</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> 
+    <style>  
+       body {
+        background: url("{% static 'images/stock.webp' %}") no-repeat center center fixed;
+            background-size: cover;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+       }
+  
+        .login-container {
+            max-width: 400px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
 
-    <!-- App favicon -->
-    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" />
+        .login-header img {
+            height: 50px;
+            margin-bottom: 5px;
+        }
+        .login-header h3 {
+            color: blue;
+        }
 
-    <link rel="stylesheet" type="text/css" href="{% static 'styles.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'style/style.css' %}">
+        /* Input Fields */
+        .form-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+        .form-control {
+            padding: 8px;
+            border-radius: 10px;
+            margin-top: 5px;
+        }
+        .form-control:focus {
+            box-shadow: none;
+            border-color:blue;
+        }
 
-    <!-- Bootstrap & Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/icons.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/app.min.css' %}" />
-  </head>
-  <style>
+        /* Buttons */
+        .btn-login {
+            width: 100%;
+            background-color:blue;
+            color: #fff;
+            padding: 8px;
+            border: none;
+            border-radius: 10px;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+        .btn-login:hover {
+            background-color: blue;
+        }
 
-  </style>
+        /* Links */
+        .forgot-password, .register-link {
+            margin-top: 10px;
+        }
+        .forgot-password a, .register-link a {
+            text-decoration: none;
+            color: blue;
+            font-weight: bold;
+        }
+        .forgot-password a:hover, .register-link a:hover {
+            text-decoration: underline;
+        }
 
-  <body>
+        /* Error Message */
+        .error {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
     <div class="login-container">
-      <div class="login-header">
-        <img src="{% static 'images/logo-sm.png' %}" alt="Logo" height="40" />
-        <h3 class="text-primary fw-bold">Welcome Back</h3>
-        <p class="text-white-50">Sign in to continue</p>
-      </div>
-
-      <form action="{% url 'login' %}" method="POST">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{% url 'home' %}" />
-
-        <div class="input-group mb-3">
-          <span class="input-group-text text-primary" id="basic-addon1">Username@</span>
-          <input type="text" class="form-control" placeholder=" Enter Username" aria-label="Username" aria-describedby="basic-addon1">
+        <div class="login-header">
+            <img src="{% static 'images/logo-sm.png' %}" alt="Logo">
+            <h3 class="fs-3 fw-bold">Welcome To AllStocK Login</h3>
+            <p class="text-muted">Sign in to continue</p>
         </div>
-        <br>
-        <div class="input-group mt-3">
-          <span class="input-group-text text-primary" id="basic-addon1">Password@</span>
-          <input type="text" class="form-control" placeholder=" Enter Password" aria-label="Password" aria-describedby="basic-addon1">
+
+        <form action="{% url 'login' %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'home' %}">
+
+            <div class="form-group">
+                <label for="username"><i class="fas fa-user"></i> @Username :</label>
+                <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password"><i class="fas fa-lock"></i> @Password :</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+            </div>
+
+            {% if error %}
+            <div class="error text-danger">{{ error }}</div>
+            {% endif %}
+
+            <button type="submit" class="btn-login">Log In</button>
+        </form>
+
+        <div class="forgot-password">
+            <a href="#">Forgot your password?</a>
         </div>
-        <br>
 
-        {% if error %}
-        <div class="error text-danger text-danger">{{ error }}</div>
-        {% endif %}
-
-        <button type="submit" class="btn-login">Log In</button>
-      </form>
-
-      <div class="forgot-password">
-        <a href="#">Forgot your password?</a>
-      </div>
-
-      <div class="register-link">
-        <p>Don't have an account? <a href="{% url 'register' %}">Signup now</a></p>
-      </div>
+        <div class="register-link">
+            <p>Don't have an account? <a href="{% url 'register' %}">Signup now</a></p>
+        </div>
     </div>
 
-    <!-- JAVASCRIPT -->
-    <script src="{% static 'libs/jquery/jquery.min.js' %}"></script>
-    <script src="{% static 'libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'js/app.js' %}"></script>
-  </body>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
 </html>

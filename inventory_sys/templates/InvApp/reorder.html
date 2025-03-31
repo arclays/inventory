@@ -3,12 +3,12 @@
 
 {% block content %}
 <div class="container-fluid pt-5">
-    <h2 class="text-primary fw-bold">Reorder Alerts</h2>
+    <h2 class="text-primary fw-bold text-center">Reorder Alerts</h2>
 
-    <section class="mt-4">
+    <section class="mt-4 ">
         <h4 class="text-secondary">Overview</h4>
-        <p>
-            This page provides an overview of products that are below their reorder levels. 
+        <p class="text-center">
+            An overview of products that are below their reorder levels. 
             Keeping track of these items ensures that we maintain optimal stock levels and avoid stockouts.
         </p>
     </section>
@@ -50,31 +50,20 @@
             </tbody>
         </table>
     </section>
-
-    <!-- Actionable Insights Section -->
     <section class="mt-4">
-        <h4 class="text-secondary">Actionable Insights</h4>
-        <p>
-            Based on the current stock levels, consider the following actions:
-        </p>
-        <ul class="list-group">
-            <li class="list-group-item">Review supplier lead times for critical items.</li>
-            <li class="list-group-item">Place orders for low stock items to avoid disruptions.</li>
-            <li class="list-group-item">Analyze sales trends to adjust reorder levels accordingly.</li>
-        </ul>
+        <h4 class="text-secondary">Need Assistance?</h4>
+        <p>If you have any questions regarding inventory management, restocking, or supplier coordination, feel free to reach out:</p>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-primary">restock Support Team</h5>
+                <p class="card-text"><strong>Arnold</strong> Manager</p>
+                <p class="card-text"><i class="fas fa-envelope"></i> Email: <a href="mailto:arno@example.com">johndoe@example.com</a></p>
+                <p class="card-text"><i class="fas fa-phone"></i> Phone: <a href="tel:+2835687746">(256) 7623-73813</a></p>
+                <p class="card-text"><i class="fas fa-map-marker-alt"></i> Office: 123 Allstock, office room12</p>
+            </div>
+        </div>
     </section>
+    
 
-    <!-- Contact Information Section -->
-    <section class="mt-4">
-        <h4 class="text-secondary">Contact Information</h4>
-        <p>
-            For any inquiries regarding inventory management, please contact:
-        </p>
-        <ul class="list-group">
-            <li class="list-group-item">John Doe - Inventory Manager</li>
-            <li class="list-group-item">Email: johndoe@example.com</li>
-            <li class="list-group-item">Phone: (123) 456-7890</li>
-        </ul>
-    </section>
 </div>
 {% endblock %}

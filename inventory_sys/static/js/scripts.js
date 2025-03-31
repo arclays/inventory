@@ -294,3 +294,14 @@ document.addEventListener("DOMContentLoaded", function () {
     let today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
     document.getElementById("orderDate").value = today;
 });
+
+
+document.querySelector('form').addEventListener('submit', function(e) {
+    var password = document.getElementById('password').value;
+    var confirmPassword = document.getElementById('confirm_password').value;
+
+    if (password !== confirmPassword) {
+        e.preventDefault();
+        alert('Passwords do not match.');
+    }
+});

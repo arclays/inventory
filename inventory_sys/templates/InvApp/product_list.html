@@ -94,34 +94,34 @@
     </div>
   </div>
   <!-- Product Table -->
-  <div class="mt-3">
+  <div class="mt-3 table-responsive">
     <table class="table align-middle table-striped-columns table-white">
       <thead class="table-header">
         <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Buying Price</th>
-          <th>Available Stock</th>
-          <th>Supplier</th>
-          <th>Units</th>
-          <th>Category</th>
-          <th>Selling Price</th>
-          <th>Manufacture Date</th>
-          <th>Reorder Qty</th>
-          <th>Reorder Level</th>
-          <th>Actions</th>
+          <th style="width: 5%;">ID</th>
+          <th style="width: 15%;">Name</th>
+          <th style="width: 8%;">Buying Price</th>
+          <th style="width: 8%;">Stock</th>
+          <th style="width: 12%;">Supplier</th>
+          <th style="width: 8%;">Units</th>
+          <th style="width: 10%;">Category</th>
+          <th style="width: 8%;">Selling Price</th>
+          <th style="width: 12%;">Manufacture Date</th>
+          <th style="width: 8%;">Reorder Qty</th>
+          <th style="width: 8%;">Reorder Level</th>
+          <th style="width: 15%;">Actions</th>
         </tr>
       </thead>
       <tbody class="table-group-divider">
         {% for product in page_obj %}
         <tr>
           <td>{{ product.product_id }}</td>
-          <td>{{ product.name }}</td>
+          <td class="text-truncate" style="max-width: 120px;">{{ product.name }}</td>
           <td>{{ product.buying_price }}</td>
           <td>{{ product.quantity_in_stock }}</td>
-          <td>{{ product.supplier.name }}</td>
+          <td class="text-truncate" style="max-width: 120px;">{{ product.supplier.name }}</td>
           <td>{{ product.units }}</td>
-          <td>{{ product.category.name }}</td>
+          <td class="text-truncate" style="max-width: 100px;">{{ product.category.name }}</td>
           <td>{{ product.selling_price }}</td>
           <td>{{ product.manufacture_date }}</td>
           <td>{{ product.reorder_quantity }}</td>

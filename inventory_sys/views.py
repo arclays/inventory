@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-from django.views import View
 from .forms import RegistrationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -18,27 +17,27 @@ from django.http import JsonResponse
 
 
 
-# @login_required
-
-def get_selling_price(request, product_id):
-    try:
-        product = Product.objects.get(product_id=product_id)
-        return JsonResponse({"selling_price": product.selling_price})
-    except Product.DoesNotExist:
-        return JsonResponse({"selling_price": 0}, status=404)
-
 def register_view(request):
-    if request.method == 'POST': 
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = User.objects.create_user(username=username, password=password)
-            login(request, user)
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            return redirect('register')
+
+        try:
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user.save()
+            messages.success(request, "Registration successful. You can now log in.")
             return redirect('login')
-    else:
-        form = RegistrationForm()
-    return render(request, 'Invapp/register.html', {'form': form}) 
+        except Exception as e:
+            messages.error(request, str(e))
+            return redirect('register')
+
+    return render(request, 'Invapp/register.html')
 
 def login_view(request):
     if request.method == 'POST':
@@ -56,17 +55,11 @@ def login_view(request):
     next_url = request.GET.get('next', '')
     return render(request, 'Invapp/login.html', {'next': next_url})
 
-
 def logout_view(request):
-    logout(request)
-    return redirect('login') 
-
-class ProtectedView(LoginRequiredMixin, View):
-    login_url = '/Invapp/login/'
-    redirect_field_name = 'next'
-
-    def get(self, request):
-        return render(request, 'Invapp/products.html')      
+    if request.method == "POST":
+        logout(request)
+        return redirect('login')  # Redirect to login after logout
+    return render(request, 'Invapp/logout.html')   
 
 
 def product_list(request):
@@ -227,6 +220,13 @@ def order_page(request):
     }
 
     return render(request, 'InvApp/order_page.html', context)
+def get_selling_price(request, product_id):
+    try:
+        product = Product.objects.get(product_id=product_id)
+        return JsonResponse({"selling_price": product.selling_price})
+    except Product.DoesNotExist:
+        return JsonResponse({"selling_price": 0}, status=404)
+
 
 def place_order(request):
     if request.method == 'POST':
@@ -312,8 +312,9 @@ def get_sales_data(request):
 
 def get_stock_data(request):
     products = Product.objects.all()
-    labels = [product.product_name for product in products]  # Product names
-    data = [product.quantity_in_stock for product in products]  # Stock quantities
+    labels = [product.product_name for product in products] 
+    
+    data = [product.quantity_in_stock for product in products] 
 
     return JsonResponse({'labels': labels, 'data': data})
 
@@ -464,7 +465,7 @@ def reorder_alerts(request):
 
 
 
-
+# @login_required
 def home_view(request):
     orders = Order.objects.all()
     low_stock_items = Product.objects.filter(quantity_in_stock__lt=F('reorder_level')).values(

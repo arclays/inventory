@@ -5,11 +5,9 @@ from . import views
 
 urlpatterns = [
     path('', views.home_view, name='home'),
-    path('login/', views.login_view, name='login'), 
-    path('logout/', views.logout_view, name='logout'),
-    path('Invapp/logout/', views.login_view, name='logout'),  
+    path('Invapp/login/', views.login_view, name='login'), 
+    path('Invapp/logout/', views.logout_view, name='logout'),  
     path('register/', views.register_view, name='register'), 
-    path('protected/', views.ProtectedView.as_view(), name='protected'),
     path('customers/', views.customer_list, name='customer_list'),
     path('stock/', views.stock_view, name='stock'),
     path('add-stock/', views.add_stock, name='add_stock'),
@@ -27,6 +25,7 @@ urlpatterns = [
     path('stock-adjustments/', views.stock_adjustments, name='stock_adjustments'),
     path('product/catalog/', views.catalog, name='catalog'),
     path('get-sales-data/', views.get_sales_data, name='get_sales_data'),
+    path('get-stock-data/', views.get_stock_data, name='get_stock_data'),
    
 
    
