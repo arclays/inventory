@@ -1,23 +1,20 @@
 {% extends "InvApp/layout.html" %}
 {% block title %} Catalog{% endblock %}
 {% block content %}
-<div class="container-fluid pt-5"> 
-    <div class="shadow-sm p-3 mb-5 bg-body-tertiary rounded text-primary fw-bold fs-1 text-center">   
+<div class="container-fluid pt-3"> 
+    <div class="shadow-sm mb-5 bg-body-tertiary rounded text-primary fw-bold fs-1 text-center">   
     Catalog</div>
 
-    <div class="mb-3 d-flex justify-content-end gap-2">
+    <div class="mb-1 d-flex justify-content-end gap-2">
     <button class="btn btn-outline-dark mb-3" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-        <i class="bi bi-plus-circle me-2"></i>Add Category
-    </button>
+        <i class="bi bi-plus-circle me-2"></i>Add Category</button>
     <button class="btn btn-outline-dark mb-3" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
-        <i class="bi bi-plus-circle me-2"> Add Supplier
-    </button>
+        <i class="bi bi-plus-circle me-2"></i> Add Supplier</button>
    </div>
-
     <!-- Category Table -->
-    <h3>Categories</h3>
+    <h3 class="text-primary">Categories</h3>
     <table class="table table-bordered">
-        <thead>
+        <thead class="table-header">
             <tr>
                 <th>Name</th>
                 <th>Description</th>
@@ -40,9 +37,9 @@
     </table>
 
     <!-- Supplier Table -->
-    <h3>Suppliers</h3>
+    <h3 class="text-primary">Suppliers</h3>
     <table class="table table-bordered">
-        <thead>
+        <thead class="table-header">
             <tr>
                 <th>Name</th>
                 <th>Contact Person and Role</th>

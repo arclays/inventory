@@ -14,94 +14,125 @@
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
   <div class="container-fluid">
-    <a class="navbar-brand fs-2" href="{% url 'home' %}">
+    <!-- Brand -->
+    <a class="navbar-brand fs-2 me-auto" href="{% url 'home' %}">
       <i class="material-icons">All STocK</i>
- 
     </a>
-    <button id="fullscreen-btn" class="ms-auto">
-      <i class="fas fa-expand"></i>
+    <div class="flex-grow-1"></div>
+
+    <!-- Centered Sidebar Toggle Button -->
+    <div class="d-flex justify-content-center w-100">
+        <button class="toggle-btn" id="toggleSidebar"><i class="fas fa-bars"></i></button>
+    </div>
+
+    <!-- Navbar Toggler (for collapsing menu) -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
     </button>
+
+    <!-- Navbar Links -->
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <!-- Notifications -->
         <li class="nav-item">
           <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#notificationModal">
-            <i class="fas fa-bell text-dark">  </i><strong class="text-white">Notifications</strong> 
+            <i class="fas fa-bell"></i>
+            <strong class="text-white">Notifications</strong> 
             <span class="badge bg-danger" id="notificationCount">{{ orders.count }}</span>
           </a>
         </li>
+
+        <!-- Profile -->
         <li class="nav-item">
           <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">
-            <img src="{% static 'images/hiladah.png' %}" alt="Profile" class="rounded-circle me-1" style="width: 40px; height: 30px;">
+            <img src="{% static 'images/hiladah.png' %}" alt="Profile" class="rounded-circle me-1" style="width: 40px; height: 40px;">
           </a>
+        </li>
+
+        <!-- Fullscreen Toggle -->
+        <li class="nav-item">
+          <button class="btn btn-primary" id="fullscreen-toggle">
+            <i class="fas fa-expand"></i>
+          </button>
         </li>
       </ul>
     </div>
   </div>
 </nav>
-<div class="sidebar fw-bold fs-2" style="margin-top: 60px;">
 
-  <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %} fs-5 d-flex align-items-center gap-2">
-    <i class="fas fa-tachometer-alt px-4"></i> <span>Dashboard</span>
-  </a>
-  <!-- Product with Collapse -->
-<a class="fs-5 d-flex align-items-center gap-2" data-bs-toggle="collapse" href="#productsCollapse" role="button">
-  <i class="fas fa-cubes px-4"></i> <span>Product</span>
-  <i class="fas fa-chevron-down ms-auto"></i>
-</a>
+<div class="sidebar d-flex flex-column fw-bold fs-5">
+  <ul class="nav flex-column">
+      <li class="nav-item">
+          <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
+              <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
+          </a>
+      </li>
 
-<!-- Collapsible Product Items -->
-<div class="collapse {% if request.resolver_match.url_name == 'product_list' or request.resolver_match.url_name == 'Catalog' %}show{% endif %}" id="productsCollapse">
-  <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}active{% endif %} fs-5 d-flex align-items-center gap-2 ps-4">
-    <i class="fas fa-plus-square px-4"></i> <span>Add Product</span>
-  </a>
-  <a href="{% url 'catalog' %}" class="{% if request.resolver_match.url_name == 'catalog' %}active{% endif %}fs-6 fw-bold d-flex align-items-center gap-2 ps-4">
-    <i class="fas fa-list-alt px-4"></i>  Add Catalog
-  </a>
+      <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="collapse" href="#products-menu">
+              <i class="fas fa-box-open"></i> <span>Products</span> <i class="fas fa-chevron-down ms-auto"></i>
+          </a>
+          <div id="products-menu" class="collapse">
+              <a class="nav-link" href="{% url 'product_list' %}">
+                  <i class="fas fa-plus-circle"></i> <span>Add Product</span>
+              </a>
+              <a class="nav-link" href="{% url 'catalog' %}">
+                  <i class="fas fa-list"></i> <span>Add Catalog</span>
+              </a>
+          </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.path == '/order_page/' %}active{% endif %}" href="{% url 'order_page' %}">
+          <i class="fas fa-shopping-cart"></i><span>Orders</span>
+        </a>
+    </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.path == '/stock/' %}active{% endif %}" href="{% url 'stock' %}">
+            <i class="fas fa-box"></i> <span>Stock</span>
+        </a>
+    </li>
+
+      <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="collapse" href="#reports-menu">
+              <i class="fas fa-file-alt"></i> <span>Reports</span> <i class="fas fa-chevron-down ms-auto"></i>
+          </a>
+          <div id="reports-menu" class="collapse">
+              <a class="nav-link" href="{% url 'report' %}">
+                  <i class="fas fa-exchange-alt"></i> <span>Stock Transactions</span>
+              </a>
+              <a class="nav-link" href="{% url 'reorder_alerts' %}">
+                  <i class="fas fa-exclamation-triangle"></i> <span>Reorder Alerts</span>
+              </a>
+              <a class="nav-link" href="{% url 'stock_adjustments' %}">
+                  <i class="fas fa-wrench"></i> <span>Adjustments</span>
+              </a>
+          </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.path == '/customers/' %}active{% endif %}" href="{% url 'customer_list' %}">
+            <i class="fas fa-users"></i> <span>Customers</span>
+        </a>
+    </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'logout' %}">
+            <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+        </a>
+    </li>
+  </ul>
 </div>
-
-  <a href="{% url 'order_page' %}" class="{% if request.resolver_match.url_name == 'order_page' %}active{% endif %} fs-5  d-flex align-items-center gap-2">
-    <i class="fas fa-shopping-cart px-4"></i> <span>Orders</span>
-  </a>
-
-  <a href="{% url 'stock' %}" class="{% if request.resolver_match.url_name == 'stock' %}active{% endif %} fs-5  d-flex align-items-center gap-2">
-      <i class="fas fa-warehouse px-4"></i> <span>Stock</span>
-  </a>
-
-  <!-- Reports with Collapse -->
-  <a class="fs-5 d-flex align-items-center gap-2" data-bs-toggle="collapse" href="#reportsCollapse" role="button">
-      <i class="fas fa-chart-line px-4"></i> <span>Reports</span> <i class="fas fa-chevron-down ms-auto"></i>
-  </a>
-  
-  <!-- Collapsible Reports Items -->
-  <div class="collapse {% if request.resolver_match.url_name in 'Reorder, stock_transaction_report, adjustments_report' %}show{% endif %}" id="reportsCollapse">
-      <a href="{% url 'report' %}" class="fs-6 d-flex align-items-center gap-2 ps-4 {% if request.resolver_match.url_name == 'stock_report' %}active{% endif %} display-1">
-          <i class="bi bi-box-seam px-4"></i> StockTransaction
-      </a>
-<a href="{% url 'reorder_alerts' %}" class="fs-6 d-flex align-items-center gap-2 ps-4 {% if request.resolver_match.url_name == 'transaction_report' %}active{% endif %} display-3">
-          <i class="bi bi-receipt px-4"></i> Reorder Alerts
-      </a>
-      <a href="{% url 'stock_adjustments' %}" class="fs-6 d-flex align-items-center gap-2 ps-4 {% if request.resolver_match.url_name == 'adjustments_report' %}active{% endif %} display-5">
-          <i class="bi bi-pencil-square px-4"></i> Adjust stock 
-      </a>
+    <div class="col-lg-10 col-md-9 ms-auto px-4" style="margin-top: 80px;">
+      <div class="content" id="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            {% block content %}{% endblock %}
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
   </div>
-
-  <a href="{% url 'customer_list' %}" class="{% if request.resolver_match.url_name == 'customer_list' %}active{% endif %} fs-5  d-flex align-items-center gap-2">
-    <i class="fas fa-users px-4"></i> <span>Customers</span>
-  </a>
-
-  <a href="{% url 'logout' %} ">
-      <i class="fas fa-sign-out-alt fs-5 px-4"></i> <span class="fs-5  d-flex align-items-center gap-2">Logout</span>
-  </a>
-
 </div>
-
-
-<!-- Main Content -->
-<div class="content">
-  <div class="col-md-12">{% block content %}{% endblock %}</div>
-</div>
-
-
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

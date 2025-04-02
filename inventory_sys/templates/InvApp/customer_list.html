@@ -17,7 +17,8 @@
                     <button type="button" class="btn-close"  data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form method="POST" action="{% url 'customer_list' %}">
+                        <form method="POST" action="{% url 'customer_list' %}" autocomplete="off">
+    
                         {% csrf_token %}
                         {{ form.as_p }}
                         <div class="mb-3">
@@ -52,8 +53,8 @@
     {% endif %}
 
     <!-- Customer Table -->
-    <table class="table mt-4 text-center">
-        <thead class="table-header">
+    <table class="table mt-2  text-center align-middle table-striped-columns table-secondary"> 
+        <thead class="table-header text-white">
             <tr>
                 <th>ID</th>
                 <th>Name</th>

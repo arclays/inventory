@@ -1,35 +1,22 @@
 
 body {
   display: flex;
-  min-height: 100vh;
   overflow-x: hidden;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-} 
+}
 
 .card-title {
   font-size: 1.0rem;
 } 
-.table-header {
-  background-color: #72a08b; 
-  color: white; 
-} 
-.content {
-  margin-left: 250px; /* Match sidebar width */
-  flex-grow: 1;
-  padding: 50px;
-  width: calc(100% - 250px); /* Ensure correct width */
-  background-color: rgb(248, 249, 250);
-  transition: margin-left 0.3s ease;
-  font-family:Arial, Helvetica, sans-serif;
-}
-
- 
   
   form.d-flex .btn {
     margin-left: 0.5rem;
   }
+
+  input:-webkit-autofill {
+    background-color: transparent !important;
+    color: black !important;
+    box-shadow: 0 0 0px 1000px white inset !important;
+}
 
 .navbar {
   background-color: #0b8adf !important;
@@ -38,7 +25,6 @@ body {
 }
 
 .navbar-brand {
-  font-size: 5px;
   font-weight: bold;
   color: white !important;
 }
@@ -55,73 +41,8 @@ body {
       background-color: black;
       color: white;
   }
-
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0; 
-    height: 100vh;
-    width: 250px; 
-    background-color: rgb(236, 242, 247);
-    padding-top: 20px;
-    overflow-y: auto;
-    transition: all 0.3s ease-in-out;
-    justify-content: center;
-    text-align: center;
-    align-items: center;
-  }
-
-.sidebar a {
-  display: flex;
-  align-items: center;
-  padding: 12px;
-  font-size: 8px;
-  text-align: center;
-  text-decoration: none;
-  color: black;
-  border-left: 4px solid transparent;
-  font-family:'Courier New', Courier, monospace;
-}
-
-.sidebar a i {
-  width: 20px;
-  text-align: center;
-}
-
-.sidebar a span {
-  display: inline; 
-  
-}
-
-.sidebar a:hover {
-  background: rgba(11, 7, 233, 0.1); 
-  border-left: 5px solid #ffc107; 
-}
-
-
-.sidebar a.active {
-  background: rgba(64, 147, 255, 0.2); 
-  border-left: 10px solid #f80a0a; 
-}
-
-.sidebar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background: #ffc107; 
-  border-radius: 5px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background: #f80606;
-}
-
-   .table-header{
-    background-color: aliceblue;
-   }
-
-   .card {
+ 
+.card {
     border-radius: 10px;
     transition: transform 0.2s ease-in-out;
 }
@@ -132,7 +53,7 @@ body {
     border-left: 40px solid #ffc107 !important;
 }
 .border-left-success {
-    border-left: 60px solid #28a745 !important;
+    border-left: 40px solid #28a745 !important;
 }
 .border-left-info {
     border-left: 40px solid #17a2b8 !important;
@@ -149,4 +70,109 @@ body {
 }
 .border-left-secondary{
     border-left: 40px solid #6c757d !important;
+}
+
+.content {
+  transition: margin-left 0.3s, width 0.3s;
+}
+.content.expanded {
+  margin-left: 60px;
+  width: calc(100% - 60px);
+}
+.toggle-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  background: #d8e5f5;
+  color: rgb(0, 0, 0);
+  padding-top: 20px;
+  transition: width 0.3s ease-in-out;
+  z-index: 1000;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.sidebar .nav-link {
+  color: rgb(0, 0, 0);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  border-radius: 5px;
+}
+
+
+.sidebar .collapse .nav-link {
+  padding-left: 40px;
+}
+
+.toggle-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+      width: 60px;
+      overflow: hidden;
+  }
+
+  .sidebar .nav-link span {
+      display: none;
+  }
+
+  .toggle-btn {
+      display: block;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+  }
+
+  .sidebar:hover {
+      width: 200px;
+  }
+
+  .sidebar:hover .nav-link span {
+      display: inline;
+  }
+}
+
+.sidebar a:hover {
+  background: rgba(11, 7, 233, 0.1); 
+  border-left: 5px solid #ffc107; 
+  text-decoration: none;
+}
+.sidebar a.active {
+  background: rgba(64, 147, 255, 0.2); 
+  border-left: 10px solid #f80a0a; 
+  text-decoration: none;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #ffc107; 
+  border-radius: 5px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #f80606;
 }

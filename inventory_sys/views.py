@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-from .forms import RegistrationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -14,6 +13,7 @@ from .models import Order, Stock, StockAdjustment
 from django.db.models import Sum
 from django.db.models import F, Avg
 from django.http import JsonResponse
+from django.contrib.auth.models import User
 
 
 
@@ -32,12 +32,15 @@ def register_view(request):
             user = User.objects.create_user(username=username, email=email, password=password)
             user.save()
             messages.success(request, "Registration successful. You can now log in.")
+            print("Redirecting to login after success")
             return redirect('login')
         except Exception as e:
             messages.error(request, str(e))
+            print(f"Redirecting to register due to error: {e}")
             return redirect('register')
 
     return render(request, 'Invapp/register.html')
+
 
 def login_view(request):
     if request.method == 'POST':

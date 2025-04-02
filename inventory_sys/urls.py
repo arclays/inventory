@@ -5,9 +5,9 @@ from . import views
 
 urlpatterns = [
     path('', views.home_view, name='home'),
-    path('Invapp/login/', views.login_view, name='login'), 
     path('Invapp/logout/', views.logout_view, name='logout'),  
-    path('register/', views.register_view, name='register'), 
+    path('register/', views.register_view, name='register'),
+    path('login/', views.login_view, name='login'),
     path('customers/', views.customer_list, name='customer_list'),
     path('stock/', views.stock_view, name='stock'),
     path('add-stock/', views.add_stock, name='add_stock'),

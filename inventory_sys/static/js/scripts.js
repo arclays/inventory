@@ -305,3 +305,22 @@ document.querySelector('form').addEventListener('submit', function(e) {
         alert('Passwords do not match.');
     }
 });
+
+document.getElementById('fullscreen-toggle').addEventListener('click', function() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const sidebar = document.getElementById("sidebar"); 
+    const toggleBtn = document.getElementById("toggleSidebar");
+
+    if (sidebar && toggleBtn) {
+        toggleBtn.addEventListener("click", function () {
+            sidebar.classList.toggle("active");
+        });
+    }
+});

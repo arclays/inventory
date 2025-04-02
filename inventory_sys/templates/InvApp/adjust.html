@@ -2,7 +2,8 @@
 {% block title %} Stock Adjustments {% endblock %}
 
 {% block content %}
-<div class="container-fluid pt-5">
+<div class="container-fluid pt-2">
+    <div class="shadow-sm  mb-2 bg-body-tertiary rounded">
     <h4 class="mt-4 text-primary text-center fs-2">Stock Adjustments</h4>
     
     <!-- Date Range Filter -->
@@ -17,14 +18,20 @@
                        value="{{ request.GET.end_date }}" placeholder="End Date">
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn btn-outline-dark">Filter</button>
+                <button type="submit" class="btn btn-primary">Filter</button>
             </div>
         </div>
     </form>
-    
+</div>
+
+<div class=" d-flex justify-content-end gap-2 mb-2">
+    <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal">
+        Adjust stock
+    </button>
+    </div>
 
     <!-- Stock Adjustments Table -->
-    <table class="table table-bordered">
+    <table class="table text-center  text-center align-middle table-striped-columns table-secondary"> 
         <thead class="table-header">
             <tr>
                 <th>Product</th>
@@ -49,13 +56,7 @@
             </tr>
             {% endfor %}
         </tbody>
-    </table>
-
-    <!-- Button to Open Modal -->
-    <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal">
-        Adjust stock
-    </button>
-
+    </table> 
     <!-- Modal for Stock Adjustment -->
     <div class="modal fade" id="stockAdjustmentModal" tabindex="-1" aria-labelledby="stockAdjustmentModalLabel" aria-hidden="true">
         <div class="modal-dialog">

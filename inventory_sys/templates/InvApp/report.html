@@ -4,8 +4,8 @@
 <title>{% block title %}Stock & Inventory Report{% endblock %}</title>
 
 {% block content %}
-<div class="container-fluid pt-5">
-    <div class="shadow-sm p-2 mb-3 bg-body-tertiary rounded">
+<div class="container-fluid pt-2">
+    <div class="shadow-sm  mb-1 bg-body-tertiary rounded">
     <h3 class="fw-bold text-primary ">Stock & Inventory Report - {{ selected_date|default:"All Dates" }}</h3>
     <p><strong>Generated on:</strong> {{ current_time }}</p>
 
@@ -23,7 +23,7 @@
         <!-- Stock In -->
         <div class="col-md-4">
             <div class="card shadow-lg border-left-dark">
-                <div class="card-body text-center">
+                <div class="card-body text-center" style="min-height: 50px;">
                     <i class="fas fa-plus-square fa-2x text-success mb-2"></i>
                     <h6 class="text-muted fw-bold">Stock In</h6>
                     <h3 class="fw-bold">{{ total_stock_in }}</h3>
@@ -33,7 +33,7 @@
     
         <!-- Stock Out -->
         <div class="col-md-4">
-            <div class="card shadow-lg border-left-danger">
+            <div class="card shadow-lg border-left-danger" style="min-height: 50px;" >
                 <div class="card-body text-center">
                     <i class="fas fa-minus-square fa-2x text-danger mb-2"></i>
                     <h6 class="text-muted fw-bold">Stock Out</h6>
@@ -57,7 +57,7 @@
     
     <!-- Stock Details -->
     <h4  class="text-primary mt-3">Stock Transactions</h4>
-    <table class="table table-bordered ">
+        <table class="table text-center  text-center align-middle table-striped-columns table-secondary"> 
         <thead >
             <tr>
                 <th>No</th>

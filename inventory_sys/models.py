@@ -28,7 +28,6 @@ class User(models.Model):
     email = models.EmailField(max_length=100, unique=True)
     username = models.CharField(max_length=50)
     password = models.CharField(max_length=100)
-    confirm_password = models.CharField(max_length=100)   
 
 
 class Customer(models.Model):
