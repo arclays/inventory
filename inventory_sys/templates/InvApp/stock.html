@@ -4,24 +4,23 @@
 
 {% block content %}
 <div class="container-fluid pt-2">
-    <div class="shadow-sm  mb-2 bg-body-tertiary rounded">
-    <h5 class="text-primary fw-bold fs-2">Stock updates on {{ selected_date }}</h5>
+    <div class="  mb-2 ">
+        <h2 class="mt-2  fs-1 text-center text-info  mb-3">Stock</h2>
+    <h5 class="text-info  fs-4">Stock updates on {{ selected_date }}</h5>
 
     <!-- Date Picker -->
     <form method="GET" action="{% url 'stock' %}">
         <div class="row align-items-center">
-            <div class="mb-2 col-md-2">
+            <div class="mb-2 col-md-3">
                 <label for="orderDate" class="form-label fw-bold ">Select Date</label>
                 <input type="date" class="form-control" id="orderDate" name="orderDate" value="{{ selected_date }}">
             </div>
             <div class="col-md-3 mt-3">
-                <button type="submit" class="btn btn-primary">View by Date</button>
+                <button type="submit" class="btn btn-outline-dark">View by Date</button>
             </div>
         </div>
     </form>
    </div>
-
-    <h2 class="mt-2  ">Stock Changes</h2>
 
     <div class="mb-1 d-flex justify-content-end gap-2">
         <button class="btn btn-outline-dark px-2 py-2" data-bs-toggle="modal" data-bs-target="#addStockModal">
@@ -33,7 +32,7 @@
 
     <!-- Default Stock Table -->
     <div id="defaultStockTable">
-        <table class="table mt-3 text-center  text-center align-middle table-striped-columns table-secondary"> 
+        <table class="table mt-3 text-center"> 
                     <thead class="table-header" > 
                 <tr>
                     <th>No</th>
@@ -47,7 +46,7 @@
                     <th>Category</th>
                 </tr>
             </thead>
-            <tbody class="table-group-divider">
+            <tbody class="table-group-divider fw-bold">
                 {% for stock in stocks %}
                 <tr>
                     <td>{{ forloop.counter }}</td>
@@ -67,20 +66,18 @@
 
     <!-- Add Stock Modal -->
     <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog ">
             <div class="modal-content">
                 <form method="POST" action="{% url 'add_stock' %}">
                     {% csrf_token %}
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="addStockModalLabel">Add Stock</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-header  ">
+                        <h5 class="modal-title fw-bold fs-2 mb-4 text-info" id="addStockModalLabel">Add Stock</h5>
+                        <button type="button" class="btn-close text-bg-info" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <h1 class="modal-title mb-3">Add Stock</h1>
-
-                        <div class="form-group mb-3">
+                        <div class="form-group mb-4">
                             <label for="productName">Product Name</label>
-                            <select id="productName" name="product_id" class="form-control" required>
+                            <select id="productName" name="product_id" class="form-control text-bg-light" required>
                                 <option value="">Select a product</option>
                                 {% for product in products %}
                                     <option value="{{ product.product_id }}">{{ product.name }}</option>
@@ -90,23 +87,23 @@
                         
                         <div class="form-group mb-3">
                             <label for="newStock">New Stock</label>
-                            <input type="number" id="newStock" name="newStock" class="form-control" required>
+                            <input type="number" id="newStock" name="newStock" class="form-control text-bg-light" required>
                         </div>
 
                         <div class="form-group mb-3">
                             <label for="stockDate">Stock Date</label>
-                            <input type="date" id="stockDate" name="stockDate" class="form-control" required>
+                            <input type="date" id="stockDate" name="stockDate" class="form-control text-bg-light" required>
                         </div>
 
                         <div class="form-group mb-3">
                             <label for="expiryDate">Expiry Date</label>
-                            <input type="date" id="expiryDate" name="expiryDate" class="form-control" required=False >
+                            <input type="date" id="expiryDate" name="expiryDate" class="form-control text-bg-light" required=False >
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Add Stock</button>
+                        <button type="submit" class="btn btn-outline-info">Add Stock</button>
                     </div>
                 </form>
             </div>

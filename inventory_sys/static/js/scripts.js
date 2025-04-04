@@ -208,75 +208,112 @@ function updateStockChart() {
         .catch(error => console.error('Error fetching stock data:', error));
 }
 
-// Update stock chart every 5 seconds (or on page load)
-setInterval(updateStockChart, 5000);
-updateStockChart();
-
-var salesCtx = document.getElementById('salesChart').getContext('2d');
-var salesChart = new Chart(salesCtx, {
-    type: 'line',
-    data: {
-        labels: [],  // Initially empty
-        datasets: [{
-            label: 'Total Orders',
-            data: [],
-            borderColor: '#007bff',
-            borderWidth: 2,
-            fill: false,
-            tension: 0.4
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            title: {
-                display: true,
-                text: 'Monthly Sales Quantity',
-                font: { size: 18 }
-            }
+document.addEventListener("DOMContentLoaded", function () {
+    // Initialize Sales Chart
+    var salesCtx = document.getElementById('salesChart').getContext('2d');
+    var salesChart = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Total Orders',
+                data: [],
+                borderColor: '#007bff',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4
+            }]
         },
-        scales: {
-            y: {
-                beginAtZero: true,
+        options: {
+            responsive: true,
+            plugins: {
                 title: {
                     display: true,
-                    text: 'Total Quantity Ordered'
+                    text: 'Monthly Sales Quantity',
+                    font: { size: 18 }
                 }
             },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Months'
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Total Quantity Ordered'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Months'
+                    }
                 }
             }
         }
+    });
+
+    // Fetch Sales Data from Django API
+    function updateSalesChart() {
+        fetch('/get-sales-data/')
+            .then(response => response.json())
+            .then(data => {
+                salesChart.data.labels = data.labels;
+                salesChart.data.datasets[0].data = data.data;
+                salesChart.update();
+            })
+            .catch(error => console.error('Error fetching sales data:', error));
     }
+
+    updateSalesChart(); 
+
+   
+    var stockCtx = document.getElementById('stockChart').getContext('2d');
+    var stockChart = new Chart(stockCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Stock Levels',
+                data: [],
+                backgroundColor: ['red', 'blue', 'green', 'purple']
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Stock Quantity'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Products'
+                    }
+                }
+            }
+        }
+    });
+
+    // Fetch Stock Data from Django API
+    function updateStockChart() {
+        fetch('/get-stock-data/')
+            .then(response => response.json())
+            .then(data => {
+                stockChart.data.labels = data.labels;
+                stockChart.data.datasets[0].data = data.data;
+                stockChart.update();
+            })
+            .catch(error => console.error('Error fetching stock data:', error));
+    }
+
+    updateStockChart(); // Call on page load
+    setInterval(updateStockChart, 5000); // Auto-update every 5 seconds
 });
 
-// Fetch data from Django view
-fetch('/get-sales-data/')
-    .then(response => response.json())
-    .then(data => {
-        salesChart.data.labels = data.labels;
-        salesChart.data.datasets[0].data = data.data;
-        salesChart.update();
-    })
-    .catch(error => console.error('Error fetching data:', error));
 
-
-// Stock Chart
-var stockCtx = document.getElementById('stockChart').getContext('2d');
-var stockChart = new Chart(stockCtx, {
-    type: 'bar',
-    data: {
-        labels: ['Product A', 'Product B', 'Product C', 'Product D'],
-        datasets: [{
-            label: 'Stock Levels',
-            data: [40, 60, 30, 80],
-            backgroundColor: ['red', 'blue', 'green', 'purple']
-        }]
-    }
-});
      
 document.addEventListener("DOMContentLoaded", function () {
     let sidebar = document.querySelector(".sidebar");
@@ -291,7 +328,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-    let today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    let today = new Date().toISOString().split('T')[0]; 
     document.getElementById("orderDate").value = today;
 });
 
@@ -323,4 +360,64 @@ document.addEventListener("DOMContentLoaded", function () {
             sidebar.classList.toggle("active");
         });
     }
+});
+document.addEventListener("DOMContentLoaded", function () {
+    // Fetch Sales Data and Render Line Chart
+    fetch("/get_sales_data/")
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById("salesChart").getContext("2d");
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: "Quantity Ordered",
+                        data: data.data,
+                        borderColor: "#007bff",
+                        backgroundColor: "rgba(0, 123, 255, 0.2)",
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: "Months" } },
+                        y: { title: { display: true, text: "Quantity Ordered" }, beginAtZero: true }
+                    }
+                }
+            });
+        });
+
+    // Fetch Stock Data and Render Pie Chart
+    fetch("/get_stock_data/")
+        .then(response => response.json())
+        .then(data => {
+            const ctx2 = document.getElementById("stockChart").getContext("2d");
+            new Chart(ctx2, {
+                type: "pie",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: "Stock Distribution",
+                        data: data.data,
+                        backgroundColor: [
+                            "#28a745", "#dc3545", "#ffc107", "#17a2b8", "#6610f2",
+                            "#fd7e14", "#6c757d", "#20c997", "#e83e8c", "#343a40"
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: "right" }
+                    }
+                }
+            });
+        });
 });

@@ -1,35 +1,9 @@
 
 
-function fetchInitialStock(productId) {
-    if (productId) {
-        $.ajax({
-            url: "{% url 'get_initial_stock' %}",
-            data: {
-                'product_id': productId
-            },
-            dataType: 'json',
-            success: function (data) {
-                if (data.quantity_in_stock !== undefined) {
-                    $('#initialStock').val(data.quantity_in_stock);
-                } else {
-                    $('#initialStock').val('');
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error('Error fetching initial stock:', error);
-                $('#initialStock').val('');
-            }
-        });
-    } else {
-        $('#initialStock').val('');
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function () {
     const productContainer = document.getElementById('product-container');
     const addProductBtn = document.getElementById('add-product');
 
-    // Function to add a new product block
     addProductBtn.addEventListener('click', function () {
         const productItem = document.querySelector('.product-item');
         const clone = productItem.cloneNode(true);
@@ -40,8 +14,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         productContainer.appendChild(clone);
     });
-
-    // Remove product item when clicking the "Remove" button
     productContainer.addEventListener('click', function (e) {
         if (e.target.classList.contains('remove-product')) {
             const items = document.querySelectorAll('.product-item');
@@ -57,23 +29,6 @@ document.addEventListener("DOMContentLoaded", function () {
     let totalPrice = "{{ order.total_price }}"; // Fetch from Django context
     document.getElementById("totalprice").value = totalPrice;
 });
-
-
-
-    function fetchInitialStock(productId) {
-        if (productId) {
-            fetch(`/get-initial-stock/${productId}/`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('initialStock').value = data.initial_stock;
-                })
-                .catch(error => console.error('Error fetching initial stock:', error));
-        } else {
-            document.getElementById('initialStock').value = '';
-        }
-    }
-
-
    
     document.addEventListener("DOMContentLoaded", function () {
         const addProductBtn = document.getElementById("add-product");
@@ -134,58 +89,67 @@ document.addEventListener("DOMContentLoaded", function () {
         newWindow.document.close();
     }
 
+    document.addEventListener("DOMContentLoaded", function () {
+         function updateTotalPrice() {
+            let finalTotal = 0;
+    
+             document.querySelectorAll(".product-item").forEach(item => {
+                let quantity = parseFloat(item.querySelector(".quantity").value);
+                let pricePerUnitField = item.querySelector(".price_per_unit");
+                let totalPriceField = item.querySelector(".total-price");
+                let discount = parseFloat(document.getElementById("discount").value) || 0.0;
+    
+                // Ensure unit price is set to the selling price if it's empty or zero
+                if (!pricePerUnitField.value || parseFloat(pricePerUnitField.value) === 0) {
+                    let selectedProduct = item.querySelector("select[name='products[]']").value;
+                    let sellingPrice = 0;  
+                    fetch(`/get-selling-price/${selectedProduct}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        sellingPrice= data.selling_price || 0;
+                         pricePerUnitField.value = sellingPrice;
 
-document.addEventListener("DOMContentLoaded", function () {
-    function updateTotalPrice() {
-        let finalTotal = 0;
-
-        document.querySelectorAll(".product-item").forEach(item => {
-            let quantity = item.querySelector(".quantity").value;
-            let unitPrice = item.querySelector(".unit-price").value;
-            let totalPriceField = item.querySelector(".total-price");
-
-            let totalPrice = (quantity && unitPrice) ? (quantity * unitPrice) : 0;
-            totalPriceField.value = totalPrice.toFixed(2);
-
-            finalTotal += totalPrice;
+    
+                    // alert(sellingPrice)
+                })
+                }
+    
+                let pricePerUnit = parseFloat(pricePerUnitField.value) || 0;
+    
+                // Calculate total price: (quantity * unit price) - discount(quantity * unit price)
+                let totalPrice = (quantity * pricePerUnit) - ((quantity * pricePerUnit) * (discount / 100));
+                totalPriceField.value = totalPrice.toFixed(2);
+    
+                 finalTotal += totalPrice;
+            });
+    
+            // Update final total
+            document.getElementById("finalTotal").value = finalTotal.toFixed(2);
+        }
+    
+  
+        
+        document.addEventListener("input", function (event) {
+            if (event.target.matches(".quantity, price_per_unit, #discount, select[name='products[]']")) {
+                updateTotalPrice();
+            }
         });
-
-        let discount = document.getElementById("discount").value;
-        if (discount) {
-            finalTotal -= (finalTotal * discount / 100);
-        }
-
-        document.getElementById("finalTotal").value = finalTotal.toFixed(2);
-    }
-    // Event Listeners for quantity and unit price inputs
-    document.addEventListener("input", function (event) {
-        if (event.target.matches(".quantity, .unit-price")) {
-            updateTotalPrice();
-        }
+    
+        // Fullscreen Toggle Button
+        document.getElementById('fullscreen-btn')?.addEventListener('click', function () {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        });
+    
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     });
-
-    // Event Listeners
-    document.addEventListener("input", function (event) {
-        if (event.target.matches(".quantity, .unit-price, #discount")) {
-            updateTotalPrice();
-        }
-    });
-});
-document.getElementById('fullscreen-btn').addEventListener('click', function () {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-    } else {
-        document.exitFullscreen();
-    }
-});
-
-// Enable Bootstrap Tooltips
-document.addEventListener("DOMContentLoaded", function () {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-});
+    
 document.getElementById('fullscreen-btn').addEventListener('click', function () {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
@@ -195,34 +159,161 @@ document.getElementById('fullscreen-btn').addEventListener('click', function () 
 });
 
 // Sales Chart
-var salesCtx = document.getElementById('salesChart').getContext('2d');
-var salesChart = new Chart(salesCtx, {
-    type: 'line',
+// var salesCtx = document.getElementById('salesChart').getContext('2d');
+// var salesChart = new Chart(salesCtx, {
+//     type: 'line',
+//     data: {
+//         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+//         datasets: [{
+//             label: 'Sales ($)',
+//             data: [5000, 7000, 8000, 12000, 15000, 20000],
+//             borderColor: 'blue',
+//             borderWidth: 2,
+//             fill: false
+//         }]
+//     }
+// });
+var stockCtx = document.getElementById('stockChart').getContext('2d');
+var stockChart = new Chart(stockCtx, {
+    type: 'pie',
     data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        labels: [],
         datasets: [{
-            label: 'Sales ($)',
-            data: [5000, 7000, 8000, 12000, 15000, 20000],
-            borderColor: 'blue',
-            borderWidth: 2,
-            fill: false
+            label: 'Stock Levels',
+            data: [],
+            backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40']
         }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Product Stock Levels',
+                font: { size: 18 }
+            }
+        }
     }
 });
 
-// Stock Chart
-var stockCtx = document.getElementById('stockChart').getContext('2d');
-var stockChart = new Chart(stockCtx, {
-    type: 'bar',
-    data: {
-        labels: ['Product A', 'Product B', 'Product C', 'Product D'],
-        datasets: [{
-            label: 'Stock Levels',
-            data: [40, 60, 30, 80],
-            backgroundColor: ['red', 'blue', 'green', 'purple']
-        }]
+// Fetch stock data from Django view
+function updateStockChart() {
+    fetch('/get-stock-data/')
+        .then(response => response.json())
+        .then(data => {
+            stockChart.data.labels = data.labels;
+            stockChart.data.datasets[0].data = data.data;
+            stockChart.update();
+        })
+        .catch(error => console.error('Error fetching stock data:', error));
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    // Initialize Sales Chart
+    var salesCtx = document.getElementById('salesChart').getContext('2d');
+    var salesChart = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Total Orders',
+                data: [],
+                borderColor: '#007bff',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Monthly Sales Quantity',
+                    font: { size: 18 }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Total Quantity Ordered'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Months'
+                    }
+                }
+            }
+        }
+    });
+
+    // Fetch Sales Data from Django API
+    function updateSalesChart() {
+        fetch('/get-sales-data/')
+            .then(response => response.json())
+            .then(data => {
+                salesChart.data.labels = data.labels;
+                salesChart.data.datasets[0].data = data.data;
+                salesChart.update();
+            })
+            .catch(error => console.error('Error fetching sales data:', error));
     }
+
+    updateSalesChart(); 
+
+   
+    var stockCtx = document.getElementById('stockChart').getContext('2d');
+    var stockChart = new Chart(stockCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Stock Levels',
+                data: [],
+                backgroundColor: ['red', 'blue', 'green', 'purple']
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Stock Quantity'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Products'
+                    }
+                }
+            }
+        }
+    });
+
+    // Fetch Stock Data from Django API
+    function updateStockChart() {
+        fetch('/get-stock-data/')
+            .then(response => response.json())
+            .then(data => {
+                stockChart.data.labels = data.labels;
+                stockChart.data.datasets[0].data = data.data;
+                stockChart.update();
+            })
+            .catch(error => console.error('Error fetching stock data:', error));
+    }
+
+    updateStockChart(); // Call on page load
+    setInterval(updateStockChart, 5000); // Auto-update every 5 seconds
 });
+
+
      
 document.addEventListener("DOMContentLoaded", function () {
     let sidebar = document.querySelector(".sidebar");
@@ -234,4 +325,99 @@ document.addEventListener("DOMContentLoaded", function () {
             sidebar.classList.remove("expanded");
         }
     });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    let today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    document.getElementById("orderDate").value = today;
+});
+
+
+document.querySelector('form').addEventListener('submit', function(e) {
+    var password = document.getElementById('password').value;
+    var confirmPassword = document.getElementById('confirm_password').value;
+
+    if (password !== confirmPassword) {
+        e.preventDefault();
+        alert('Passwords do not match.');
+    }
+});
+
+document.getElementById('fullscreen-toggle').addEventListener('click', function() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const sidebar = document.getElementById("sidebar"); 
+    const toggleBtn = document.getElementById("toggleSidebar");
+
+    if (sidebar && toggleBtn) {
+        toggleBtn.addEventListener("click", function () {
+            sidebar.classList.toggle("active");
+        });
+    }
+});
+document.addEventListener("DOMContentLoaded", function () {
+    // Fetch Sales Data and Render Line Chart
+    fetch("/get_sales_data/")
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById("salesChart").getContext("2d");
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: "Quantity Ordered",
+                        data: data.data,
+                        borderColor: "#007bff",
+                        backgroundColor: "rgba(0, 123, 255, 0.2)",
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: "Months" } },
+                        y: { title: { display: true, text: "Quantity Ordered" }, beginAtZero: true }
+                    }
+                }
+            });
+        });
+
+    // Fetch Stock Data and Render Pie Chart
+    fetch("/get_stock_data/")
+        .then(response => response.json())
+        .then(data => {
+            const ctx2 = document.getElementById("stockChart").getContext("2d");
+            new Chart(ctx2, {
+                type: "pie",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: "Stock Distribution",
+                        data: data.data,
+                        backgroundColor: [
+                            "#28a745", "#dc3545", "#ffc107", "#17a2b8", "#6610f2",
+                            "#fd7e14", "#6c757d", "#20c997", "#e83e8c", "#343a40"
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: "right" }
+                    }
+                }
+            });
+        });
 });

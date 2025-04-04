@@ -27,3 +27,63 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+document.addEventListener("DOMContentLoaded", function () {
+    // Fetch Sales Data and Render Line Chart
+    fetch("/get_sales_data/")
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById("salesChart").getContext("2d");
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: "Quantity Ordered",
+                        data: data.data,
+                        borderColor: "#007bff",
+                        backgroundColor: "rgba(0, 123, 255, 0.2)",
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: "Months" } },
+                        y: { title: { display: true, text: "Quantity Ordered" }, beginAtZero: true }
+                    }
+                }
+            });
+        });
+
+    // Fetch Stock Data and Render Pie Chart
+    fetch("/get_stock_data/")
+        .then(response => response.json())
+        .then(data => {
+            const ctx2 = document.getElementById("stockChart").getContext("2d");
+            new Chart(ctx2, {
+                type: "pie",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: "Stock Distribution",
+                        data: data.data,
+                        backgroundColor: [
+                            "#28a745", "#dc3545", "#ffc107", "#17a2b8", "#6610f2",
+                            "#fd7e14", "#6c757d", "#20c997", "#e83e8c", "#343a40"
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: "right" }
+                    }
+                }
+            });
+        });
+});

@@ -4,51 +4,59 @@
 <title>{% block title %}Stock & Inventory Report{% endblock %}</title>
 
 {% block content %}
-<div class="container-fluid pt-2">
-    <div class="shadow-sm  mb-1 bg-body-tertiary rounded">
-    <h3 class="fw-bold text-primary ">Stock & Inventory Report - {{ selected_date|default:"All Dates" }}</h3>
-    <p><strong>Generated on:</strong> {{ current_time }}</p>
-
-    <!-- Date Filter Form -->
-    <form method="GET" class="d-flex mb-3">
-        <div class="d-flex align-items-center">
-          <input type="date" name="date" class="form-control w-25" value="{{ selected_date }}">
-          <button type="submit" class="btn btn-outline-dark ms-2">View Report</button>
-        </div>
-      </form>
-    </div>
-      
+<div class="container-fluid pt-4">
+    <div class="shadow-none  mb-3 ">
+        <h2 class="text-info fw-bold  mt-2">Stock changes on {{ selected_date }}</h2>
+    
+        <!-- Date Picker -->
+        <form method="GET" action="{% url 'report' %}">
+            <div class="row align-items-center">
+                <div class="mb-2 col-md-3">
+                    <label for="date" class="form-label fw-bold">Select Date</label>
+                    <input type="date" name="date" class="form-control " value="{{ selected_date }}">
+                </div>
+                <div class="col-md-3 mt-2">
+                    <button type="submit" class="btn btn-outline-dark">View changes</button>
+                </div>
+            </div>
+        </form>
     <!-- Stock Summary -->
-    <div class="row">
+    <div class="row mt-4 mb-4">
         <!-- Stock In -->
-        <div class="col-md-4">
-            <div class="card shadow-lg border-left-dark">
-                <div class="card-body text-center" style="min-height: 50px;">
-                    <i class="fas fa-plus-square fa-2x text-success mb-2"></i>
-                    <h6 class="text-muted fw-bold">Stock In</h6>
-                    <h3 class="fw-bold">{{ total_stock_in }}</h3>
+        <div class="col-md-4 ">
+            <div class="card ">
+                <div class="card-body " style="min-height: 50px;">
+                    <i class="fas fa-plus-square fa-2x text-info mb-2"></i>
+                    <div class="text-start d-flex justify-content-between">
+                        <h6 class="text-muted fw-bold">Stock In</h6>
+                        <h3 class="fw-bold">{{ total_stock_in }}</h3>
+                    </div>
                 </div>
             </div>
         </div>
     
         <!-- Stock Out -->
         <div class="col-md-4">
-            <div class="card shadow-lg border-left-danger" style="min-height: 50px;" >
-                <div class="card-body text-center">
-                    <i class="fas fa-minus-square fa-2x text-danger mb-2"></i>
-                    <h6 class="text-muted fw-bold">Stock Out</h6>
-                    <h3 class="fw-bold">{{ stock_out }}</h3>
+            <div class="card " style="min-height: 50px;" >
+                <div class="card-body">
+                    <i class="fas fa-minus-square fa-2x text-info mb-2"></i>
+                    <div class="text-start d-flex justify-content-between">
+                        <h6 class="text-muted fw-bold">Stock Out</h6>
+                        <h3 class="fw-bold">{{ stock_out }}</h3>
+                    </div>
                 </div>
             </div>
         </div>
     
         <!-- Closing Stock -->
         <div class="col-md-4">
-            <div class="card shadow-lg border-left-info">
-                <div class="card-body text-center">
-                    <i class="fas fa-boxes fa-2x text-primary mb-2"></i>
-                    <h6 class="text-muted fw-bold">Closing Stock</h6>
-                    <h3 class="fw-bold">{{ closing_stock}}</h3>
+            <div class="card ">
+                <div class="card-body">
+                    <i class="fas fa-boxes fa-2x text-info mb-2"></i>
+                    <div class="text-start d-flex justify-content-between">
+                        <h6 class="text-muted fw-bold">Closing Stock</h6>
+                        <h3 class="fw-bold">{{ closing_stock}}</h3>
+                    </div>
                 </div>
             </div>
         </div>
@@ -56,8 +64,8 @@
     
     
     <!-- Stock Details -->
-    <h4  class="text-primary mt-3">Stock Transactions</h4>
-        <table class="table text-center  text-center align-middle table-striped-columns table-secondary"> 
+    <h4  class="text-info mt-3">Stock Transactions</h4>
+        <table class="table text-center"> 
         <thead >
             <tr>
                 <th>No</th>
@@ -67,7 +75,7 @@
                 <th>Adjustments</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody class="table-group-divider fw-bold">
             {% for entry in stock_transactions %}
             <tr>
                 <td>{{ forloop.counter }}</td>
@@ -83,17 +91,5 @@
             {% endfor %}
         </tbody>
     </table>
-   
-    
-    <div class="container mt-5">
-        <!-- Sales Summary -->
-        <h4 class="mb-0 ">Sales Summary</h4>
-        <p class="mb-0">
-            <i class="fas fa-users"></i> <strong class="text-primary">Total Customers:</strong> {{ total_customers }} 
-            |     <i class="fas fa-shopping-cart"></i> <strong class="text-primary">Total Sales:</strong> ${{ total_orders }} 
-            |     <i class="fas fa-dollar-sign"></i> <strong class="text-primary">Total Revenue:</strong> ${{ total_cash_made }}
-        </p>
-    </div>
-</div>
 
 {% endblock %}

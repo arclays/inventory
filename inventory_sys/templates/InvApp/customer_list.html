@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container-fluid pt-5">
-    <h2 class="text-primary fw-bold text-center">Customer List</h2>
+    <h2 class="text-info fw-bold text-center">Customer List</h2>
     <button
         type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#addCustomerModal"> + Add Customer
     </button>
@@ -53,7 +53,7 @@
     {% endif %}
 
     <!-- Customer Table -->
-    <table class="table mt-2  text-center align-middle table-striped-columns table-secondary"> 
+    <table class="table mt-2  text-center"> 
         <thead class="table-header text-white">
             <tr>
                 <th>ID</th>
@@ -64,7 +64,7 @@
                 <th>Actions</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody class="table-group-divider fw-bold">
             {% for customer in page_obj %}
             <tr>
                 <td>{{ customer.id }}</td>
@@ -73,10 +73,10 @@
                 <td>{{ customer.address}}</td>
                 <td>{{ customer.phone }}</td>
                 <td>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editCustomerModal{{ customer.id }}">
+                    <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#editCustomerModal{{ customer.id }}">
                         Edit
                     </button>
-                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteCustomerModal{{ customer.id }}">
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteCustomerModal{{ customer.id }}">
                         Delete
                     </button>
                 </td>

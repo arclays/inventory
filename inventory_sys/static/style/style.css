@@ -19,8 +19,7 @@ body {
 }
 
 .navbar {
-  background-color: #0b8adf !important;
-  border-bottom: 3px solid black;
+  border-bottom: 3px double rgb(2, 2, 2);
   padding: 0px;
 }
 
@@ -48,29 +47,7 @@ body {
 }
 .card:hover {
     transform: scale(1.05);
-}
-.border-left-warning {
-    border-left: 40px solid #ffc107 !important;
-}
-.border-left-success {
-    border-left: 40px solid #28a745 !important;
-}
-.border-left-info {
-    border-left: 40px solid #17a2b8 !important;
-}
-.border-left-danger {
-    border-left: 40px solid #dc3545 !important;
-}
-.border-left-primary {
-    border-left: 40px solid #007bff !important;
-}
-.border-left-dark{
-    border-left: 40px solid #343a40 !important;
-
-}
-.border-left-secondary{
-    border-left: 40px solid #6c757d !important;
-}
+ }
 
 .content {
   transition: margin-left 0.3s, width 0.3s;
@@ -96,12 +73,14 @@ body {
   position: fixed;
   top: 60px;
   left: 0;
-  background: #d8e5f5;
+  flex-direction: column;
+  background-color:white;
   color: rgb(0, 0, 0);
   padding-top: 20px;
   transition: width 0.3s ease-in-out;
   z-index: 1000;
   font-family: 'Courier New', Courier, monospace;
+  border-right: 4px double rgb(235, 241, 241) ;
 }
 
 .sidebar .nav-link {
@@ -111,6 +90,8 @@ body {
   gap: 10px;
   padding: 12px 15px;
   border-radius: 5px;
+  border: 3px double #f6f8fa;
+  
 }
 
 
@@ -159,7 +140,7 @@ body {
   text-decoration: none;
 }
 .sidebar a.active {
-  background: rgba(64, 147, 255, 0.2); 
+  background: rgba(24, 232, 247, 0.2); 
   border-left: 10px solid #f80a0a; 
   text-decoration: none;
 }
@@ -175,4 +156,24 @@ body {
 
 .sidebar::-webkit-scrollbar-thumb:hover {
   background: #f80606;
+}
+.profile-section {
+  background: #f8f9fa; /* Light grey background for contrast */
+  border-radius: 100px;
+}
+.profile-section img {
+  transition: transform 0.3s ease-in-out;
+}
+.profile-section img:hover {
+  transform: scale(1.1);
+}
+.table-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #0dcaf0;
+  border-radius: 10px;
+}
+.table-responsive::-webkit-scrollbar-track {
+  background: #e9ecef;
 }

@@ -32,7 +32,6 @@ def register_view(request):
             user = User.objects.create_user(username=username, email=email, password=password)
             user.save()
             messages.success(request, "Registration successful. You can now log in.")
-            print("Redirecting to login after success")
             return redirect('login')
         except Exception as e:
             messages.error(request, str(e))
@@ -59,10 +58,12 @@ def login_view(request):
     return render(request, 'Invapp/login.html', {'next': next_url})
 
 def logout_view(request):
-    if request.method == "POST":
-        logout(request)
-        return redirect('login')  # Redirect to login after logout
     return render(request, 'Invapp/logout.html')   
+
+
+def confirm_logout(request):
+    logout(request)
+    return redirect('login')
 
 
 def product_list(request):
@@ -308,8 +309,8 @@ def place_order(request):
 def get_sales_data(request):
     orders = Order.objects.values('order_date').annotate(total_quantity=Sum('quantity')).order_by('order_date')
 
-    labels = [order['order_date'].strftime('%b') for order in orders]  # Get month names
-    data = [order['total_quantity'] for order in orders]  # Get total quantity per month
+    labels = [order['order_date'].strftime('%b') for order in orders]
+    data = [order['total_quantity'] for order in orders]
 
     return JsonResponse({'labels': labels, 'data': data})
 
@@ -380,7 +381,7 @@ def add_stock(request):
 
 def report_page(request):
     selected_date = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
-
+    today = datetime.today().date()
     orders = Order.objects.filter(order_date=selected_date)
     
     # Order 
@@ -395,6 +396,8 @@ def report_page(request):
     stock_transactions = []
     products = Product.objects.all()
 
+    all_zeros = True  # Flag to check if all values are 0
+
     for product in products:
 
         stock_in = stock_entries.filter(product=product).aggregate(Sum('new_stock'))['new_stock__sum'] or 0
@@ -407,12 +410,15 @@ def report_page(request):
         total_adjustments = StockAdjustment.objects.filter(adjustment_type='add').aggregate(total=Sum('quantity'))['total'] or 0
 
         total_quantity_in_stock = Product.objects.aggregate(total_stock=Sum('quantity_in_stock'))['total_stock']
-        tol_adjustments = StockAdjustment.objects.filter(adjustment_type='subtract').aggregate(total=Sum('quantity'))['total'] or 0      
+        tol_adjustments = StockAdjustment.objects.filter(adjustment_type='subtract',  adjustment_date=today).aggregate(total=Sum('quantity'))['total'] or 0      
         adjust_total  = total_adjustments + tol_adjustments
         total_stock_in = total_new_stock + total_quantity_in_stock 
         average_adjustments =+adjust_total
         stock_out = total_quantity + tol_adjustments
         closing_stock = total_stock_in + stock_out
+
+        if stock_in != 0 or stock_out != 0 or adjustments != 0:
+         all_zeros = False
 
         stock_transactions.append({
             'product_name': product.name,
@@ -443,6 +449,7 @@ def report_page(request):
         'closing_stock': closing_stock,
         'total_quantity_in_stock': total_quantity_in_stock,
         'total_stock_in': total_stock_in,
+        'all_zeros': all_zeros, 
     }
 
 
@@ -468,8 +475,11 @@ def reorder_alerts(request):
 
 
 
-# @login_required
+@login_required
 def home_view(request):
+    selected_date = request.GET.get('orderDate', str(date.today()))
+    selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
+    stocks = Stock.objects.filter(stock_date=selected_date)
     orders = Order.objects.all()
     low_stock_items = Product.objects.filter(quantity_in_stock__lt=F('reorder_level')).values(
     'name', 'quantity_in_stock', 'reorder_level', 'reorder_quantity'
@@ -560,46 +570,8 @@ def catalog(request):
 
 
 def stock_adjustments(request):
-    products = Product.objects.all()
-    stock_adjustments_qs = StockAdjustment.objects.all().select_related('product')
-    orders = Order.objects.all().select_related('product')
-    
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    
-    if start_date and end_date:
-        try:
-            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
-            end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
-            stock_adjustments_qs = stock_adjustments_qs.filter(adjustment_date__range=(start_date, end_date))
-        except ValueError:
-            messages.error(request, "Invalid date format. Please use YYYY-MM-DD.")
-            return redirect('stock_adjustments')
-    
-    total_quantity = orders.aggregate(total=Sum('quantity'))['total'] or 0
-    stock_entries = Stock.objects.filter(stock_date__range=(start_date, end_date)) if start_date and end_date else Stock.objects.all()
-    
-    stock_adjustments_list = []
-    for product in products:
-        stock_in = stock_entries.filter(product=product).aggregate(Sum('new_stock'))['new_stock__sum'] or 0
-        stock_out = stock_adjustments_qs.filter(product=product, adjustment_type='subtract').aggregate(Sum('quantity'))['quantity__sum'] or 0
-        adjustments = stock_adjustments_qs.filter(product=product).aggregate(Sum('quantity'))['quantity__sum'] or 0
-        
-        total_new_stock = Stock.objects.aggregate(total=Sum('new_stock'))['total'] or 0
-        total_adjustments = StockAdjustment.objects.filter(adjustment_type='add').aggregate(total=Sum('quantity'))['total'] or 0
-        total_stock_in = total_new_stock + total_adjustments 
-        tol_adjustments = StockAdjustment.objects.filter(adjustment_type='subtract').aggregate(total=Sum('quantity'))['total'] or 0
-        stock_out = total_quantity + tol_adjustments
-        adjust_total = total_adjustments + tol_adjustments
-        average_adjustments = adjust_total
-        
-        stock_adjustments_list.append({
-            'product_name': product.name,
-            'stock_in': stock_in,
-            'stock_out': stock_out,
-            'adjustments': adjustments,
-        })
-    
+    selected_date = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
+
     if request.method == 'POST':
         product_id = request.POST.get('product_id')
         adjustment_type = request.POST.get('adjustment_type')
@@ -640,19 +612,40 @@ def stock_adjustments(request):
         
         messages.success(request, "Stock adjusted successfully!")
         return redirect('stock_adjustments')
+    else:
+        products = Product.objects.all()
+        stock_adjustments_qs = StockAdjustment.objects.all().select_related('product')
+        # orders = Order.objects.all().select_related('product')
+        
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        
+        if start_date and end_date:
+            try:
+                start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+                end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+                stock_adjustments_qs = stock_adjustments_qs.filter(adjustment_date__range=(start_date, end_date))
+            except ValueError:
+                messages.error(request, "Invalid date format. Please use YYYY-MM-DD.")
+                return redirect('stock_adjustments')
+            
+        else:
+            today = datetime.today().date()
+            stock_adjustments_qs = stock_adjustments_qs.filter(adjustment_date=today)
+            start_date = end_date = today  # for displaying in filters    
+        
+       
+            
+           
+        
     
-    context = {
-        'stock_adjustments': stock_adjustments_list,
-        'products': products,
-        'start_date': start_date,
-        'end_date': end_date,
-        'total_quantity': total_quantity,
-        'total_new_stock': total_new_stock,
-        'total_adjustments': total_adjustments,
-        'total_stock_in': total_stock_in,
-        'tol_adjustments': tol_adjustments,
-        'adjust_total': adjust_total,
-        'average_adjustments': average_adjustments,
-    }
-    
-    return render(request, 'InvApp/adjust.html', context)
+        context = {
+            'stock_adjustments_list': stock_adjustments_qs,
+            'selected_date': selected_date,
+            'products': products,
+            'start_date': start_date,
+            'end_date': end_date,
+            
+        }
+        
+        return render(request, 'InvApp/adjust.html', context)

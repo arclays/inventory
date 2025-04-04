@@ -6,6 +6,7 @@ from . import views
 urlpatterns = [
     path('', views.home_view, name='home'),
     path('Invapp/logout/', views.logout_view, name='logout'),  
+    path('Invapp/confirm_logout/', views.confirm_logout, name='confirm_logout'),  
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
     path('customers/', views.customer_list, name='customer_list'),
@@ -26,8 +27,6 @@ urlpatterns = [
     path('product/catalog/', views.catalog, name='catalog'),
     path('get-sales-data/', views.get_sales_data, name='get_sales_data'),
     path('get-stock-data/', views.get_stock_data, name='get_stock_data'),
-   
-
    
 ] 
 
