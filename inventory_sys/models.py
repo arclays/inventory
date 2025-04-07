@@ -33,7 +33,7 @@ class User(models.Model):
 class Customer(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=20)
+    phone = models.CharField(max_length=10)
     address = models.CharField(max_length=40)
 
     def __str__(self):
@@ -103,7 +103,7 @@ class StockAdjustment(models.Model):
     adjustment_type = models.CharField(max_length=20, choices=ADJUSTMENT_TYPES)
     quantity = models.IntegerField()
     reason = models.TextField()
-    adjustment_date = models.DateField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
 
 
 
@@ -149,7 +149,6 @@ class Supplier(models.Model):
     contact_person = models.CharField(max_length=255)
     phone = models.CharField(max_length=20)
     email = models.EmailField()
-    address = models.TextField()
 
     def __str__(self):
         return self.name

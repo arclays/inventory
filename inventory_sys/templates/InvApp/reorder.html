@@ -2,19 +2,19 @@
 {% block title %} Reorder Alerts {% endblock %}
 
 {% block content %}
-<div class="container-fluid pt-5">
-    <h2 class="text-primary fw-bold text-center">Reorder Alerts</h2>
+<div class="container-fluid pt-4">
+    <h2 class="text-info fw-bold text-center">Reorder Alerts</h2>
 
     <section class="mt-4 ">
-        <h4 class="text-secondary">Overview</h4>
-        <p class="text-center">
-            An overview of products that are below their reorder levels. 
-            Keeping track of these items ensures that we maintain optimal stock levels and avoid stockouts.
+        <h4 class="text-dark">Overview</h4>
+        <p class="text-center fs-6">
+            An overview of products that are below their <span class="text-info fs-4">reorder levels. 
+            Keep track of these items </span>ensures that we maintain optimal stock levels and avoid stockouts.
         </p>
     </section>
 
     <section class="mt-4">
-        <h4 class="text-secondary">Key Metrics</h4>
+        <h4 class="text-info">Key Metrics</h4>
         <ul class="list-group">
             <li class="list-group-item">Total Products: {{ total_products }}</li>
             <li class="list-group-item">Low Stock Items: {{ low_stock_count }}</li>
@@ -24,8 +24,8 @@
 
     <!-- Reorder Alerts Section -->
     <section class="mt-4">
-        <h4 class="text-secondary">Low Stock Items</h4>
-        <table class="table text-center  text-center align-middle table-striped-columns table-secondary"> 
+        <h4 class="text-info">Low Stock Items</h4>
+        <table class="table text-center "> 
             <thead>
                 <tr>
                     <th>Product</th>
@@ -34,7 +34,7 @@
                     <th>Suggested Reorder Quantity</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="table-group-divider">
                 {% for item in low_stock_items %}
                 <tr>
                     <td>{{ item.name }}</td>
@@ -50,20 +50,5 @@
             </tbody>
         </table>
     </section>
-    <section class="mt-4">
-        <h4 class="text-secondary">Need Assistance?</h4>
-        <p>If you have any questions regarding inventory management, restocking, or supplier coordination, feel free to reach out:</p>
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title text-primary">restock Support Team</h5>
-                <p class="card-text"><strong>Arnold</strong> Manager</p>
-                <p class="card-text"><i class="fas fa-envelope"></i> Email: <a href="mailto:arno@example.com">johndoe@example.com</a></p>
-                <p class="card-text"><i class="fas fa-phone"></i> Phone: <a href="tel:+2835687746">(256) 7623-73813</a></p>
-                <p class="card-text"><i class="fas fa-map-marker-alt"></i> Office: 123 Allstock, office room12</p>
-            </div>
-        </div>
-    </section>
-    
-
 </div>
 {% endblock %}

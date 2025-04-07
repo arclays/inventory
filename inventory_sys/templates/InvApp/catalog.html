@@ -1,16 +1,18 @@
 {% extends "InvApp/layout.html" %}
 {% block title %} Catalog{% endblock %}
 {% block content %}
-<div class="container-fluid pt-3"> 
-    <div class="mb-5  text-info fw-bold fs-1 text-center">   
+<div class="container-fluid pt-2"> 
+    <div class="mb-3  text-info fw-bold fs-1 text-center">   
     Catalog</div>
     <!-- Category Table -->
      <div class="container-fluid">
      <div class="row g-4 mb-3 ">
      <div class="col-md-6 pe-4">
-        <button class="btn btn-outline-dark mb-3" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+        <button class="btn btn-outline-dark mb-2" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
             <i class="bi bi-plus-circle me-2"></i>Add Category</button>
     <h3 class="text-info">Categories</h3>
+    <div class="col-md-6 shadow-sm mb-2"><input type="text" id="searchInput" class="form-control " placeholder="Search for a category..."></div>
+    
     <div style="max-height: 300px; overflow-y: auto; overflow-x: auto; " class="border-end border-5">
     <table class="table ">
         <thead class="table-header">
@@ -35,15 +37,15 @@
       </div>
     </div>
     <!-- Supplier Table -->
-<div class="col-md-6 pe-4">
+<div class="col-md-6">
     <button class="btn btn-outline-dark mb-3" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
         <i class="bi bi-plus-circle me-2"></i> Add Supplier
-    </button>
-    
+    </button>  
     <h3 class="text-info">Suppliers</h3>
-
+    <div class="col-md-6 shadow-sm  mb-2"><input type="text" id="searchInput" class="form-control " placeholder="Search for a supplier..."></div>
+    
     <!-- Scrollable container -->
-    <div style="max-height: 300px; overflow-y: auto; overflow-x: auto;" class="border-end border-5">
+    <div style=" overflow-y: auto; ">
         <table class="table ms-4 ps-4">
             <thead class="table-header">
                 <tr>

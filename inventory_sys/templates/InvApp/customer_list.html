@@ -4,9 +4,11 @@
 {% block content %}
 <div class="container-fluid pt-5">
     <h2 class="text-info fw-bold text-center">Customer List</h2>
-    <button
-        type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#addCustomerModal"> + Add Customer
-    </button>
+   <div class="d-flex justify-content-end">
+       <button
+            type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#addCustomerModal"> + Add Customer
+        </button>
+   </div> 
 
     <!-- Modal -->
     <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
@@ -51,7 +53,7 @@
         {% endfor %}
     </div>
     {% endif %}
-
+    <div class="col-md-4  mb-2"><input type="text" id="searchInput" class="form-control " placeholder="Search for a customer..."></div>
     <!-- Customer Table -->
     <table class="table mt-2  text-center"> 
         <thead class="table-header text-white">

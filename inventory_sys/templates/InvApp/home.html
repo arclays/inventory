@@ -10,6 +10,22 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item text-info"><a href="{% url 'home' %}">Home</a></li>
                 <li class="breadcrumb-item active">Dashboard</li>
+             <!-- Filter Icon -->
+<div class="mb-3 ">
+    <i class="bi bi-funnel-fill fs-4 btn-outline-dark" id="filterToggle" style="cursor: pointer;"></i>
+  </div>
+  
+  <!-- Hidden Date Filter Form -->
+  <form class="row g-2 mb-3 " id="dateFilterForm" method="get" style="display: none;">
+    <div class="col-auto">
+      <input type="date" class="form-control" name="orderDate" value="{{ selected_date }}">
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-info ">Apply</button>
+    </div>
+  </form>
+  
+                  
             </ol>
         </nav>
     <div class="container-fluid">

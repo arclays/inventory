@@ -1,30 +1,5 @@
 
 
-document.addEventListener('DOMContentLoaded', function () {
-    const productContainer = document.getElementById('product-container');
-    const addProductBtn = document.getElementById('add-product');
-
-    addProductBtn.addEventListener('click', function () {
-        const productItem = document.querySelector('.product-item');
-        const clone = productItem.cloneNode(true);
-
-        // Clear input fields in the cloned item
-        clone.querySelectorAll('input').forEach(input => input.value = '');
-        clone.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
-
-        productContainer.appendChild(clone);
-    });
-    productContainer.addEventListener('click', function (e) {
-        if (e.target.classList.contains('remove-product')) {
-            const items = document.querySelectorAll('.product-item');
-            if (items.length > 1) {
-                e.target.closest('.product-item').remove();
-            } else {
-                alert('At least one product must be selected.');
-            }
-        }
-    });
-});
 document.addEventListener("DOMContentLoaded", function () {
     let totalPrice = "{{ order.total_price }}"; // Fetch from Django context
     document.getElementById("totalprice").value = totalPrice;
@@ -150,29 +125,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
     
-document.getElementById('fullscreen-btn').addEventListener('click', function () {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-    } else {
-        document.exitFullscreen();
-    }
-});
-
-// Sales Chart
-// var salesCtx = document.getElementById('salesChart').getContext('2d');
-// var salesChart = new Chart(salesCtx, {
-//     type: 'line',
-//     data: {
-//         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-//         datasets: [{
-//             label: 'Sales ($)',
-//             data: [5000, 7000, 8000, 12000, 15000, 20000],
-//             borderColor: 'blue',
-//             borderWidth: 2,
-//             fill: false
-//         }]
-//     }
-// });
 var stockCtx = document.getElementById('stockChart').getContext('2d');
 var stockChart = new Chart(stockCtx, {
     type: 'pie',
@@ -333,23 +285,23 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-document.querySelector('form').addEventListener('submit', function(e) {
-    var password = document.getElementById('password').value;
-    var confirmPassword = document.getElementById('confirm_password').value;
+// document.querySelector('form').addEventListener('submit', function(e) {
+//     var password = document.getElementById('password').value;
+//     var confirmPassword = document.getElementById('confirm_password').value;
 
-    if (password !== confirmPassword) {
-        e.preventDefault();
-        alert('Passwords do not match.');
-    }
-});
+//     if (password !== confirmPassword) {
+//         e.preventDefault();
+//         alert('Passwords do not match.');
+//     }
+// });
 
-document.getElementById('fullscreen-toggle').addEventListener('click', function() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-    } else {
-        document.exitFullscreen();
-    }
-});
+// document.getElementById('fullscreen-toggle').addEventListener('click', function() {
+//     if (!document.fullscreenElement) {
+//         document.documentElement.requestFullscreen();
+//     } else {
+//         document.exitFullscreen();
+//     }
+// });
 
 document.addEventListener("DOMContentLoaded", function () {
     const sidebar = document.getElementById("sidebar"); 
@@ -421,3 +373,48 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 });
+
+  document.getElementById('filterToggle').addEventListener('click', function () {
+    var form = document.getElementById('dateFilterForm');
+    form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+  });
+
+  
+  
+  $(document).ready(function() {
+    $('#categoryname').select2({
+      placeholder: "Select a category",
+      allowClear: true,
+       });
+  });
+  $(document).ready(function() {
+    $('#suppliername').select2({
+      placeholder: "Select a supplier",
+      allowClear: true,
+       });
+  });
+  
+  $(document).ready(function() {
+    $('#orderCustomer').select2({
+      placeholder: "Select a customer",
+      allowClear: true,
+       });
+  });
+  $(document).ready(function() {
+    $('#productname').select2({
+      placeholder: "Select Product",
+      allowClear: true,
+       });
+  });
+
+  document.getElementById('searchInput').addEventListener('keyup', function () {
+    const filter = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#productTable tbody tr');
+
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(filter) ? '' : 'none';
+    });
+  });
+
+  new DataTable('#example');

@@ -32,7 +32,7 @@
 
     <!-- Default Stock Table -->
     <div id="defaultStockTable">
-        <table class="table mt-3 text-center"> 
+        <table class="table mt-3 text-start"> 
                     <thead class="table-header" > 
                 <tr>
                     <th>No</th>
@@ -46,7 +46,7 @@
                     <th>Category</th>
                 </tr>
             </thead>
-            <tbody class="table-group-divider fw-bold">
+            <tbody class="table-group-divider fs-5">
                 {% for stock in stocks %}
                 <tr>
                     <td>{{ forloop.counter }}</td>

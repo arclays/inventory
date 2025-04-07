@@ -26,11 +26,11 @@
         <div class="col-md-4 ">
             <div class="card ">
                 <div class="card-body " style="min-height: 50px;">
-                    <i class="fas fa-plus-square fa-2x text-info mb-2"></i>
                     <div class="text-start d-flex justify-content-between">
-                        <h6 class="text-muted fw-bold">Stock In</h6>
+                        <i class="fas fa-plus-square fa-2x text-info mb-2"></i> 
                         <h3 class="fw-bold">{{ total_stock_in }}</h3>
                     </div>
+                    <h6 class="text-muted fw-bold">Stock In</h6>
                 </div>
             </div>
         </div>
@@ -39,11 +39,11 @@
         <div class="col-md-4">
             <div class="card " style="min-height: 50px;" >
                 <div class="card-body">
-                    <i class="fas fa-minus-square fa-2x text-info mb-2"></i>
                     <div class="text-start d-flex justify-content-between">
-                        <h6 class="text-muted fw-bold">Stock Out</h6>
+                        <i class="fas fa-minus-square fa-2x text-info mb-2"></i>    
                         <h3 class="fw-bold">{{ stock_out }}</h3>
                     </div>
+                    <h6 class="text-muted fw-bold">Stock Out</h6>
                 </div>
             </div>
         </div>
@@ -51,12 +51,12 @@
         <!-- Closing Stock -->
         <div class="col-md-4">
             <div class="card ">
-                <div class="card-body">
-                    <i class="fas fa-boxes fa-2x text-info mb-2"></i>
+                <div class="card-body">       
                     <div class="text-start d-flex justify-content-between">
-                        <h6 class="text-muted fw-bold">Closing Stock</h6>
+                        <i class="fas fa-boxes fa-2x text-info mb-2"></i>
                         <h3 class="fw-bold">{{ closing_stock}}</h3>
                     </div>
+                    <h6 class="text-muted fw-bold">Closing Stock</h6>
                 </div>
             </div>
         </div>
@@ -81,8 +81,8 @@
                 <td>{{ forloop.counter }}</td>
                 <td>{{ entry.product_name }}</td>
                 <td>{{ entry.stock_in }}</td>
-                <td>{{ entry.stock_out }}</td>
-                <td>{{ entry.adjustments }}</td>
+                <td>{{ entry.total_quantity }}</td>
+                <td>{{ entry.adjustment.quantity }}</td>
             </tr>
             {% empty %}
             <tr>

@@ -38,7 +38,6 @@
                 <th>Product</th>
                 <th>Adjustment Type</th>
                 <th>Quantity</th>
-                <th>Date</th>
                 <th>Reason</th>
             </tr>
         </thead>
@@ -49,7 +48,6 @@
                 <td>{{ adjustment.product.name }}</td>
                 <td>{{ adjustment.adjustment_type }}</td>
                 <td>{{ adjustment.quantity }}</td>
-                <td>{{ adjustment.adjustment_date }}</td>
                 <td>{{ adjustment.reason }}</td>
             </tr>
             {% empty %}
@@ -90,10 +88,6 @@
                         <div class="form-group mb-4">
                             <label for="quantity" class="form-label">Quantity</label>
                             <input type="number" class="form-control text-bg-light" id="quantity" name="quantity" min="1" required>
-                        </div>
-                        <div class="form-group mb-4">
-                            <label for="adjustmentDate">Adjustment Date</label>
-                            <input type="date" id="adjustmentDate" name="adjustment_date" class="form-control text-bg-light" required>
                         </div>
                         <div class="form-group mb-4">
                             <label for="reason" class="form-label">Reason</label>
