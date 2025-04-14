@@ -1,7 +1,5 @@
-
-
 document.addEventListener("DOMContentLoaded", function () {
-    let totalPrice = "{{ order.total_price }}"; // Fetch from Django context
+    let totalPrice = "{{ order.total_price }}"; 
     document.getElementById("totalprice").value = totalPrice;
 });
    
@@ -22,11 +20,9 @@ document.addEventListener("DOMContentLoaded", function () {
             // Append new product item to container
             productContainer.appendChild(newProductItem);
 
-            // Add event listener for remove button
-            newProductItem.querySelector(".remove-product").addEventListener("click", function () {
-                newProductItem.remove();
-            });
         });
+    });
+
 
         // Remove product on click
         document.addEventListener("click", function (e) {
@@ -34,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 e.target.closest(".product-item").remove();
             }
         });
-    });
+    
 
     function printStockTable() {
         var stockTable = document.getElementById("stockTable").outerHTML;
@@ -124,184 +120,16 @@ document.addEventListener("DOMContentLoaded", function () {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     });
-    
-var stockCtx = document.getElementById('stockChart').getContext('2d');
-var stockChart = new Chart(stockCtx, {
-    type: 'pie',
-    data: {
-        labels: [],
-        datasets: [{
-            label: 'Stock Levels',
-            data: [],
-            backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40']
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            title: {
-                display: true,
-                text: 'Product Stock Levels',
-                font: { size: 18 }
-            }
-        }
-    }
-});
-
-// Fetch stock data from Django view
-function updateStockChart() {
-    fetch('/get-stock-data/')
-        .then(response => response.json())
-        .then(data => {
-            stockChart.data.labels = data.labels;
-            stockChart.data.datasets[0].data = data.data;
-            stockChart.update();
-        })
-        .catch(error => console.error('Error fetching stock data:', error));
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-    // Initialize Sales Chart
-    var salesCtx = document.getElementById('salesChart').getContext('2d');
-    var salesChart = new Chart(salesCtx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Total Orders',
-                data: [],
-                borderColor: '#007bff',
-                borderWidth: 2,
-                fill: false,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Monthly Sales Quantity',
-                    font: { size: 18 }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Total Quantity Ordered'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Months'
-                    }
-                }
-            }
-        }
-    });
-
-    // Fetch Sales Data from Django API
-    function updateSalesChart() {
-        fetch('/get-sales-data/')
-            .then(response => response.json())
-            .then(data => {
-                salesChart.data.labels = data.labels;
-                salesChart.data.datasets[0].data = data.data;
-                salesChart.update();
-            })
-            .catch(error => console.error('Error fetching sales data:', error));
-    }
-
-    updateSalesChart(); 
-
-   
-    var stockCtx = document.getElementById('stockChart').getContext('2d');
-    var stockChart = new Chart(stockCtx, {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Stock Levels',
-                data: [],
-                backgroundColor: ['red', 'blue', 'green', 'purple']
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Stock Quantity'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Products'
-                    }
-                }
-            }
-        }
-    });
-
-    // Fetch Stock Data from Django API
-    function updateStockChart() {
-        fetch('/get-stock-data/')
-            .then(response => response.json())
-            .then(data => {
-                stockChart.data.labels = data.labels;
-                stockChart.data.datasets[0].data = data.data;
-                stockChart.update();
-            })
-            .catch(error => console.error('Error fetching stock data:', error));
-    }
-
-    updateStockChart(); // Call on page load
-    setInterval(updateStockChart, 5000); // Auto-update every 5 seconds
-});
 
 
      
-document.addEventListener("DOMContentLoaded", function () {
-    let sidebar = document.querySelector(".sidebar");
 
-    window.addEventListener("scroll", function () {
-        if (window.scrollY > 50) { 
-            sidebar.classList.add("expanded");
-        } else {
-            sidebar.classList.remove("expanded");
-        }
-    });
-});
 
 document.addEventListener("DOMContentLoaded", function () {
     let today = new Date().toISOString().split('T')[0]; 
     document.getElementById("orderDate").value = today;
 });
 
-
-// document.querySelector('form').addEventListener('submit', function(e) {
-//     var password = document.getElementById('password').value;
-//     var confirmPassword = document.getElementById('confirm_password').value;
-
-//     if (password !== confirmPassword) {
-//         e.preventDefault();
-//         alert('Passwords do not match.');
-//     }
-// });
-
-// document.getElementById('fullscreen-toggle').addEventListener('click', function() {
-//     if (!document.fullscreenElement) {
-//         document.documentElement.requestFullscreen();
-//     } else {
-//         document.exitFullscreen();
-//     }
-// });
 
 document.addEventListener("DOMContentLoaded", function () {
     const sidebar = document.getElementById("sidebar"); 
@@ -314,7 +142,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 document.addEventListener("DOMContentLoaded", function () {
-    // Fetch Sales Data and Render Line Chart
     fetch("/get_sales_data/")
         .then(response => response.json())
         .then(data => {
@@ -417,4 +244,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  new DataTable('#example');
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(modal => {
+    modal.addEventListener('hidden.bs.modal', function () {
+      modal.querySelector('form').reset();
+    });
+  });

@@ -166,7 +166,7 @@
                         <thead>
                             <tr>
                                 <th scope="col">Order ID</th>
-                                <th scope="col">Customer</th>
+                                <th scope="col">Batch/sku code</th>
                                 <th scope="col">Qty</th>
                                 <th scope="col">Amount</th>
                             </tr>
@@ -175,7 +175,7 @@
                             {% for order in recent_orders %}
                             <tr class="fw-bold">
                                 <td>{{ order.id }}</td>
-                                <td>{{ order.customer.name }}</td>
+                                <td>{{ order.batch_sku }}</td>
                                 <td>{{ order.quantity }}</td>
                                 <td>${{ order.final_total|floatformat:2 }}</td>
                             </tr>

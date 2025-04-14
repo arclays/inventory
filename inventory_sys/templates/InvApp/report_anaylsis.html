@@ -1,0 +1,285 @@
+
+  {% extends "InvApp/layout.html" %}
+
+{% block title %}Report&Analysis{% endblock %}
+
+{% block content %}
+<div class="container-fluid pt-2">
+  <h3>Report & Analysis</h3>
+
+  <!-- Main Tabs -->
+  <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab">Inventory</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab">Sales</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#expiry" type="button" role="tab">Product Expiry</button>
+    </li>
+  </ul>
+
+  <!-- Main Tab Content -->
+  <div class="tab-content mt-3" id="mainTabsContent">
+
+    <!-- Inventory Tab with Sub-Tabs -->
+    <div class="tab-pane fade show active" id="inventory" role="tabpanel">
+
+      <!-- Inventory Sub-Tabs -->
+      <ul class="nav nav-pills mb-3" id="inventorySubTabs" role="tablist">
+        <li class="nav-item">
+          <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#totalInventory" type="button" role="tab">Total Inventory Value</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="pill" data-bs-target="#lowStock" type="button" role="tab">Low Stock Products</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="pill" data-bs-target="#categoryOverview" type="button" role="tab">Product Categories Overview</button>
+        </li>
+      </ul>
+
+      <!-- Inventory Sub-Tab Content -->
+      <div class="tab-content" id="inventorySubContent">
+        <!-- Total Inventory -->
+        <div class="tab-pane fade show active" id="totalInventory" role="tabpanel">
+          <h5>Total Inventory Value</h5>
+          <table class="table table-bordered mt-3">
+            <thead class="table-light">
+              <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Unit Cost</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in inventory %}
+              <tr>
+                <td>{{ item.product_name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.unit_cost }}</td>
+                <td>{{ item.total_value }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="3">Total Inventory Value</th>
+                <th>{{ total_inventory_value }}</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Low Stock -->
+        <div class="tab-pane fade" id="lowStock" role="tabpanel">
+          <h5>Low Stock Products</h5>
+          <section class="mt-4">
+            <h4 class="text-info">Key Metrics</h4>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Total Products</th>
+                  <th>Low Stock Items</th>
+                  <th>Average Reorder Quantity</th>
+                </tr>
+              </thead>
+              <tbody class="table-group-divider">
+                <tr>
+                  <td>{{ total_products }}</td>
+                  <td>{{ low_stock_count }}</td>
+                  <td> {{ average_reorder_quantity }}</td>
+                </tr>
+              </tbody>
+            </table>
+        </section>
+    
+        <!-- Reorder Alerts Section -->
+        <section class="mt-4">
+            <h4 class="text-info">Low Stock Items</h4>
+            <table class="table text-center "> 
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Current Stock</th>
+                        <th>Reorder Level</th>
+                        <th>Suggested Reorder Quantity</th>
+                        <th>Confirm Reorder</th>
+              </tr>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider">
+                    {% for item in low_stock_items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.quantity_in_stock }}</td>
+                        <td>{{ item.reorder_level }}</td>
+                        <td>{{ item.reorder_quantity }}</td>
+                        <td><button class="btn btn-sm btn-warning">Request</button></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">No low stock items.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        </div>
+
+        <!-- Product Categories -->
+        <div class="tab-pane fade" id="categoryOverview" role="tabpanel">
+          <h5>Product Categories Overview</h5>
+          <table class="table table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>Category Name</th>
+                <th>Total Quantity</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for category in category %}
+              <tr>
+                <td>{{ category.category_name }}</td>
+                <td>{{ category.total_quantity }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sales Tab -->
+    <div class="tab-pane fade" id="sales" role="tabpanel">
+      <ul class="nav nav-pills mb-3" id="salesSubTabs">
+        <li class="nav-item">
+          <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#salesTopSellings" type="button">Top Sellings</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="pill" data-bs-target="#salesMonthly" type="button">Monthly Sales and Returns</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="pill" data-bs-target="#salesDaily" type="button">Daily Report</button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="salesSubContent">
+        <div class="tab-pane fade show active" id="salesTopSellings">
+            <h5>Top Selling Products</h5>
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity Sold</th>
+                        <th>Total Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in top_selling %}
+                    <tr>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.qty }}</td>
+                        <td>{{ product.revenue }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tab-pane fade" id="salesMonthly">
+          <h5>Monthly Sales and Returns</h5>
+          <table class="table table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>Month/Year</th>
+                <th>Total Sales</th>
+                <th>Total Returns</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for report in monthly_sales %}
+              <tr>
+                <td>{{ report.month }}</td>
+                <td>{{ report.total_sales }}</td>
+                <td>{{ report.total_returns }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="3">Total monthly_sales</th>
+                <th>{{ total_inventory_value }}</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="tab-pane fade" id="salesDaily">
+          <h5 class="mt-2">Daily Report</h5>
+          <table class="table table-bordered">
+              <thead class="table-light">
+                  <tr>
+                      <th>Product</th>
+                      <th>Qty</th>
+                      <th> cost</th>
+                      <th>Revenue</th>
+                      <th>Gross Profit</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  {% for daily in daily %}
+                  <tr>
+                      <td>{{ daily.product }}</td>
+                      <td>{{ daily.quantity }}</td>
+                      <td>{{ daily.cost}}</td>
+                      <td>{{ daily.revenue }}</td>
+                      <td>{{ daily.gross }}</td>
+                  </tr>
+                  {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="4">Total Gross profit</th>
+                  <th>{{ total_inventory_value }}</th>
+                  <tfoot>
+                    <tr>
+                      <th colspan="3">Total daily Revenue</th>
+                      <th>{{ total_inventory_value }}</th>
+                    </tr>
+                  </tfoot>
+                </tr>
+              </tfoot>
+          </table>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Expiry Tab -->
+    <div class="tab-pane fade" id="expiry" role="tabpanel">
+      <h5>Products Near Expiry</h5>
+      <table class="table table-bordered">
+        <thead class="table-light">
+          <tr>
+            <th>Product</th>
+            <th>Expiry Date</th>
+            <th>Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for exp in near_expiry %}
+          <tr>
+            <td>{{ exp.product_name }}</td>
+            <td>{{ exp.expiry_date }}</td>
+            <td>{{ exp.quantity }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

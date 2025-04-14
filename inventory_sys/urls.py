@@ -22,11 +22,11 @@ urlpatterns = [
     path('place_order/', views.place_order, name='place_order'),
     path('report/', views.report_page, name='report'),
     path('stock/add/', views.add_stock, name='add_stock'),
-    path('reorder/', views.reorder_alerts, name='reorder_alerts'),
     path('stock-adjustments/', views.stock_adjustments, name='stock_adjustments'),
     path('product/catalog/', views.catalog, name='catalog'),
     path('get-sales-data/', views.get_sales_data, name='get_sales_data'),
     path('get-stock-data/', views.get_stock_data, name='get_stock_data'),
+    path('report_anaylsis/', views.report_anaylsis, name='report_anaylsis'),
    
 ] 
 

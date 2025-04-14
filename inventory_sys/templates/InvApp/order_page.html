@@ -80,10 +80,11 @@
     
     <!-- Order Table -->
         <table class="table mt-1 text-start"> 
-        <thead class="table-header">
+        <thead class="table-light">
             <tr>
                 <th>Order ID</th>
                 <th>Customer</th>
+                <th> Batch/sku code</th>
                 <th>Product</th>
                 <th>Quantity</th>
                 <th>Units</th>
@@ -101,6 +102,13 @@
                 <td>{{ order.id }}</td>
                 <td>{{ order.customer.name }}</td>
                 <td>{{ order.product.name }}</td>
+                <td>
+                    {% if order.batch %}
+                        {{ order.batch.batch_sku }}
+                    {% else %}
+                        <span class="text-muted">N/A</span>
+                    {% endif %}
+                </td>
                 <td>{{ order.quantity }}</td>
                 <td>{{ order.units }}</td>
                 <td>{{ order.price_per_unit }}</td>
@@ -134,12 +142,9 @@
                             {% endfor %}
                         </select>
                     </div>
-
-                    <!-- Product Selection Section -->
                     <div id="product-container">
                         <div class="product-item mb-4 border p-3 ">
                             <div class="row">
-                                <!-- Product Selection -->
                                 <div class="col-md-3">
                                     <label>Select Product</label>
                                     <select name="products[]" class="form-control text-bg-light" id="productname" required>
@@ -148,6 +153,20 @@
                                         {% endfor %}
                                     </select>
                                 </div>
+
+                                <div class=" col-md-3 mb-3">
+                                    <label for="batchSkuSelect" class="form-label ">Select Batch (Optional)</label>
+                                    <select class="form-select text-bg-light"  name="batch_sku">
+                                        <option value="" selected disabled>- Select Batch SKU -</option>
+                                        {% for batch in product_batches %}
+                                            <option value="{{ batch.id }}">
+                                                {{ batch.batch_sku }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    
+                                </div>
+                                
 
                                 <!-- Quantity Input -->
                                 <div class="col-md-3 mb-4">

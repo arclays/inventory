@@ -1,0 +1,110 @@
+
+def place_order(request):
+    if request.method == 'POST':
+        customer_id = request.POST.get('orderCustomer') 
+        products = request.POST.getlist('products[]')
+        order_quantities = request.POST.getlist('orderQuantity[]')
+        units = request.POST.getlist('units[]')
+        price_per_units = request.POST.getlist('price_per_unit[]')
+        total_prices = request.POST.getlist('totalPrice[]')
+        batch_ids = request.POST.getlist('batch_ids[]') 
+        discounts = request.POST.getlist('productDiscount[]')
+        order_date = request.POST.get('orderDate', date.today().strftime('%Y-%m-%d'))
+        final_total = request.POST.get('finalTotal')
+        
+        product_list = []
+        for i in range(len(products)):
+            order = {
+                'product_id': products[i],
+                'quantity': int(order_quantities[i]),
+                'unit': units[i],
+                'batch_id': batch_ids[i],
+                'price_per_unit': float(price_per_units[i]),
+                'total_price': float(total_prices[i]),
+                'discount': float(discounts[i]),  # Fix KeyError
+                'order_date': order_date,
+                'final_total': float(final_total)  # Fix KeyError
+            }
+            product_list.append(order)        
+         
+        try:
+            customer = Customer.objects.get(id=customer_id)
+        except Customer.DoesNotExist:
+            print("Error: Customer not found")  
+            return redirect('order_page')
+
+        payment_method = request.POST.get('paymentMethod', 'cash')   
+       
+        for item in product_list:
+            try:
+                product_id = item['product_id']
+                unit_id = item['unit']
+                unit_price = item['price_per_unit'] 
+                total_price = item['total_price']
+                quantity = item['quantity']
+                discount = item['discount']  
+                batch_id = item['batch_id']
+
+               
+                product = Product.objects.get(product_id=product_id)
+                batch = ProductBatch.objects.get(id=batch_id)
+
+
+                # Check if batch has enough stock
+                if quantity <= 0 or quantity > batch.qty:
+                    print(f"Error: Not enough quantity in batch {batch.batch_sku}")
+                    continue
+
+                # Check if batch has enough stock
+                if quantity <= 0 or quantity > batch.quantity:
+                    print(f"Error: Not enough stock in batch {batch.batch_sku}")
+
+
+                if quantity <= 0 or quantity > product.quantity_in_stock:
+                    print(f"Error: Invalid quantity {quantity} for product {product_id}")
+                    continue 
+
+                Order.objects.create(
+                    customer=customer,
+                    product=product,
+                    quantity=quantity,
+                    batch_sku=batch_sku,
+                    price_per_unit=unit_price,
+                    total_price=total_price,
+                    units=unit_id,
+                    payment_method=payment_method, 
+                    discount=discount, 
+                    order_date=order_date,
+                    final_total=final_total, 
+                )
+
+                batch.qty -= quantity
+                batch.save()
+
+                product.quantity_in_stock -= quantity
+                product.save()
+                
+            except Product.DoesNotExist:
+                print(f"Error: Product {product_id} not found")  
+                continue 
+
+        return redirect('order_page')
+
+    return render(request, 'Invapp/order_page.html')
+
+
+
+
+
+
+
+
+    <div class="mb-3">
+      <label for="batchSku" class="form-label">\[ \text{Batch SKU} \]</label>
+      <input type="text" class="form-control" id="batchSku" name="batch_sku" 
+             pattern="[A-Z0-9]{3,}-\d{3}-\d{4}" 
+             placeholder="PROD-001-0425" required>
+      <div class="invalid-feedback">
+        \[ \text{Please follow the format: ABC-123-MMYY} \]
+      </div>
+    </div

@@ -10,18 +10,24 @@ class Product(models.Model):
     category = models.ForeignKey('Category', on_delete=models.CASCADE) 
     selling_price = models.FloatField()
     units = models.CharField(max_length=50, default='pcs') 
-    manufacture_date = models.DateField(null=True, blank=True, default=date.today)
-    quantity_in_stock = models.IntegerField()
-    supplier = models.ForeignKey('Supplier', on_delete=models.CASCADE)
+    quantity_in_stock = models.IntegerField(default=0)
     reorder_quantity = models.PositiveIntegerField(default=0) 
-    reorder_level = models.PositiveIntegerField(default=0)  # 
-    buying_price = models.FloatField() 
+    reorder_level = models.PositiveIntegerField(default=0) 
 
     def is_low_stock(self):
         return self.quantity_in_stock <= self.reorder_level
 
     def __str__(self):
         return self.name
+    
+class ProductBatch(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    batch_sku = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    expiry_date = models.DateField(null=True, blank=True)
+    qty = models.PositiveIntegerField() 
+    supplier = models.ForeignKey('Supplier', on_delete=models.CASCADE)
+    buying_price = models.FloatField() 
+    manufacture_date = models.DateField(null=True, blank=True, default=date.today)   
 
 
 class User(models.Model):
@@ -88,7 +94,6 @@ class Stock(models.Model):
     new_stock = models.IntegerField()
     total_stock = models.IntegerField()
     stock_date = models.DateField(default=timezone.now)
-    expiry_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.product.name} - {self.total_stock}"

@@ -1,149 +1,200 @@
 {% extends "InvApp/layout.html" %}
-{% block title %} Catalog{% endblock %}
+{% block title %}Catalog{% endblock %}
 {% block content %}
+
 <div class="container-fluid pt-2"> 
-    <div class="mb-3  text-info fw-bold fs-1 text-center">   
-    Catalog</div>
-    <!-- Category Table -->
-     <div class="container-fluid">
-     <div class="row g-4 mb-3 ">
-     <div class="col-md-6 pe-4">
-        <button class="btn btn-outline-dark mb-2" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-            <i class="bi bi-plus-circle me-2"></i>Add Category</button>
-    <h3 class="text-info">Categories</h3>
-    <div class="col-md-6 shadow-sm mb-2"><input type="text" id="searchInput" class="form-control " placeholder="Search for a category..."></div>
-    
-    <div style="max-height: 300px; overflow-y: auto; overflow-x: auto; " class="border-end border-5">
-    <table class="table ">
-        <thead class="table-header">
-            <tr>
-                <th class="text-info">Name</th>
-                <th>Description</th>
-                <th>Type</th>
-            </tr>
-        </thead>
-        <tbody class="table-group-divider ">
-            {% for category in categories %}
-            <tr>
-                <td class="fw-bold ">{{ category.name }}</td>
-                <td>{{ category.description }}</td>
-                <td>{{ category.get_category_type_display }}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="4">No categories added yet.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-      </div>
-    </div>
-    <!-- Supplier Table -->
-<div class="col-md-6">
-    <button class="btn btn-outline-dark mb-3" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
-        <i class="bi bi-plus-circle me-2"></i> Add Supplier
-    </button>  
-    <h3 class="text-info">Suppliers</h3>
-    <div class="col-md-6 shadow-sm  mb-2"><input type="text" id="searchInput" class="form-control " placeholder="Search for a supplier..."></div>
-    
-    <!-- Scrollable container -->
-    <div style=" overflow-y: auto; ">
-        <table class="table ms-4 ps-4">
-            <thead class="table-header">
-                <tr>
-                    <th class="text-info">Name</th>
-                    <th>Role</th>
-                    <th>Phone</th>
-                    <th>Email</th>
-                </tr>
-            </thead>
-            <tbody class="table-group-divider">
-                {% for supplier in suppliers %}
-                <tr>
-                    <td class="fw-bold">{{ supplier.name }}</td>
-                    <td>{{ supplier.contact_person }}</td>
-                    <td>{{ supplier.phone }}</td>
-                    <td>{{ supplier.email }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5">No suppliers added yet.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+    <div class="mb-3 text-info fw-bold fs-1 text-center">Catalog</div>
 
+    <div class="container-fluid">
+        <!-- Main Tabs -->
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#category" type="button" role="tab">Category</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#supplier" type="button" role="tab">Supplier</button>
+            </li>
+        </ul>
 
-<!-- Add Category Modal -->
-<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addCategoryModalLabel">Add Category</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <!-- Tab Content -->
+        <div class="tab-content mt-3" id="mainTabsContent">
+
+            <!-- Category Tab -->
+            <div class="tab-pane fade show active" id="category" role="tabpanel">
+                <div class="mt-3">
+                    <button class="btn btn-outline-dark mb-2" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                        <i class="bi bi-plus-circle me-2"></i>Add Category
+                    </button>
+                    <h3 class="text-info">Categories</h3>
+                    <div class="col-md-6 shadow-sm mb-2">
+                        <input type="text" id="searchCategoryInput" class="form-control" placeholder="Search for a category...">
+                    </div>
+
+                    <div style="max-height: 300px; overflow-y: auto; overflow-x: auto;" class="border-end border-5">
+                        <table class="table">
+                            <thead class="table-header">
+                                <tr>
+                                    <th class="text-info">Name</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                {% for category in categories %}
+                                    <tr>
+                                        <td class="fw-bold">{{ category.name }}</td>
+                                        <td>{{ category.description }}</td>
+                                        <td>{{ category.get_category_type_display }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="3">No categories added yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label">Category Name</label>
-                        <input type="text" name="category_name" class="form-control" required>
+
+            <!-- Supplier Tab -->
+            <div class="tab-pane fade" id="supplier" role="tabpanel">
+                <div class="mt-3">
+                    <button class="btn btn-outline-dark mb-3" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                        <i class="bi bi-plus-circle me-2"></i>Add Supplier
+                    </button>
+                    <h3 class="text-info">Suppliers</h3>
+                    <div class="col-md-6 shadow-sm mb-2">
+                        <input type="text" id="searchSupplierInput" class="form-control" placeholder="Search for a supplier...">
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="category_description" class="form-control"></textarea>
+
+                    <div style="overflow-y: auto;" class="border-end border-5">
+                        <table class="table ms-4 ps-4">
+                            <thead class="table-header">
+                                <tr>
+                                    <th class="text-info">Name</th>
+                                    <th>Role</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                {% for supplier in suppliers %}
+                                    <tr>
+                                        <td class="fw-bold">{{ supplier.name }}</td>
+                                        <td>{{ supplier.contact_person }}</td>
+                                        <td>{{ supplier.phone }}</td>
+                                        <td>{{ supplier.email }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="4">No suppliers added yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Category Type</label>
-                        <select name="category_type" class="form-control" required>
-                            <option value="raw_material">Raw Material</option>
-                            <option value="finished_goods">Finished Goods</option>
-                            <option value="wip">Work-in-Progress</option>
-                            <option value="consumable">Consumable</option>
-                            <option value="service">Service</option>
-                            <option value="lectronics">Electronics</option>
-                            <option value="office_supplies">Office Supplies</option>
-                            <option value="miscellaneous">Miscellaneous</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <button type="submit" name="add_category" class="btn btn-primary">Save Category</button>
-                </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Add Supplier Modal -->
-<div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addSupplierModalLabel">Add Supplier</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label">Supplier Name</label>
-                        <input type="text" name="supplier_name" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Contact Person</label>
-                        <input type="text" name="supplier_contact" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Phone</label>
-                        <input type="text" name="supplier_phone" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="supplier_email" class="form-control">
-                    </div>
-                    <button type="submit" name="add_supplier" class="btn btn-success">Save Supplier</button>
-                </form>
+    <!-- Add Category Modal -->
+    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCategoryModalLabel">Add Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Category Name</label>
+                            <input type="text" name="category_name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="category_description" class="form-control"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Category Type</label>
+                            <select name="category_type" class="form-control" required>
+                                <option value="raw_material">Raw Material</option>
+                                <option value="finished_goods">Finished Goods</option>
+                                <option value="wip">Work-in-Progress</option>
+                                <option value="consumable">Consumable</option>
+                                <option value="service">Service</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="office_supplies">Office Supplies</option>
+                                <option value="miscellaneous">Miscellaneous</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <button type="submit" name="add_category" class="btn btn-primary">Save Category</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
+    <!-- Add Supplier Modal -->
+    <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSupplierModalLabel">Add Supplier</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Supplier Name</label>
+                            <input type="text" name="supplier_name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contact Person</label>
+                            <input type="text" name="supplier_contact" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="supplier_phone" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="supplier_email" class="form-control">
+                        </div>
+                        <button type="submit" name="add_supplier" class="btn btn-success">Save Supplier</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Pagination for Categories -->
+<nav aria-label="Category pagination" class="mt-2">
+    <ul class="pagination justify-content-center">
+      {% if categories.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?category_page={{ categories.previous_page_number }}">Previous</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+      {% endif %}
+  
+      {% for num in categories.paginator.page_range %}
+        <li class="page-item {% if categories.number == num %}active{% endif %}">
+          <a class="page-link" href="?category_page={{ num }}">{{ num }}</a>
+        </li>
+      {% endfor %}
+  
+      {% if categories.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?category_page={{ categories.next_page_number }}">Next</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Next</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+  
+
+</div>
 {% endblock %}

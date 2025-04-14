@@ -33,17 +33,20 @@
     <!-- Default Stock Table -->
     <div id="defaultStockTable">
         <table class="table mt-3 text-start"> 
-                    <thead class="table-header" > 
+                    <thead class="table-light"> 
                 <tr>
                     <th>No</th>
                     <th>Product Name</th>
+                    <th>Batch code</th>
                     <th>Initial Stock</th>
                     <th>New Stock</th> 
+                    <th>Buging Price</th>
                     <th>Total Stock</th> 
-                    <th>Stock Date</th>
-                    <th>Expiry Date</th>
                     <th>Supplier</th>
                     <th>Category</th>
+                    <th>Stock Date</th>
+                    <th>Manufacture Date</th>
+                    <th>Expiry Date</th>
                 </tr>
             </thead>
             <tbody class="table-group-divider fs-5">
@@ -51,31 +54,36 @@
                 <tr>
                     <td>{{ forloop.counter }}</td>
                     <td>{{ stock.product.name }}</td>
+                    <td>{{ stock.product_batch.batch_sku }}</td>
                     <td>{{ stock.initial_stock }}</td>
                     <td>{{ stock.new_stock }}</td>
+                    <td>{{ stock.product_batch.buying_price}}</td>
                     <td>{{ stock.total_stock }}</td>
-                    <td>{{ stock.stock_date }}</td>
-                    <td>{{ stock.expiry_date }}</td>
-                    <td>{{ stock.product.supplier }}</td>
+                    <td>{{ stock.product_batch.supplier }}</td>
                     <td>{{ stock.product.category }}</td>
+                    <td>{{ stock.stock_date }}</td>
+                    <td>{{ stock.product_batch.manufacture_date }}</td>
+                    <td>{{ stock.product_batch.expiry_date }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-
     <!-- Add Stock Modal -->
-    <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
-        <div class="modal-dialog ">
-            <div class="modal-content">
-                <form method="POST" action="{% url 'add_stock' %}">
-                    {% csrf_token %}
-                    <div class="modal-header  ">
-                        <h5 class="modal-title fw-bold fs-2 mb-4 text-info" id="addStockModalLabel">Add Stock</h5>
-                        <button type="button" class="btn-close text-bg-info" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group mb-4">
+<div class="modal fade" id="addStockModal" tabindex="-1" role="dialog" aria-labelledby="addStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg bg-light" role="document">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'add_stock' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold fs-2 mb-4 text-info" id="addStockModalLabel">Add Stock</h5>
+                    <button type="button" class="btn-close text-bg-info" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Product -->
+                        <div class="form-group col-md-6 mb-3">
                             <label for="productName">Product Name</label>
                             <select id="productName" name="product_id" class="form-control text-bg-light" required>
                                 <option value="">Select a product</option>
@@ -84,30 +92,70 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        
-                        <div class="form-group mb-3">
+
+                        <!-- New Stock -->
+                        <div class="form-group col-md-6 mb-3">
                             <label for="newStock">New Stock</label>
                             <input type="number" id="newStock" name="newStock" class="form-control text-bg-light" required>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label for="stockDate">Stock Date</label>
-                            <input type="date" id="stockDate" name="stockDate" class="form-control text-bg-light" required>
+                        <!-- Batch SKU -->
+                        <div class="form-group col-md-6 mb-3">
+                            <label class="form-label">Batch SKU</label>
+                            <div class="input-group">
+                                <input type="text" name="batch_sku" class="form-control" placeholder="PROD-001-0425">
+                                <span class="input-group-text" id="skuPreview"></span>
+                            </div>
                         </div>
 
-                        <div class="form-group mb-3">
+                        <!-- Buying Price -->
+                        <div class="form-group col-md-6 mb-3">
+                            <label class="form-label">Buying Price (per unit)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">UGX</span>
+                                <input type="number" step="0.01" name="buying_price" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <!-- Supplier -->
+                        <div class="form-group col-md-6 mb-3">
+                            <label for="suppliername">Supplier</label>
+                            <select id="suppliername" name="supplier_id" class="form-control text-bg-light" required>
+                                <option value="">Select a supplier</option>
+                                {% for supplier in suppliers %}
+                                    <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                {% endfor %}
+                            </select>
+                            
+                        </div>
+
+                        <!-- Stock Date -->
+                        <div class="form-group col-md-6 mb-3">
+                            <label for="stockDate">StockIn Date</label>
+                            <input type="date" id="stockDate" name="stock_date" class="form-control text-bg-light" required>
+                        </div>
+
+                        <!-- Manufacture Date -->
+                        <div class="form-group col-md-6 mb-3">
+                            <label class="form-label">Manufacture Date</label>
+                            <input type="date" name="manufacture_date" class="form-control" max="{% now 'Y-m-d' %}" required>
+                        </div>
+
+                        <!-- Expiry Date -->
+                        <div class="form-group col-md-6 mb-3">
                             <label for="expiryDate">Expiry Date</label>
-                            <input type="date" id="expiryDate" name="expiryDate" class="form-control text-bg-light" required=False >
+                            <input type="date" id="expiryDate" name="expiryDate" class="form-control text-bg-light">
                         </div>
                     </div>
+                </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-outline-info">Add Stock</button>
-                    </div>
-                </form>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-outline-info">Add Stock</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}
