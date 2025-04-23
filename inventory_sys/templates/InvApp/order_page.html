@@ -2,7 +2,7 @@
 <title>{% block title %}Orders{% endblock %}</title>
 
 {% block content %}
-<div class="container-fluid pt-2">
+<div class="container-fluid pt-2 fs-6">
     <div class="shadow-none  mb-3 ">
     <h2 class="text-info fw-bold  mt-2">Orders on {{ selected_date }}</h2>
 
@@ -72,7 +72,7 @@
         </div>
     </div>
     <!-- Place Order Button and Modal Trigger -->
-    <div class=" d-flex justify-content-end gap-2 mt-5">
+    <div class=" d-flex justify-content-end gap-2 mt-3">
     <button class="btn btn-outline-dark " data-bs-toggle="modal" data-bs-target="#placeOrderModal">
         <i class="fas fa-shopping-cart"></i> New Order
     </button>
@@ -84,8 +84,8 @@
             <tr>
                 <th>Order ID</th>
                 <th>Customer</th>
-                <th> Batch/sku code</th>
                 <th>Product</th>
+                <th> Batch/sku code</th>
                 <th>Quantity</th>
                 <th>Units</th>
                 <th>Price per Unit</th>
@@ -96,15 +96,15 @@
                 <th>Order Date</th>
             </tr>
         </thead>
-        <tbody class="table-group-divider fs-5">
+        <tbody class="table-group-divider fs-6">
             {% for order in orders %}
             <tr>
                 <td>{{ order.id }}</td>
                 <td>{{ order.customer.name }}</td>
                 <td>{{ order.product.name }}</td>
                 <td>
-                    {% if order.batch %}
-                        {{ order.batch.batch_sku }}
+                    {% if order.batch_sku %}
+                        {{ order.batch_sku.batch_sku }}
                     {% else %}
                         <span class="text-muted">N/A</span>
                     {% endif %}
@@ -156,8 +156,8 @@
 
                                 <div class=" col-md-3 mb-3">
                                     <label for="batchSkuSelect" class="form-label ">Select Batch (Optional)</label>
-                                    <select class="form-select text-bg-light"  name="batch_sku">
-                                        <option value="" selected disabled>- Select Batch SKU -</option>
+                                    <select class="form-select text-bg-light"  id="batch_sku"  name="batch_sku[]">
+                                        <option value="" selected >- Select Batch SKU -</option>
                                         {% for batch in product_batches %}
                                             <option value="{{ batch.id }}">
                                                 {{ batch.batch_sku }}
@@ -213,15 +213,15 @@
 
                     <!-- Add More Products Button -->
                     <button type="button" id="add-product" class="btn btn-info w-100 mb-4">+ Add Another Product</button>
-
+                    <div class="row">
                     <!-- Order Date -->
-                    <div class="form-group mb-2">
+                    <div class="form-group col-md-4">
                         <label for="orderDate">Order Date</label>
                         <input type="date" id="orderDate" name="orderDate" class="form-control" required>
                     </div>
 
                     <!-- Payment Method -->
-                    <div class="form-group mb-4">
+                    <div class="form-group col-md-4 ">
                         <label for="paymentMethod">Payment Method</label>
                         <select id="paymentMethod" name="paymentMethod" class="form-control text-bg-light" required>
                             <option value="cash">Cash</option>
@@ -232,10 +232,11 @@
                     </div>
 
                     <!-- Final Total (Auto-Calculated) -->
-                    <div class="form-group mb-4">
+                    <div class="form-group col-md-4 ">
                         <label for="finalTotal">Final Total</label>
                         <input type="number" id="finalTotal" name="finalTotal" class="form-control" readonly>
                     </div>
+                </div>
 
                     <!-- Display Messages -->
                     {% if messages %}

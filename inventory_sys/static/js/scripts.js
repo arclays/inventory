@@ -250,3 +250,114 @@ document.addEventListener("DOMContentLoaded", function () {
       modal.querySelector('form').reset();
     });
   });
+
+    // Initialize charts
+    const stockLevelCtx = document.getElementById('stockLevelChart').getContext('2d');
+    const stockLevelChart = new Chart(stockLevelCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ product_names|safe }},
+            datasets: [{
+                label: 'Current Stock Levels',
+                data: {{ stock_levels|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.parsed.y} units`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    const categoryCtx = document.getElementById('categoryDistributionChart').getContext('2d');
+    const categoryChart = new Chart(categoryCtx, {
+        type: 'pie',
+        data: {
+            labels: {% category_names %},
+            datasets: [{
+                data: {{ category_counts|safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                },
+                title: {
+                    display: true,
+                    text: 'Stock by Category'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} items (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Filter functionality
+    $('#categoryFilter, #stockStatusFilter').change(function() {
+        $('#stockTable').DataTable().draw();
+    });
+    
+    $('#stockSearch').keyup(function() {
+        $('#stockTable').DataTable().search($(this).val()).draw();
+    });
+    
+    $('#clearFilters').click(function() {
+        $('#categoryFilter, #stockStatusFilter').val('');
+        $('#stockSearch').val('');
+        $('#stockTable').DataTable().search('').draw();
+    });
+    
+    // Edit stock modal
+    $('.edit-stock').click(function() {
+        const stockId = $(this).data('stock-id');
+        $.get(`/stock/edit/${stockId}/`, function(data) {
+            $('#editStockModal').html(data);
+            $('#editStockModal').modal('show');
+        });
+    });
+    
+    // Delete stock confirmation
+    $('.delete-stock').click(function() {
+        const stockId = $(this).data('stock-id');
+        if (confirm('Are you sure you want to delete this stock record?')) {
+            $.post(`/stock/delete/${stockId}/`, {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            }, function() {
+                location.reload();
+            });
+        }
+    });

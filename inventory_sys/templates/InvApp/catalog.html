@@ -37,6 +37,7 @@
                                     <th class="text-info">Name</th>
                                     <th>Description</th>
                                     <th>Type</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody class="table-group-divider">
@@ -45,6 +46,18 @@
                                         <td class="fw-bold">{{ category.name }}</td>
                                         <td>{{ category.description }}</td>
                                         <td>{{ category.get_category_type_display }}</td>
+                                        <td>
+                                            <!-- Update Button -->
+                                            <div class="btn-group">
+                                            <button type="button" class="btn btn-outline-info btn-sm " data-bs-toggle="modal" data-bs-target="#updateProductModal{{ product.product_id }}" title="Edit Product">
+                                            <i class="bi bi-pencil"></i>
+                                            </button>
+                           
+                                           <!-- Delete Button -->
+                                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteProductModal{{ product.product_id }}"title="Delete Product">
+                                             <i class="bi bi-trash"></i>
+                                           </button>
+                                           </div>
                                     </tr>
                                 {% empty %}
                                     <tr><td colspan="3">No categories added yet.</td></tr>
@@ -74,6 +87,7 @@
                                     <th>Role</th>
                                     <th>Phone</th>
                                     <th>Email</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody class="table-group-divider">
@@ -83,6 +97,18 @@
                                         <td>{{ supplier.contact_person }}</td>
                                         <td>{{ supplier.phone }}</td>
                                         <td>{{ supplier.email }}</td>
+                                        <td>
+                                            <!-- Update Button -->
+                                            <div class="btn-group">
+                                            <button type="button" class="btn btn-outline-info btn-sm " data-bs-toggle="modal" data-bs-target="#updateProductModal{{ product.product_id }}" title="Edit Product">
+                                            <i class="bi bi-pencil"></i>
+                                            </button>
+                           
+                                           <!-- Delete Button -->
+                                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteProductModal{{ product.product_id }}"title="Delete Product">
+                                             <i class="bi bi-trash"></i>
+                                           </button>
+                                           </div>
                                     </tr>
                                 {% empty %}
                                     <tr><td colspan="4">No suppliers added yet.</td></tr>
@@ -198,3 +224,5 @@
 
 </div>
 {% endblock %}
+
+

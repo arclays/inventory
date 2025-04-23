@@ -5,27 +5,15 @@
 {% block content %}
 <!-- Main content -->
 <div class="container-fluid ">
-        <h1 class="text-info mb-2 mt-2">Dashboard</h1>
+        <h1 class="text-info ">Dashboard</h1>
         <nav>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item text-info"><a href="{% url 'home' %}">Home</a></li>
                 <li class="breadcrumb-item active">Dashboard</li>
              <!-- Filter Icon -->
 <div class="mb-3 ">
-    <i class="bi bi-funnel-fill fs-4 btn-outline-dark" id="filterToggle" style="cursor: pointer;"></i>
-  </div>
-  
-  <!-- Hidden Date Filter Form -->
-  <form class="row g-2 mb-3 " id="dateFilterForm" method="get" style="display: none;">
-    <div class="col-auto">
-      <input type="date" class="form-control" name="orderDate" value="{{ selected_date }}">
-    </div>
-    <div class="col-auto">
-      <button type="submit" class="btn btn-info ">Apply</button>
-    </div>
-  </form>
-  
-                  
+    <i class="bi bi-funnel-fill fs-5 btn-outline-dark" id="filterToggle" style="cursor: pointer;"></i>
+  </div>                
             </ol>
         </nav>
     <div class="container-fluid">
@@ -139,18 +127,22 @@
     </div>    
    <!-- Charts Section -->
 <div class="row">
-    <div class="col-md-8">
-        <div class="card  mb-3">
+    <div class="col-md-6">
+        <div class="card  mb-2">
+            <div class="card-header bg-light">
+                <h5 class="card-title">Sales Analytics</h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title text-info">Sales Trends</h5>
                 <canvas id="salesChart"></canvas>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm mb-3">
-            <div class="card-body">
-                <h5 class="card-title text-info">Product Trends</h5>
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-2">
+            <div class="card-header bg-light">
+                <h5 class="card-title">Product Trends</h5>
+            </div>
+            <div class="card-body">    
                 <canvas id="stockChart"></canvas>
             </div>
         </div>
@@ -175,9 +167,9 @@
                             {% for order in recent_orders %}
                             <tr class="fw-bold">
                                 <td>{{ order.id }}</td>
-                                <td>{{ order.batch_sku }}</td>
+                                <td>{{ order.batch_sku.batch_sku}}</td>
                                 <td>{{ order.quantity }}</td>
-                                <td>${{ order.final_total|floatformat:2 }}</td>
+                                <td>UGX {{order.final_total|floatformat:2 }}</td>
                             </tr>
                             {% empty %}
                             <tr>

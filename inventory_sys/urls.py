@@ -26,7 +26,7 @@ urlpatterns = [
     path('product/catalog/', views.catalog, name='catalog'),
     path('get-sales-data/', views.get_sales_data, name='get_sales_data'),
     path('get-stock-data/', views.get_stock_data, name='get_stock_data'),
-    path('report_anaylsis/', views.report_anaylsis, name='report_anaylsis'),
-   
+    path('report_analysis/', views.report_analysis, name='report_analysis'),
+    path('product_history/<int:product_id>/', views.product_history, name='product_history'),
 ] 
 

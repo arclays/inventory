@@ -24,10 +24,12 @@ class ProductBatch(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     batch_sku = models.CharField(max_length=50, unique=True, null=True, blank=True)
     expiry_date = models.DateField(null=True, blank=True)
-    qty = models.PositiveIntegerField() 
+    initial_quantity = models.PositiveIntegerField() 
+    current_quantity = models.PositiveIntegerField()
     supplier = models.ForeignKey('Supplier', on_delete=models.CASCADE)
     buying_price = models.FloatField() 
-    manufacture_date = models.DateField(null=True, blank=True, default=date.today)   
+    manufacture_date = models.DateField(null=True, blank=True, default=date.today) 
+    stock_date = models.DateField(default=timezone.now)  
 
 
 class User(models.Model):
@@ -45,8 +47,6 @@ class Customer(models.Model):
     def __str__(self):
         return self.name
 
-
-
 class Order(models.Model):
     PAYMENT_METHODS = [
         ("cash", "Cash"),
@@ -58,6 +58,7 @@ class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, to_field="product_id", on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
+    batch_sku = models.ForeignKey('ProductBatch', on_delete=models.SET_NULL, null=True, blank=True)
     units = models.CharField(max_length=50, default='pcs')  
     price_per_unit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00) 
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  
@@ -86,8 +87,6 @@ class Order(models.Model):
      super().save(*args, **kwargs)
 
     
-
-
 class Stock(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     initial_stock = models.IntegerField()

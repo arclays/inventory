@@ -1,7 +1,19 @@
 
-body {
+
+html, body {
   display: flex;
-  overflow-x: hidden;
+  width: 100%; /* Full viewport width */
+  height: 100vh; /* Full viewport height */
+  margin: 0;
+  padding: 0;
+  background-color: #f0f0f0; /* Retaining background color from previous request */
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+.container-fluid {
+  height: 100%; /* Ensure container takes full height */
+  display: flex;
+  align-items: flex-start; /* Align content at the top */
+  padding-top: 20px; /* Add some spacing */
 }
 
 .card-title {
@@ -80,6 +92,7 @@ body {
   transition: width 0.3s ease-in-out;
   z-index: 1000;
   font-family:Arial, Helvetica, sans-serif ;
+  font-size: 10px;
   border-right: 4px double rgb(235, 241, 241) ;
 }
 
@@ -176,4 +189,84 @@ body {
 }
 .table-responsive::-webkit-scrollbar-track {
   background: #e9ecef;
+}
+/* Add to your static CSS file */
+.table-warning {
+  background-color: #fff3cd;
+}
+.table-danger {
+  background-color: #f8d7da;
+}
+.badge {
+  font-size: 0.9em;
+  padding: 5px 10px;
+  border-radius: 10px;
+}
+
+/* Timeline styling */
+.timeline {
+  position: relative;
+  padding-left: 50px;
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.timeline-item:before {
+  content: '';
+  position: absolute;
+  left: -30px;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background-color: #dee2e6;
+}
+
+.timeline-item.first:before {
+  top: 15px;
+}
+
+.timeline-item.last:before {
+  height: 15px;
+}
+
+.timeline-badge {
+  position: absolute;
+  left: -40px;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.75rem;
+}
+
+.timeline-card {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  position: relative;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.timeline-body {
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-footer {
+  font-size: 0.75rem;
+  color: #6c757d;
 }

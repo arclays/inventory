@@ -1,0 +1,596 @@
+{% extends "InvApp/layout.html" %}
+{% block title %}Product History - {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="text-info">
+            <i class="bi bi-clock-history"></i> Product History: {{ product.name }}
+        </h1>
+        <div>
+            <a href="{% url 'product_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Products
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5><i class="bi bi-info-circle"></i> Basic Info</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Product ID:</span>
+                            <span>{{ product.product_id }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Category:</span>
+                            <span>{{ product.category.name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Units:</span>
+                            <span>{{ product.units }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5><i class="bi bi-box-seam"></i> Stock Info</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Current Stock:</span>
+                            <span>{{ product.quantity_in_stock }} {{ product.units }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Reorder Level:</span>
+                            <span>{{ product.reorder_level }} {{ product.units }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Selling Price:</span>
+                            <span>UGX {{ product.selling_price }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5><i class="bi bi-graph-up"></i> Performance</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">30-Day Sales:</span>
+                            <span>{{ product.total_sold_last_30_days }} {{ product.units }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Avg Monthly:</span>
+                            <span>{{ product.avg_monthly_sales|floatformat:2 }} {{ product.units }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Stock Status:</span>
+                            <span class="badge bg-{% if product.quantity_in_stock < product.reorder_level %}danger{% elif product.quantity_in_stock == product.reorder_level %}warning{% else %}success{% endif %}">
+                                {% if product.quantity_in_stock < product.reorder_level %}Low Stock
+                                {% elif product.quantity_in_stock == product.reorder_level %}Reorder Level
+                                {% else %}In Stock{% endif %}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs" id="historyTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button">
+                <i class="bi bi-activity"></i> Activity Timeline
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="batches-tab" data-bs-toggle="tab" data-bs-target="#batches" type="button">
+                <i class="bi bi-boxes"></i> Batch History
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button">
+                <i class="bi bi-cart"></i> Orders
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="adjustments-tab" data-bs-toggle="tab" data-bs-target="#adjustments" type="button">
+                <i class="bi bi-sliders"></i> Adjustments
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button">
+                <i class="bi bi-graph-up-arrow"></i> Analytics
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content border border-top-0 rounded-bottom p-3">
+        <!-- Activity Timeline Tab -->
+        <div class="tab-pane fade show active" id="activity" role="tabpanel">
+            <div class="d-flex justify-content-between mb-3">
+                <h5>Recent Activity</h5>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Filter
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Last 7 days</a></li>
+                        <li><a class="dropdown-item" href="#">Last 30 days</a></li>
+                        <li><a class="dropdown-item" href="#">Last 90 days</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#">All time</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="timeline">
+                {% for event in combined_activity %}
+                <div class="timeline-item {% if forloop.first %}first{% endif %} {% if forloop.last %}last{% endif %}">
+                    <div class="timeline-badge bg-{% if event.event_type == 'order' %}primary{% elif event.event_type == 'adjustment' %}warning{% elif event.event_type == 'batch' %}info{% else %}secondary{% endif %}">
+                        <i class="bi bi-{% if event.event_type == 'order' %}cart{% elif event.event_type == 'adjustment' %}sliders{% elif event.event_type == 'batch' %}box{% else %}activity{% endif %}"></i>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-header">
+                            <span class="text-muted float-end">{{ event.date}}</span>
+                        </div>
+                        <div class="timeline-body">
+                            {{ event.description }}
+                        </div>
+                        <div class="timeline-footer">
+                            <span class="text-muted">By {{ event.customer.name }}</span>
+                            {% if event.quantity %}
+                            <span class="badge bg-light text-dark ms-2">{{ event.quantity }} {{ product.units }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="alert alert-info">No activity recorded for this product.</div>
+                {% endfor %}
+            </div>
+            
+            <nav aria-label="Timeline pagination" class="mt-3">
+                <ul class="pagination justify-content-center">
+                    {% if combined_activity.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo; First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ combined_activity.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            Page {{ combined_activity.number }} of {{ combined_activity.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if combined_activity.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ combined_activity.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ combined_activity.paginator.num_pages }}">Last &raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Batch History Tab -->
+        <div class="tab-pane fade" id="batches" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>No</th>
+                            <th>product</th>
+                            <th>Batch SKU</th>
+                            <th>Qty</th>
+                            <th>Current Qty</th>
+                            <th>Buying Price</th>
+                            <th>Expiry Date</th>
+                            <th>Days Left</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for batch in product_batches %}
+                        <tr class="{% if batch.expiry_status == 'expired' %}table-danger
+                                  {% elif batch.expiry_status == 'expiring-soon' %}table-warning{% endif %}">
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ batch.product.name }}</td>
+                            <td>{{ batch.batch_sku|default:"N/A" }}</td>
+                            <td>{{ batch.initial_quantity }}</td>
+                            <td>{{ batch.current_quantity }}</td>
+                            <td>{{ batch.buying_price }}</td>
+                            <td>{{ batch.expiry_date|date:"Y-m-d" }}</td>
+                            <td>
+                                {% if batch.days_until_expiry is not None %}
+                                    {{ batch.days_until_expiry }} days
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if batch.expiry_status == 'expired' %}
+                                    <span class="badge bg-danger">Expired</span>
+                                {% elif batch.expiry_status == 'expiring-soon' %}
+                                    <span class="badge bg-warning">Expiring Soon</span>
+                                {% elif batch.expiry_status == 'good' %}
+                                    <span class="badge bg-success">Good</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No Expiry</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#batchDetailModal{{ batch.id }}">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">No batches found for this product.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Orders Tab -->
+        <div class="tab-pane fade" id="orders" role="tabpanel">
+            <div class="d-flex justify-content-between mb-3">
+                <div>
+                    <input type="text" class="form-control form-control-sm" placeholder="Search orders..." id="orderSearch">
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Batch</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                            <th>Customer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.id }}</td>
+                            <td>{{ order.order_date }}</td>
+                            <td>
+                                {% if order.batch_sku %}
+                                    {{ order.batch_sku.batch_sku }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.quantity }} {{ product.units }}</td>
+                            <td>UGX {{ order.unit_price }}</td>
+                            <td>UGX {{ order.total_price }}</td>
+                            <td>{{ order.customer.name }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">No orders found for this product.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <nav aria-label="Orders pagination" class="mt-3">
+                <ul class="pagination justify-content-center">
+                    {% if orders.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo; First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ orders.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            Page {{ orders.number }} of {{ orders.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if orders.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ orders.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ orders.paginator.num_pages }}">Last &raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Adjustments Tab -->
+        <div class="tab-pane fade" id="adjustments" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Batch</th>
+                            <th>Quantity</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for adj in adjustments %}
+                        <tr>
+                            <td>{{ adj.created_at}}</td>
+                            <td>
+                                <span class="badge bg-{% if adj.quantity > 0 %}success{% else %}danger{% endif %}">
+                                    {% if adj.quantity > 0 %}Addition{% else %}Reduction{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ adj.batch.batch_sku|default:"-" }}</td>
+                            <td class="{% if adj.quantity > 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ adj.quantity }} {{ product.units }}
+                            </td>
+                            <td>{{ adj.reason }}</td>
+                            <td>{{ adj.user.username }}</td>
+                            <td>{{ adj.notes|default:"-" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No adjustments found for this product.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <nav aria-label="Adjustments pagination" class="mt-3">
+                <ul class="pagination justify-content-center">
+                    {% if adjustments.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo; First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ adjustments.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            Page {{ adjustments.number }} of {{ adjustments.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if adjustments.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ adjustments.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ adjustments.paginator.num_pages }}">Last &raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div class="tab-pane fade" id="analytics" role="tabpanel">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="bi bi-bar-chart"></i> Sales Trends</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="salesChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="bi bi-pie-chart"></i> Stock Composition</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="stockChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-lightbulb"></i> Inventory Suggestions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-{% if product.quantity_in_stock < product.reorder_level %}danger{% elif product.quantity_in_stock == product.reorder_level %}warning{% else %}info{% endif %}">
+                                {% if product.quantity_in_stock < product.reorder_level %}
+                                    <strong>Action Needed:</strong> Reorder now! Stock is below reorder level.
+                                {% elif product.quantity_in_stock == product.reorder_level %}
+                                    <strong>Warning:</strong> Stock is at reorder level. Plan procurement.
+                                {% else %}
+                                    <strong>Good:</strong> Stock levels are healthy.
+                                {% endif %}
+                            </div>
+                            
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Suggested Reorder:</span>
+                                    <span class="badge bg-primary rounded-pill">
+                                        {{ product.suggested_reorder_quantity }} {{ product.units }}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Expected Reorder Date:</span>
+                                    <span>{{ product.suggested_reorder_date|date:"Y-m-d"|default:"-" }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Expiring Soon:</span>
+                                    <span class="badge bg-{% if product.expiring_batches.exists %}warning{% else %}success{% endif %} rounded-pill">
+                                        {% if product.expiring_batches.exists %}
+                                            {{ product.expiring_batches.count }} batches
+                                        {% else %}
+                                            None
+                                        {% endif %}
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-speedometer2"></i> Performance Metrics</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6>Turnover Rate</h6>
+                                            <h3 class="text-primary">{{ product.turnover_rate|floatformat:2 }}</h3>
+                                            <small class="text-muted">times/month</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6>Stock Cover</h6>
+                                            <h3 class="text-{% if product.stock_cover_days < 14 %}danger{% elif product.stock_cover_days < 30 %}warning{% else %}success{% endif %}">
+                                                {{ product.stock_cover_days }}
+                                            </h3>
+                                            <small class="text-muted">days</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6>GMROI</h6>
+                                            <h3 class="text-{% if product.gmroi < 1 %}danger{% elif product.gmroi < 3 %}warning{% else %}success{% endif %}">
+                                                {{ product.gmroi|floatformat:2 }}
+                                            </h3>
+                                            <small class="text-muted">ratio</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Batch Detail Modals -->
+{% for batch in product.batches.all %}
+<div class="modal fade" id="batchDetailModal{{ batch.id }}" tabindex="-1" aria-labelledby="batchDetailModalLabel{{ batch.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="batchDetailModalLabel{{ batch.id }}">
+                    Batch Details: {{ batch.batch_sku }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span class="fw-bold">Product:</span>
+                                <span>{{ product.name }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span class="fw-bold">Initial Quantity:</span>
+                                <span>{{ batch.initial_quantity }} {{ product.units }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span class="fw-bold">Current Quantity:</span>
+                                <span>{{ batch.current_quantity }} {{ product.units }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span class="fw-bold">Buying Price:</span>
+                                <span>UGX {{ batch.buying_price }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span class="fw-bold">Expiry Date:</span>
+                                <span>{{ batch.expiry_date|date:"Y-m-d" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span class="fw-bold">Status:</span>
+                                <span class="badge bg-{% if batch.expiry_status == 'expired' %}danger{% elif batch.expiry_status == 'expiring-soon' %}warning{% else %}success{% endif %}">
+                                    {{ batch.get_expiry_status_display }}
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6 class="mt-3">Batch Activity</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Reference</th>
+                                <th>User</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in batch.batch_activities.all %}
+                            <tr>
+                                <td>{{ activity.date|date:"Y-m-d" }}</td>
+                                <td>{{ activity.get_activity_type_display }}</td>
+                                <td>{{ activity.quantity }} {{ product.units }}</td>
+                                <td>{{ activity.reference|default:"-" }}</td>
+                                <td>{{ activity.user.username }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No activity recorded for this batch</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

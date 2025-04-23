@@ -22,13 +22,25 @@
         </form>
     <!-- Stock Summary -->
     <div class="row mt-4 mb-4">
+        <!-- opening balance -->
+        <div class="col-md-3">
+            <div class="card " style="min-height: 50px;" >
+                <div class="card-body">
+                    <div class="text-start d-flex justify-content-between">
+                        <i class="fas fa-minus-square fa-2x text-info mb-2"></i>    
+                        <h3 class="fw-bold">{{ opening_stock  }}</h3>
+                    </div>
+                    <h6 class="text-muted fw-bold">opening_stock </h6>
+                </div>
+            </div>
+        </div>
         <!-- Stock In -->
-        <div class="col-md-4 ">
+        <div class="col-md-3 ">
             <div class="card ">
                 <div class="card-body " style="min-height: 50px;">
                     <div class="text-start d-flex justify-content-between">
                         <i class="fas fa-plus-square fa-2x text-info mb-2"></i> 
-                        <h3 class="fw-bold">{{ total_stock_in }}</h3>
+                        <h3 class="fw-bold">{{ stock_in  }}</h3>
                     </div>
                     <h6 class="text-muted fw-bold">Stock In</h6>
                 </div>
@@ -36,7 +48,7 @@
         </div>
     
         <!-- Stock Out -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card " style="min-height: 50px;" >
                 <div class="card-body">
                     <div class="text-start d-flex justify-content-between">
@@ -49,7 +61,7 @@
         </div>
     
         <!-- Closing Stock -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card ">
                 <div class="card-body">       
                     <div class="text-start d-flex justify-content-between">
@@ -81,7 +93,7 @@
                 <td>{{ forloop.counter }}</td>
                 <td>{{ entry.product_name }}</td>
                 <td>{{ entry.stock_in }}</td>
-                <td>{{ entry.total_quantity }}</td>
+                <td>{{ entry.stock_out }}</td>
                 <td>{{ entry.adjustment.quantity }}</td>
             </tr>
             {% empty %}
