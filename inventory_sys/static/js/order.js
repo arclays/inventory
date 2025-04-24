@@ -70,3 +70,78 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
+
+$(document).ready(function() {
+    // Real-time price calculations
+    function updateTotalPrice($productItem) {
+        const quantity = parseFloat($productItem.find('.quantity').val()) || 0;
+        const pricePerUnit = parseFloat($productItem.find('.price-per-unit').val()) || 0;
+        const discount = parseFloat($productItem.find('.discount').val()) || 0;
+        const totalPrice = quantity * pricePerUnit;
+        const discountedPrice = totalPrice * (1 - discount / 100);
+        $productItem.find('.total-price').val(discountedPrice.toFixed(2));
+        updateFinalTotal();
+    }
+
+    function updateFinalTotal() {
+        let finalTotal = 0;
+        $('.total-price').each(function() {
+            finalTotal += parseFloat($(this).val()) || 0;
+        });
+        $('#finalTotal').val(finalTotal.toFixed(2));
+    }
+
+    // Update prices on input change
+    $('#product-container').on('input', '.quantity, .price-per-unit, .discount', function() {
+        updateTotalPrice($(this).closest('.product-item'));
+    });
+
+    // Set default price from product selection
+    $('#product-container').on('change', '.product-select', function() {
+        const price = $(this).find('option:selected').data('price') || 0;
+        $(this).closest('.product-item').find('.price-per-unit').val(price.toFixed(2));
+        updateTotalPrice($(this).closest('.product-item'));
+    });
+
+    // Add product
+    $('#add-product').click(function() {
+        const $clone = $('.product-item:first').clone();
+        $clone.find('input, select').val('');
+        $clone.find('.total-price').val('0.00');
+        $clone.find('.discount').val('0');
+        $clone.appendTo('#product-container');
+    });
+
+    // Remove product
+    $('#product-container').on('click', '.remove-product', function() {
+        if ($('.product-item').length > 1) {
+            $(this).closest('.product-item').remove();
+            updateFinalTotal();
+        }
+    });
+
+    // Bulk actions
+    $('#selectAll').change(function() {
+        $('.order-checkbox').prop('checked', this.checked);
+        toggleBulkActionButton();
+    });
+
+    $('.order-checkbox').change(toggleBulkActionButton);
+
+    function toggleBulkActionButton() {
+        const checked = $('.order-checkbox:checked').length > 0;
+        $('#applyBulkAction').prop('disabled', !checked);
+    }
+
+    $('#bulkAction').change(function() {
+        const action = $(this).val();
+        $('#newStatus').toggle(action === 'update_status');
+    });
+
+    // Initialize default prices
+    $('.product-item').each(function() {
+        updateTotalPrice($(this));
+    });
+});
+
+

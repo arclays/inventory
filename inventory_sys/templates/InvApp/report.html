@@ -1,107 +1,168 @@
-
-
 {% extends "InvApp/layout.html" %}
-<title>{% block title %}Stock & Inventory Report{% endblock %}</title>
+{% load static %}
+
+{% block title %}Stock & Inventory Report{% endblock %}
 
 {% block content %}
-<div class="container-fluid pt-4">
-    <div class="shadow-none  mb-3 ">
-        <h2 class="text-info fw-bold  mt-2">Stock changes on {{ selected_date }}</h2>
-    
-        <!-- Date Picker -->
-        <form method="GET" action="{% url 'report' %}">
-            <div class="row align-items-center">
-                <div class="mb-2 col-md-3">
-                    <label for="date" class="form-label fw-bold">Select Date</label>
-                    <input type="date" name="date" class="form-control " value="{{ selected_date }}">
-                </div>
-                <div class="col-md-3 mt-2">
-                    <button type="submit" class="btn btn-outline-dark">View changes</button>
-                </div>
-            </div>
-        </form>
-    <!-- Stock Summary -->
-    <div class="row mt-4 mb-4">
-        <!-- opening balance -->
-        <div class="col-md-3">
-            <div class="card " style="min-height: 50px;" >
-                <div class="card-body">
-                    <div class="text-start d-flex justify-content-between">
-                        <i class="fas fa-minus-square fa-2x text-info mb-2"></i>    
-                        <h3 class="fw-bold">{{ opening_stock  }}</h3>
+<div class="container-fluid pt-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style="background: linear-gradient(135deg, #0dcaf0 0%, #007bff 100%); color: #fff;">
+        <h2 class="m-0"><i class="bi bi-bar-chart-line-fill me-2"></i> Stock & Inventory Report</h2>
+        <img src="{% static 'images/logo-sm.png' %}" alt="Logo" style="height: 40px; opacity: 0.9;">
+    </div>
+
+    <!-- Date Picker and Summary -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4" style="background: #f8f9fa;">
+        <div class="card-body">
+            <!-- Date Picker -->
+            <form method="GET" action="{% url 'report' %}">
+                <div class="row align-items-end mb-4">
+                    <div class="col-md-3">
+                        <label for="date" class="form-label fw-bold">Select Date</label>
+                        <div class="input-group">
+                            <span class="input-group-text rounded-start-3"><i class="bi bi-calendar-event"></i></span>
+                            <input type="date" name="date" id="date" class="form-control rounded-end-3" value="{{ selected_date }}">
+                        </div>
                     </div>
-                    <h6 class="text-muted fw-bold">opening_stock </h6>
-                </div>
-            </div>
-        </div>
-        <!-- Stock In -->
-        <div class="col-md-3 ">
-            <div class="card ">
-                <div class="card-body " style="min-height: 50px;">
-                    <div class="text-start d-flex justify-content-between">
-                        <i class="fas fa-plus-square fa-2x text-info mb-2"></i> 
-                        <h3 class="fw-bold">{{ stock_in  }}</h3>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-success rounded-3 w-100">
+                            <i class="bi bi-eye-fill me-2"></i> View Changes
+                        </button>
                     </div>
-                    <h6 class="text-muted fw-bold">Stock In</h6>
                 </div>
-            </div>
-        </div>
-    
-        <!-- Stock Out -->
-        <div class="col-md-3">
-            <div class="card " style="min-height: 50px;" >
-                <div class="card-body">
-                    <div class="text-start d-flex justify-content-between">
-                        <i class="fas fa-minus-square fa-2x text-info mb-2"></i>    
-                        <h3 class="fw-bold">{{ stock_out }}</h3>
+            </form>
+
+            <!-- Stock Summary -->
+            <h4 class="text-primary fw-bold mb-3">Stock Summary for {{ selected_date }}</h4>
+            <div class="row g-3">
+                <!-- Opening Stock -->
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+                        <div class="card-body d-flex align-items-center">
+                            <i class="bi bi-box-arrow-in-down fs-2 text-primary me-3"></i>
+                            <div>
+                                <h6 class="text-muted mb-0">Opening Stock</h6>
+                                <h3 class="fw-bold mb-0">{{ opening_stock }}</h3>
+                            </div>
+                        </div>
                     </div>
-                    <h6 class="text-muted fw-bold">Stock Out</h6>
                 </div>
-            </div>
-        </div>
-    
-        <!-- Closing Stock -->
-        <div class="col-md-3">
-            <div class="card ">
-                <div class="card-body">       
-                    <div class="text-start d-flex justify-content-between">
-                        <i class="fas fa-boxes fa-2x text-info mb-2"></i>
-                        <h3 class="fw-bold">{{ closing_stock}}</h3>
+                <!-- Stock In -->
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+                        <div class="card-body d-flex align-items-center">
+                            <i class="bi bi-plus-square-fill fs-2 text-success me-3"></i>
+                            <div>
+                                <h6 class="text-muted mb-0">Stock In</h6>
+                                <h3 class="fw-bold mb-0">{{ stock_in }}</h3>
+                            </div>
+                        </div>
                     </div>
-                    <h6 class="text-muted fw-bold">Closing Stock</h6>
+                </div>
+                <!-- Stock Out -->
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+                        <div class="card-body d-flex align-items-center">
+                            <i class="bi bi-dash-square-fill fs-2 text-danger me-3"></i>
+                            <div>
+                                <h6 class="text-muted mb-0">Stock Out</h6>
+                                <h3 class="fw-bold mb-0">{{ stock_out }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Closing Stock -->
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+                        <div class="card-body d-flex align-items-center">
+                            <i class="bi bi-boxes fs-2 text-primary me-3"></i>
+                            <div>
+                                <h6 class="text-muted mb-0">Closing Stock</h6>
+                                <h3 class="fw-bold mb-0">{{ closing_stock }}</h3>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    
-    <!-- Stock Details -->
-    <h4  class="text-info mt-3">Stock Transactions</h4>
-        <table class="table text-center"> 
-        <thead >
-            <tr>
-                <th>No</th>
-                <th>Product</th>
-                <th>Stock In</th>
-                <th>Stock Out</th>
-                <th>Adjustments</th>
-            </tr>
-        </thead>
-        <tbody class="table-group-divider fw-bold">
-            {% for entry in stock_transactions %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ entry.product_name }}</td>
-                <td>{{ entry.stock_in }}</td>
-                <td>{{ entry.stock_out }}</td>
-                <td>{{ entry.adjustment.quantity }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7" class="text-center">No stock transactions recorded for this date.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 
+    <!-- Stock Transactions -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-table me-2"></i> Stock Transactions</h5>
+            <div class="d-flex gap-2">
+                <div class="input-group input-group-sm" style="width: 200px;">
+                    <input type="text" id="searchTransactions" class="form-control rounded-start-3" placeholder="Search products...">
+                    <button class="btn btn-outline-light rounded-end-3" type="button" onclick="document.getElementById('searchTransactions').value=''">Clear</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>No</th>
+                            <th>Product</th>
+                            <th>Stock In</th>
+                            <th>Stock Out</th>
+                            <th>Adjustments</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in stock_transactions %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td class="fw-bold">{{ entry.product_name }}</td>
+                            <td class="text-success">{{ entry.stock_in|default:"0" }}</td>
+                            <td class="text-danger">{{ entry.stock_out|default:"0" }}</td>
+                            <td>{{ entry.adjustment.quantity|default:"0" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-database-x fs-1 text-success mb-2"></i>
+                                    <h5 class="text-muted">No stock transactions recorded for this date.</h5>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Search Functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('searchTransactions');
+    const table = document.querySelector('table');
+    const rows = table.querySelectorAll('tbody tr');
+
+    searchInput.addEventListener('input', function () {
+        const searchTerm = this.value.toLowerCase();
+        rows.forEach(row => {
+            const productName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            row.style.display = productName.includes(searchTerm) ? '' : 'none';
+        });
+    });
+});
+</script>
+
+<!-- CSS for Enhanced Styling -->
+<style>
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.table th {
+    color: #0d6efd;
+}
+</style>
 {% endblock %}

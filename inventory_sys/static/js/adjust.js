@@ -148,3 +148,65 @@ document.addEventListener('DOMContentLoaded', function() {
         new bootstrap.Collapse(document.getElementById('dateRangeCollapse')).show();
     }
 });
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Quick Date Buttons
+    document.querySelectorAll('.quick-date-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const days = parseInt(this.getAttribute('data-days'));
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - days);
+
+            document.getElementById('start_date').value = startDate.toISOString().split('T')[0];
+            document.getElementById('end_date').value = endDate.toISOString().split('T')[0];
+            document.getElementById('dateRangeForm').submit();
+        });
+    });
+
+    // Reset Form
+    document.querySelector('button[type="reset"]').addEventListener('click', function () {
+        document.getElementById('start_date').value = '';
+        document.getElementById('end_date').value = '';
+        document.getElementById('dateRangeForm').submit();
+    });
+
+    // Stock Adjustment Calculations
+    function updateStockValues(modalIdPrefix = '') {
+        const productSelect = document.getElementById(`product_id${modalIdPrefix}`);
+        const adjustmentType = document.getElementById(`adjustment_type${modalIdPrefix}`);
+        const quantityInput = document.getElementById(`quantity${modalIdPrefix}`);
+        const currentStockInput = document.getElementById(`current_stock${modalIdPrefix}`);
+        const afterAdjustmentInput = document.getElementById(`after_adjustment${modalIdPrefix}`);
+
+        if (!productSelect || !adjustmentType || !quantityInput || !currentStockInput || !afterAdjustmentInput) return;
+
+        function calculateStock() {
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
+            const currentStock = parseFloat(selectedOption.getAttribute('data-stock')) || 0;
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const type = adjustmentType.value;
+
+            currentStockInput.value = currentStock.toFixed(2);
+            const afterAdjustment = type === 'add' ? currentStock + quantity : currentStock - quantity;
+            afterAdjustmentInput.value = afterAdjustment.toFixed(2);
+        }
+
+        productSelect.addEventListener('change', calculateStock);
+        adjustmentType.addEventListener('change', calculateStock);
+        quantityInput.addEventListener('input', calculateStock);
+
+        // Initial calculation
+        calculateStock();
+    }
+
+    // Initialize for New Adjustment Modal
+    updateStockValues();
+
+    // Initialize for Edit Adjustment Modals
+    {% for adjustment in stock_adjustments_list %}
+        updateStockValues('_{{ adjustment.id }}');
+    {% endfor %}
+});

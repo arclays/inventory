@@ -251,113 +251,115 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-    // Initialize charts
-    const stockLevelCtx = document.getElementById('stockLevelChart').getContext('2d');
-    const stockLevelChart = new Chart(stockLevelCtx, {
-        type: 'bar',
+  
+
+
+
+$(document).ready(function() {
+    // Filter Toggle
+    $('#filterToggle').click(function() {
+        $('#filterPanel').slideToggle();
+    });
+
+    // Sales Chart
+    const salesChart = new Chart(document.getElementById('salesChart'), {
+        type: 'line',
         data: {
-            labels: {{ product_names|safe }},
-            datasets: [{
-                label: 'Current Stock Levels',
-                data: {{ stock_levels|safe }},
-                backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
+            labels: {{ sales_labels|safe }},
+            datasets: [
+                {
+                    label: 'Sales (UGX)',
+                    data: {{ sales_data|safe }},
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                    fill: true,
+                },
+                {
+                    label: 'Profit (UGX)',
+                    data: {{ profit_data|safe }},
+                    borderColor: '#1cc88a',
+                    backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                    fill: true,
+                }
+            ]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    title: { display: true, text: 'Amount (UGX)' }
+                },
+                x: {
+                    title: { display: true, text: 'Month' }
                 }
             },
             plugins: {
+                legend: { position: 'top' },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return `${context.parsed.y} units`;
+                            return `${context.dataset.label}: UGX ${context.parsed.y.toLocaleString()}`;
                         }
                     }
                 }
             }
         }
     });
-    
-    const categoryCtx = document.getElementById('categoryDistributionChart').getContext('2d');
-    const categoryChart = new Chart(categoryCtx, {
-        type: 'pie',
+
+    // Stock Chart
+    const stockChart = new Chart(document.getElementById('stockChart'), {
+        type: 'bar',
         data: {
-            labels: {% category_names %},
-            datasets: [{
-                data: {{ category_counts|safe }},
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.7)',
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 206, 86, 0.7)',
-                    'rgba(75, 192, 192, 0.7)',
-                    'rgba(153, 102, 255, 0.7)'
-                ],
-                borderWidth: 1
-            }]
+            labels: {{ stock_labels|safe }},
+            datasets: [
+                {
+                    label: 'Stock Quantity',
+                    data: {{ stock_data|safe }},
+                    backgroundColor: '#36b9cc',
+                    yAxisID: 'y',
+                },
+                {
+                    label: 'Stock Value (UGX)',
+                    data: {{ stock_value_data|safe }},
+                    type: 'line',
+                    borderColor: '#f6c23e',
+                    backgroundColor: 'rgba(246, 194, 62, 0.1)',
+                    fill: true,
+                    yAxisID: 'y1',
+                }
+            ]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Quantity' },
+                    position: 'left',
+                },
+                y1: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Value (UGX)' },
                     position: 'right',
+                    grid: { drawOnChartArea: false }
                 },
-                title: {
-                    display: true,
-                    text: 'Stock by Category'
-                },
+                x: {
+                    title: { display: true, text: 'Month' }
+                }
+            },
+            plugins: {
+                legend: { position: 'top' },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            const label = context.label || '';
-                            const value = context.raw || 0;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = Math.round((value / total) * 100);
-                            return `${label}: ${value} items (${percentage}%)`;
+                            return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} ${context.dataset.label.includes('Value') ? 'UGX' : ''}`;
                         }
                     }
                 }
             }
         }
     });
-    
-    // Filter functionality
-    $('#categoryFilter, #stockStatusFilter').change(function() {
-        $('#stockTable').DataTable().draw();
-    });
-    
-    $('#stockSearch').keyup(function() {
-        $('#stockTable').DataTable().search($(this).val()).draw();
-    });
-    
-    $('#clearFilters').click(function() {
-        $('#categoryFilter, #stockStatusFilter').val('');
-        $('#stockSearch').val('');
-        $('#stockTable').DataTable().search('').draw();
-    });
-    
-    // Edit stock modal
-    $('.edit-stock').click(function() {
-        const stockId = $(this).data('stock-id');
-        $.get(`/stock/edit/${stockId}/`, function(data) {
-            $('#editStockModal').html(data);
-            $('#editStockModal').modal('show');
-        });
-    });
-    
-    // Delete stock confirmation
-    $('.delete-stock').click(function() {
-        const stockId = $(this).data('stock-id');
-        if (confirm('Are you sure you want to delete this stock record?')) {
-            $.post(`/stock/delete/${stockId}/`, {
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            }, function() {
-                location.reload();
-            });
-        }
-    });
+});

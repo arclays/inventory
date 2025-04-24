@@ -1,92 +1,99 @@
 {% extends "InvApp/layout.html" %}
-{% block title %}Stock Adjustments{% endblock %}
+{% load static %}
 
+{% block title %}Stock Adjustments{% endblock %}
 {% block content %}
-<div class="container-fluid px-2 py-2">
-    <!-- Page Header with Stats -->
-    <div class="d-flex justify-content-between align-items-center mb-2">
+<div class="container-fluid pt-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style="background: linear-gradient(135deg, #ffffff 0%, #353638 100%); color: #000000;">
         <div>
-            <h1 class="h2 text-primary fw-bold mb-0">
-                </i>Stock Adjustments
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <h2 class="m-0 text-dark"><i class="bi bi-clipboard2-pulse-fill me-2"></i> Stock Adjustments</h2>
+            <nav aria-label="breadcrumb" class="mt-1">
+                <ol class="breadcrumb bg-transparent mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-primary text-decoration-none">Dashboard</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Stock Adjustments</li>
                 </ol>
             </nav>
         </div>
-        <div class="d-flex gap-2">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal">
-                <i class="bi bi-plus-circle me-2"></i>New Adjustment
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-light rounded-3" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal">
+                <i class="bi bi-plus-circle-fill me-2"></i> New Adjustment
             </button>
-            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="bi bi-download"></i> Export
-            </button>
-            <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">Excel</a></li>
-                <li><a class="dropdown-item" href="#">PDF</a></li>
-            </ul>
+            <div class="dropdown">
+                <button class="btn btn-outline-light rounded-3 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-download me-2"></i> Export
+                </button>
+                <ul class="dropdown-menu rounded-3 shadow-sm">
+                    <li><a class="dropdown-item" href="#">Excel</a></li>
+                    <li><a class="dropdown-item" href="#">PDF</a></li>
+                </ul>
+            </div>
+            <img src="{% static 'images/logo-sm.png' %}" alt="Logo" style="height: 40px; opacity: 0.9; margin-left: 15px;">
         </div>
     </div>
-    </div>
-    <div class=" mb-3">
+
+    <!-- Filter Section -->
+    <div class="mb-4">
         <!-- Filter Toggle Button -->
-        <button class=" btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#dateRangeCollapse" aria-expanded="false" aria-controls="dateRangeCollapse">
-            <i class="bi bi-funnel me-2"></i> Filter
+        <button class="btn btn-success rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#dateRangeCollapse" aria-expanded="{% if request.GET.start_date or request.GET.end_date %}true{% else %}false{% endif %}" aria-controls="dateRangeCollapse">
+            <i class="bi bi-funnel-fill me-2"></i> Filter
         </button>
-        
+
         <!-- Collapsible Date Range Filter -->
         <div class="collapse mt-2 {% if request.GET.start_date or request.GET.end_date %}show{% endif %}" id="dateRangeCollapse">
-            <div class="card card-body bg-light">
-                <form id="dateRangeForm">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-4">
-                            <label for="start_date" class="form-label">From Date</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
-                                <input type="date" id="start_date" name="start_date" class="form-control" 
-                                       value="{{ request.GET.start_date }}">
+            <div class="card border-0 shadow-sm rounded-3" style="background: #f8f9fa;">
+                <div class="card-body">
+                    <form id="dateRangeForm" method="GET" action="{% url 'stock_adjustments' %}">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label for="start_date" class="form-label fw-bold">From Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text rounded-start-3"><i class="bi bi-calendar-event"></i></span>
+                                    <input type="date" id="start_date" name="start_date" class="form-control rounded-end-3" value="{{ request.GET.start_date }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="end_date" class="form-label fw-bold">To Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text rounded-start-3"><i class="bi bi-calendar-event"></i></span>
+                                    <input type="date" id="end_date" name="end_date" class="form-control rounded-end-3" value="{{ request.GET.end_date }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4 d-flex gap-2">
+                                <button type="button" class="btn btn-outline-primary rounded-3 quick-date-btn" data-days="0">Today</button>
+                                <button type="button" class="btn btn-outline-primary rounded-3 quick-date-btn" data-days="7">Week</button>
+                                <button type="button" class="btn btn-outline-primary rounded-3 quick-date-btn" data-days="30">Month</button>
+                            </div>
+                            <div class="col-12 d-flex justify-content-end gap-2">
+                                <button type="reset" class="btn btn-outline-secondary rounded-3">Reset</button>
+                                <button type="submit" class="btn btn-success rounded-3">
+                                    <i class="bi bi-funnel-fill me-2"></i> Apply Filter
+                                </button>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <label for="end_date" class="form-label">To Date</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
-                                <input type="date" id="end_date" name="end_date" class="form-control" 
-                                       value="{{ request.GET.end_date }}">
-                            </div>
-                        </div>
-                        <div class="col-md-4 d-flex gap-2">
-                            <button type="button" class="btn btn-outline-primary quick-date-btn" data-days="0">Today</button>
-                            <button type="button" class="btn btn-outline-primary quick-date-btn" data-days="7">Week</button>
-                            <button type="button" class="btn btn-outline-primary quick-date-btn" data-days="30">Month</button>
-                        </div>
-                        <div class="col-12 d-flex justify-content-end gap-2">
-                            <button type="reset" class="btn btn-outline-secondary">Reset</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-filter me-2"></i> Apply Filter
-                            </button>
-                        </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
+
     <!-- Adjustments Table Card -->
-    <div class="card">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-            <h5 class="mb-0"><i class="bi bi-table me-2"></i>Adjustment Records</h5>
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header text-primary d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-table me-2"></i> Adjustment Records</h5>
             <div class="d-flex gap-2">
-                <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search...">
-                <button class="btn btn-sm btn-outline-secondary" id="printBtn">
+                <div class="input-group input-group-sm" style="width: 200px;">
+                    <input type="text" id="searchInput" class="form-control rounded-start-3" placeholder="Search...">
+                    <button class="btn btn-outline-light rounded-end-3" type="button" onclick="document.getElementById('searchInput').value=''">Clear</button>
+                </div>
+                <button class="btn btn-sm btn-success rounded-3" id="printBtn" data-bs-toggle="tooltip" title="Print Table">
                     <i class="bi bi-printer"></i>
                 </button>
             </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="adjustmentsTable">
+                <table class="table table-hover table-bordered align-middle mb-0" id="adjustmentsTable">
                     <thead class="table-light">
                         <tr>
                             <th>No</th>
@@ -117,17 +124,15 @@
                                     </div>
                                 </div>
                             </td>
-                            
-                                <td>
-                                    {% if order.batch_sku %}
-                                        {{ order.batch_sku.batch_sku }}
-                                    {% else %}
-                                        <span class="text-muted">N/A</span>
-                                    {% endif %}
-                                </td>
-                            
                             <td>
-                                <span class="badge bg-{% if adjustment.adjustment_type == 'add' %}success{% else %}danger{% endif %}-subtle text-{% if adjustment.adjustment_type == 'add' %}success{% else %}danger{% endif %}">
+                                {% if adjustment.batch_sku %}
+                                    {{ adjustment.batch_sku.batch_sku }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if adjustment.adjustment_type == 'add' %}success{% else %}danger{% endif %} rounded-pill">
                                     {{ adjustment.get_adjustment_type_display }}
                                 </span>
                             </td>
@@ -140,23 +145,25 @@
                             </td>
                             <td>{{ adjustment.created_at|date:"M d, Y" }}</td>
                             <td>
-                                <button class="btn btn-sm y btn-outline-secondary" data-bs-toggle="tooltip" title="View Details">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="edit">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary rounded-3" data-bs-toggle="tooltip" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary rounded-3" data-bs-toggle="modal" data-bs-target="#editAdjustmentModal{{ adjustment.id }}" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
                             <td colspan="9" class="text-center py-4">
                                 <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-database-x fs-1 text-muted mb-2"></i>
+                                    <i class="bi bi-database-x fs-1 text-success mb-2"></i>
                                     <h5 class="text-muted">No adjustments found</h5>
-                                    <p class="text-muted"> create a new adjustment</p>
-                                    <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal">
-                                        <i class="bi bi-plus-circle me-2"></i>Create Adjustment
+                                    <p class="text-muted">Create a new adjustment</p>
+                                    <button type="button" class="btn btn-success rounded-3 mt-2" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal">
+                                        <i class="bi bi-plus-circle-fill me-2"></i> Create Adjustment
                                     </button>
                                 </div>
                             </td>
@@ -172,31 +179,29 @@
                 <ul class="pagination justify-content-end mb-0">
                     {% if stock_adjustments_list.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <a class="page-link rounded-3" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
                             First
                         </a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ stock_adjustments_list.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <a class="page-link rounded-3" href="?page={{ stock_adjustments_list.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
                             Previous
                         </a>
                     </li>
                     {% endif %}
-                    
                     <li class="page-item disabled">
-                        <span class="page-link">
+                        <span class="page-link rounded-3">
                             Page {{ stock_adjustments_list.number }} of {{ stock_adjustments_list.paginator.num_pages }}
                         </span>
                     </li>
-                    
                     {% if stock_adjustments_list.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ stock_adjustments_list.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <a class="page-link rounded-3" href="?page={{ stock_adjustments_list.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
                             Next
                         </a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ stock_adjustments_list.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <a class="page-link rounded-3" href="?page={{ stock_adjustments_list.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
                             Last
                         </a>
                     </li>
@@ -206,77 +211,153 @@
         </div>
         {% endif %}
     </div>
-</div>
 
-<!-- Stock Adjustment Modal -->
-<div class="modal fade" id="stockAdjustmentModal" tabindex="-1" aria-labelledby="stockAdjustmentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="stockAdjustmentModalLabel">
-                    <i class="bi bi-clipboard2-plus me-2"></i>New Stock Adjustment
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="{% url 'stock_adjustments' %}" id="adjustmentForm">
-                <div class="modal-body">
+    <!-- Stock Adjustment Modal -->
+    <div class="modal fade" id="stockAdjustmentModal" tabindex="-1" aria-labelledby="stockAdjustmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-3">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="stockAdjustmentModalLabel">
+                        <i class="bi bi-clipboard2-plus-fill me-2"></i> New Stock Adjustment
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{% url 'stock_adjustments' %}" id="adjustmentForm">
                     {% csrf_token %}
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label for="product_id" class="form-label">Product</label>
-                            <select id="product_id" name="product_id" class="form-select" required>
-                                <option value="" selected disabled>Select a product</option>
-                                {% for product in products %}
-                                    <option value="{{ product.product_id }}" data-stock="{{ product.quantity_in_stock }}">
-                                        {{ product.name }} (Current: {{ product.quantity_in_stock }} {{ product.units }})
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                            <div class=" col-md-4 mb-3">
-                                <label for="batchSkuSelect" class="form-label ">Select Batch (Optional)</label>
-                                <select class="form-select text-bg-light"  id="batch_sku"  name="batch_sku[]">
-                                    <option value="" selected >- Select Batch SKU -</option>
-                                    {% for batch in product_batches %}
-                                        <option value="{{ batch.id }}">
-                                            {{ batch.batch_sku }} (Current: {{ batch.current_quantity }})                                      </option>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="product_id" class="form-label fw-bold">Product</label>
+                                <select id="product_id" name="product_id" class="form-select rounded-3" required>
+                                    <option value="" selected disabled>Select a product</option>
+                                    {% for product in products %}
+                                        <option value="{{ product.product_id }}" data-stock="{{ product.quantity_in_stock }}">
+                                            {{ product.name }} (Current: {{ product.quantity_in_stock }} {{ product.units }})
+                                        </option>
                                     {% endfor %}
                                 </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="adjustment_type" class="form-label">Adjustment Type</label>
-                            <select id="adjustment_type" name="adjustment_type" class="form-select" required>
-                                <option value="add">Add Stock</option>
-                                <option value="subtract">Remove Stock</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="quantity" class="form-label">Quantity</label>
-                            <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Current Stock</label>
-                            <input type="text" class="form-control" id="current_stock" readonly>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">After Adjustment</label>
-                            <input type="text" class="form-control" id="after_adjustment" readonly>
-                        </div>
-                        <div class="col-12">
-                            <label for="reason" class="form-label">Reason</label>
-                            <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="batch_sku" class="form-label fw-bold">Select Batch (Optional)</label>
+                                <select id="batch_sku" name="batch_sku" class="form-select rounded-3">
+                                    <option value="" selected>- Select Batch SKU -</option>
+                                    {% for batch in product_batches %}
+                                        <option value="{{ batch.id }}">
+                                            {{ batch.batch_sku }} (Current: {{ batch.current_quantity }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="adjustment_type" class="form-label fw-bold">Adjustment Type</label>
+                                <select id="adjustment_type" name="adjustment_type" class="form-select rounded-3" required>
+                                    <option value="add">Add Stock</option>
+                                    <option value="subtract">Remove Stock</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="quantity" class="form-label fw-bold">Quantity</label>
+                                <input type="number" class="form-control rounded-3" id="quantity" name="quantity" min="1" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Current Stock</label>
+                                <input type="text" class="form-control rounded-3" id="current_stock" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">After Adjustment</label>
+                                <input type="text" class="form-control rounded-3" id="after_adjustment" readonly>
+                            </div>
+                            <div class="col-12">
+                                <label for="reason" class="form-label fw-bold">Reason</label>
+                                <textarea class="form-control rounded-3" id="reason" name="reason" rows="3" required></textarea>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-2"></i>Apply Adjustment
-                    </button>
-                </div>
-            </form>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success rounded-3">
+                            <i class="bi bi-check-circle-fill me-2"></i> Apply Adjustment
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
+
+    <!-- Edit Adjustment Modal -->
+    {% for adjustment in stock_adjustments_list %}
+    <div class="modal fade" id="editAdjustmentModal{{ adjustment.id }}" tabindex="-1" aria-labelledby="editAdjustmentModalLabel{{ adjustment.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-3">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="editAdjustmentModalLabel{{ adjustment.id }}">
+                        <i class="bi bi-pencil-fill me-2"></i> Edit Stock Adjustment
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="product_id_{{ adjustment.id }}" class="form-label fw-bold">Product</label>
+                                <select id="product_id_{{ adjustment.id }}" name="product_id" class="form-select rounded-3" required>
+                                    <option value="{{ adjustment.product.product_id }}">{{ adjustment.product.name }} (Current: {{ adjustment.product.quantity_in_stock }} {{ adjustment.product.units }})</option>
+                                    {% for product in products %}
+                                        {% if product.product_id != adjustment.product.product_id %}
+                                            <option value="{{ product.product_id }}" data-stock="{{ product.quantity_in_stock }}">
+                                                {{ product.name }} (Current: {{ product.quantity_in_stock }} {{ product.units }})
+                                            </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="batch_sku_{{ adjustment.id }}" class="form-label fw-bold">Select Batch (Optional)</label>
+                                <select id="batch_sku_{{ adjustment.id }}" name="batch_sku" class="form-select rounded-3">
+                                    <option value="" {% if not adjustment.batch_sku %}selected{% endif %}>- Select Batch SKU -</option>
+                                    {% for batch in product_batches %}
+                                        <option value="{{ batch.id }}" {% if adjustment.batch_sku and adjustment.batch_sku.id == batch.id %}selected{% endif %}>
+                                            {{ batch.batch_sku }} (Current: {{ batch.current_quantity }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="adjustment_type_{{ adjustment.id }}" class="form-label fw-bold">Adjustment Type</label>
+                                <select id="adjustment_type_{{ adjustment.id }}" name="adjustment_type" class="form-select rounded-3" required>
+                                    <option value="add" {% if adjustment.adjustment_type == 'add' %}selected{% endif %}>Add Stock</option>
+                                    <option value="subtract" {% if adjustment.adjustment_type == 'subtract' %}selected{% endif %}>Remove Stock</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="quantity_{{ adjustment.id }}" class="form-label fw-bold">Quantity</label>
+                                <input type="number" class="form-control rounded-3" id="quantity_{{ adjustment.id }}" name="quantity" min="1" value="{{ adjustment.quantity }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Current Stock</label>
+                                <input type="text" class="form-control rounded-3" id="current_stock_{{ adjustment.id }}" value="{{ adjustment.product.quantity_in_stock }}" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">After Adjustment</label>
+                                <input type="text" class="form-control rounded-3" id="after_adjustment_{{ adjustment.id }}" readonly>
+                            </div>
+                            <div class="col-12">
+                                <label for="reason_{{ adjustment.id }}" class="form-label fw-bold">Reason</label>
+                                <textarea class="form-control rounded-3" id="reason_{{ adjustment.id }}" name="reason" rows="3" required>{{ adjustment.reason }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success rounded-3">
+                            <i class="bi bi-check-circle-fill me-2"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% endblock %}
-

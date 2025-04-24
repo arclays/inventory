@@ -1,0 +1,27 @@
+
+
+  
+  .card:hover {
+    transform: translateY(-5px);
+  }
+  .nav-tabs .nav-link:hover, .nav-pills .nav-link:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+    transition: all 0.3s;
+  }
+  .table-hover tbody tr:hover {
+    background-color: #f1f3f5;
+  }
+  .pagination .page-link {
+    border-radius: 50%;
+    margin: 0 5px;
+    color: #0dcaf0;
+  }
+  .pagination .page-item.active .page-link {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+  }
+  canvas {
+    border: 1px solid #e9ecef;
+    padding: 10px;
+  }

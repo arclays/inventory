@@ -7,32 +7,97 @@
     <title>Login - AllStocK</title>
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> 
-    <style>  
-       body {
-        background: url("{% static 'images/stock.webp' %}") no-repeat center center fixed;
-            background-size: cover;
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
             height: 100vh;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        .split-container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* Left Side - Promotional Section */
+        .left-side {
+            flex: 1;
+            background: url("{% static 'images/stock.webp' %}") no-repeat center center;
+            background-size: cover;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #fff;
+            position: relative;
             overflow: hidden;
-       }
-  
+        }
+
+        .left-side::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Dark overlay for readability */
+            z-index: 1;
+        }
+
+        .left-content {
+            z-index: 2;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .left-content img {
+            height: 120px;
+            margin-bottom: 20px;
+        }
+
+        .left-content h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #0dcaf0;
+        }
+
+        .left-content p {
+            font-size: 1.2rem;
+            max-width: 400px;
+        }
+
+        /* Right Side - Login Form */
+        .right-side {
+            flex: 1;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
         .login-container {
-            max-width: 600px;
-            padding: 40px;
-            background: rgba(255, 255, 255, 0.9);
+            max-width: 400px;
+            width: 100%;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 10px;
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
             text-align: center;
         }
 
-        .login-header img {
-            height: 100px;
-            margin-bottom: 5px;
-        }
         .login-header h3 {
             color: #0dcaf0;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #6c757d;
+            font-size: 0.9rem;
         }
 
         /* Input Fields */
@@ -40,85 +105,128 @@
             text-align: left;
             margin-bottom: 15px;
         }
+
         .form-control {
-            padding: 8px;
+            padding: 10px;
             border-radius: 5px;
-            margin-top: 10px;
+            border: 1px solid #ced4da;
         }
+
         .form-control:focus {
             box-shadow: none;
-            border-color:#0dcaf0;
+            border-color: #0dcaf0;
         }
 
         /* Buttons */
         .btn-login {
             width: 100%;
-            background-color:#0dcaf0;
+            background-color: #0dcaf0;
             color: #fff;
-            padding: 8px;
+            padding: 10px;
             border: none;
             border-radius: 5px;
-            transition: 0.3s;
             font-weight: bold;
+            transition: background-color 0.3s;
         }
+
         .btn-login:hover {
-            background-color: #0dcaf0;
+            background-color: #0aa8cc;
         }
 
         /* Links */
         .forgot-password, .register-link {
             margin-top: 15px;
         }
+
         .forgot-password a, .register-link a {
             text-decoration: none;
             color: #0dcaf0;
             font-weight: bold;
         }
+
         .forgot-password a:hover, .register-link a:hover {
             text-decoration: underline;
         }
 
         .error {
-            margin-top: 1px;
-            font-size: 14px;
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: #dc3545;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .split-container {
+                flex-direction: column;
+            }
+
+            .left-side, .right-side {
+                flex: none;
+                height: 50vh;
+                width: 100%;
+            }
+
+            .left-content h1 {
+                font-size: 1.8rem;
+            }
+
+            .left-content p {
+                font-size: 1rem;
+            }
+
+            .login-container {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">  
-            <a href="{% url 'login' %}" class="logo">
-                <img src="{% static 'images/logo-sm.png' %}" alt="Logo">  </a>
-            <h3 class="fs-3 fw-bold">Welcome To AllStocK Login</h3>
-            <p class="text-muted">Sign in to continue</p>
-        </div>
-        <form action="{% url 'login' %}" method="POST">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{% url 'home' %}">
-
-            <div class="form-group">
-                <label for="username"><i class="fas fa-user"></i> Username :</label>
-                <input type="text" id="username" name="username" class="form-control text-bg-light" placeholder="Enter your username" required>
+    <div class="split-container">
+        <!-- Left Side: Promotional Content -->
+        <div class="left-side">
+            <div class="left-content">
+                <img src="{% static 'images/logo-sm.png' %}" alt="Logo">
+                <h1>Welcome to AllStocK</h1>
+                <p>Manage your investments and track your portfolio with ease. Join our platform today!</p>
             </div>
-
-            <div class="form-group">
-                <label for="password"><i class="fas fa-lock"></i> Password :</label>
-                <input type="password" id="password" name="password" class="form-control text-bg-light" placeholder="Enter your password" required>
-            </div>
-
-            {% if error %}
-            <div class="error text-danger">{{ error }}</div>
-            {% endif %}
-
-            <button type="submit" class="btn-login">Log In</button>
-        </form>
-
-        <div class="forgot-password">
-            <a href="#">Forgot your password?</a>
         </div>
 
-        <div class="register-link">
-            <p>Don't have an account? <a href="{% url 'register' %}">Signup now</a></p>
+        <!-- Right Side: Login Form -->
+        <div class="right-side">
+            <div class="login-container">
+                <div class="login-header">
+                    <h3>Sign In</h3>
+                    <p>Enter your credentials to continue</p>
+                </div>
+                <form action="{% url 'login' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'home' %}">
+
+                    <div class="form-group">
+                        <label for="username"><i class="fas fa-user"></i> Username:</label>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password"><i class="fas fa-lock"></i> Password:</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                    </div>
+
+                    {% if error %}
+                    <div class="error">{{ error }}</div>
+                    {% endif %}
+
+                    <button type="submit" class="btn-login">Log In</button>
+                </form>
+
+                <div class="forgot-password">
+                    <a href="#">Forgot your password?</a>
+                </div>
+
+                <div class="register-link">
+                    <p>Don't have an account? <a href="{% url 'register' %}">Signup now</a></p>
+                </div>
+            </div>
         </div>
     </div>
 
