@@ -1,0 +1,203 @@
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        .split-container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        .left-side {
+            flex: 1;
+            background: url("{% static 'images/stock.webp' %}") no-repeat center center;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-side::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5); 
+        }
+
+        .left-content {
+            z-index: 2;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .left-content img {
+            height: 120px;
+            margin-bottom: 20px;
+        }
+
+        .left-content h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #0dcaf0;
+        }
+
+        .left-content p {
+            font-size: 1.2rem;
+            max-width: 400px;
+        }
+
+        .right-side {
+            flex: 1;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .register-container {
+            max-width: 600px;
+            width: 100%;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .register-header h4 {
+            color: #0dcaf0;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .register-header p {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        /* Home Icon */
+        .home-icon {
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .home-icon a {
+            color: #0dcaf0;
+            font-size: 1.8rem;
+        }
+
+        .home-icon a:hover {
+            color: #0aa8cc;
+        }
+
+        /* Input Fields */
+        .form-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            width: 60px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            flex-grow: 1;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+        }
+
+        .form-control:focus {
+            box-shadow: none;
+            border-color: #0dcaf0;
+        }
+
+        
+        .btn-register {
+            width: 100%;
+            background-color: #0dcaf0;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .btn-register:hover {
+            background-color: #dc3545;
+        }
+
+        /* Links */
+        .terms-link, .login-link {
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .terms-link a, .login-link a {
+            text-decoration: none;
+            color: #0dcaf0;
+            font-weight: bold;
+        }
+
+        .terms-link a:hover, .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        
+        @media (max-width: 768px) {
+            .split-container {
+                flex-direction: column;
+            }
+
+            .left-side, .right-side {
+                flex: none;
+                height: 50vh;
+                width: 100%;
+            }
+
+            .left-content h1 {
+                font-size: 1.8rem;
+            }
+
+            .left-content p {
+                font-size: 1rem;
+            }
+
+            .register-container {
+                padding: 20px;
+                max-width: 90%;
+            }
+
+            .form-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .form-group label {
+                width: auto;
+                margin-bottom: 5px;
+            }
+
+            .form-group input {
+                width: 100%;
+            }
+        }
+    

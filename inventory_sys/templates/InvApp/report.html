@@ -135,34 +135,4 @@
         </div>
     </div>
 </div>
-
-<!-- JavaScript for Search Functionality -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.getElementById('searchTransactions');
-    const table = document.querySelector('table');
-    const rows = table.querySelectorAll('tbody tr');
-
-    searchInput.addEventListener('input', function () {
-        const searchTerm = this.value.toLowerCase();
-        rows.forEach(row => {
-            const productName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-            row.style.display = productName.includes(searchTerm) ? '' : 'none';
-        });
-    });
-});
-</script>
-
-<!-- CSS for Enhanced Styling -->
-<style>
-.card {
-    transition: transform 0.2s;
-}
-.card:hover {
-    transform: translateY(-5px);
-}
-.table th {
-    color: #0d6efd;
-}
-</style>
 {% endblock %}

@@ -45,30 +45,26 @@
                 <div class="card-body">
                     <form id="dateRangeForm" method="GET" action="{% url 'stock_adjustments' %}">
                         <div class="row g-3 align-items-end">
-                            <div class="col-md-4">
-                                <label for="start_date" class="form-label fw-bold">From Date</label>
-                                <div class="input-group">
-                                    <span class="input-group-text rounded-start-3"><i class="bi bi-calendar-event"></i></span>
-                                    <input type="date" id="start_date" name="start_date" class="form-control rounded-end-3" value="{{ request.GET.start_date }}">
-                                </div>
+                            <div class="col-md-3">
+                                <label for="start_date" class="form-label fw-bold">Start Date</label>
+                                <input type="date" class="form-control rounded-3" id="start_date" name="start_date" value="{{ start_date }}">
                             </div>
-                            <div class="col-md-4">
-                                <label for="end_date" class="form-label fw-bold">To Date</label>
-                                <div class="input-group">
-                                    <span class="input-group-text rounded-start-3"><i class="bi bi-calendar-event"></i></span>
-                                    <input type="date" id="end_date" name="end_date" class="form-control rounded-end-3" value="{{ request.GET.end_date }}">
-                                </div>
+                            <div class="col-md-3">
+                                <label for="end_date" class="form-label fw-bold">End Date</label>
+                                <input type="date" class="form-control rounded-3" id="end_date" name="end_date" value="{{ end_date }}">
                             </div>
-                            <div class="col-md-4 d-flex gap-2">
-                                <button type="button" class="btn btn-outline-primary rounded-3 quick-date-btn" data-days="0">Today</button>
-                                <button type="button" class="btn btn-outline-primary rounded-3 quick-date-btn" data-days="7">Week</button>
-                                <button type="button" class="btn btn-outline-primary rounded-3 quick-date-btn" data-days="30">Month</button>
-                            </div>
-                            <div class="col-12 d-flex justify-content-end gap-2">
-                                <button type="reset" class="btn btn-outline-secondary rounded-3">Reset</button>
-                                <button type="submit" class="btn btn-success rounded-3">
-                                    <i class="bi bi-funnel-fill me-2"></i> Apply Filter
-                                </button>
+                                <div class="col-md-3">
+                                    <label for="reportPeriod" class="form-label fw-bold">Period</label>
+                                    <select class="form-select rounded-3" id="reportPeriod">
+                                      <option value="daily">Daily</option>
+                                      <option value="weekly" selected>Weekly</option>
+                                      <option value="monthly">Monthly</option>
+                                      <option value="quarterly">Quarterly</option>
+                                      <option value="yearly">Yearly</option>
+                                    </select>
+                                  </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-info w-100 rounded-3"><i class="bi bi-check-circle me-1"></i> Apply Filters</button>
                             </div>
                         </div>
                     </form>

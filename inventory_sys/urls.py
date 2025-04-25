@@ -1,8 +1,6 @@
 from django.urls import path
 from . import views
-
-
-
+from .views import BulkUpdateOrdersView
 urlpatterns = [
     path('', views.home_view, name='home'),
     path('Invapp/logout/', views.logout_view, name='logout'),  
@@ -28,7 +26,7 @@ urlpatterns = [
     path('product_history/<int:product_id>/', views.product_history, name='product_history'),
     path('orders/', views.order_page, name='order_page'),
     path('orders/place/', views.place_order, name='place_order'),
-    path('orders/bulk/', views.bulk_update_orders, name='bulk_update_orders'),
+    path('orders/bulk-update/', BulkUpdateOrdersView.as_view(), name='bulk_update_orders'),
     path('orders/export/', views.export_orders_csv, name='export_orders_csv'),
     path('report_analysis/', views.report_analysis, name='report_analysis'),
     path('export_dashboard_csv/', views.export_dashboard_csv, name='export_dashboard_csv'),

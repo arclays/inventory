@@ -54,6 +54,12 @@ class Order(models.Model):
         ("mobile_money", "Mobile Money"),
         ("bank_transfer", "Bank Transfer"),
     ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('canceled', 'Canceled'),
+    ]
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, to_field="product_id", on_delete=models.CASCADE)
@@ -66,7 +72,7 @@ class Order(models.Model):
     discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00) 
     final_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00) 
     order_date = models.DateField(default=timezone.now)
-    status = models.CharField(max_length=50, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     
 
     def __str__(self):

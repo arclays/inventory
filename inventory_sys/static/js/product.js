@@ -1,77 +1,72 @@
 
+    let timeout;
+    function updateSearchResults(page = 1) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        const searchQuery = document.getElementById('stockSearch').value;
+        const categoryId = document.getElementById('categoryFilter').value;
+        const url = `{% url 'products:product_list' %}?search=${encodeURIComponent(searchQuery)}&category=${encodeURIComponent(categoryId)}&page=${page}`;
 
-
-    // Initialize charts
-    document.addEventListener('DOMContentLoaded', function() {
-        // Sales Chart
-        const salesCtx = document.getElementById('salesChart').getContext('2d');
-        const salesChart = new Chart(salesCtx, {
-            type: 'line',
-            data: {
-                labels: {{ sales_labels|safe }},
-                datasets: [{
-                    label: 'Sales ({{ product.units }})',
-                    data: {{ sales_data }},
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
+        fetch(url, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+          .then(response => response.json())
+          .then(data => {
+            // Update table body
+            const tbody = document.getElementById('productTableBody');
+            tbody.innerHTML = '';
+            if (data.results.length > 0) {
+              data.results.forEach(product => {
+                tbody.innerHTML += `
+                  <tr>
+                    <td>${product.product_id}</td>
+                    <td>${product.name}</td>
+                    <td>${product.category}</td>
+                    <td>${product.quantity_in_stock}</td>
+                    <td>${product.units}</td>
+                    <td>${product.selling_price}</td>
+                    <td>${product.reorder_quantity}</td>
+                    <td>${product.reorder_level}</td>
+                  </tr>
+                `;
+              });
+            } else {
+              tbody.innerHTML = '<tr><td colspan="8" class="text-center">No products found.</td></tr>';
             }
-        });
 
-        // Stock Composition Chart
-        const stockCtx = document.getElementById('stockChart').getContext('2d');
-        const stockChart = new Chart(stockCtx, {
-            type: 'doughnut',
-            data: {
-                labels: {{ batch_labels|safe }},
-                datasets: [{
-                    data: {{ batch_quantities }},
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ${context.raw} ${'{{ product.units }}'} (${context.formattedValue}%)`;
-                            }
-                        }
-                    }
-                }
+            // Update pagination
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            if (data.has_previous) {
+              pagination.innerHTML += `
+                <li class="page-item">
+                  <a class="page-link" href="#" onclick="updateSearchResults(${data.page_number - 1}); return false;">Previous</a>
+                </li>
+              `;
             }
-        });
+            for (let i = 1; i <= data.total_pages; i++) {
+              pagination.innerHTML += `
+                <li class="page-item ${i === data.page_number ? 'active' : ''}">
+                  <a class="page-link" href="#" onclick="updateSearchResults(${i}); return false;">${i}</a>
+                </li>
+              `;
+            }
+            if (data.has_next) {
+              pagination.innerHTML += `
+                <li class="page-item">
+                  <a class="page-link" href="#" onclick="updateSearchResults(${data.page_number + 1}); return false;">Next</a>
+                </li>
+              `;
+            }
+          })
+          .catch(error => console.error('Error:', error));
+      }, 300); 
+    }
+
+    
+    document.getElementById('stockSearch').addEventListener('input', () => updateSearchResults());
+    document.getElementById('clearFilters').addEventListener('click', () => {
+      document.getElementById('stockSearch').value = '';
+      document.getElementById('categoryFilter').value = '';
+      updateSearchResults();
     });
-

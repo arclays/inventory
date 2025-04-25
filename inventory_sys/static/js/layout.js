@@ -26,6 +26,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-
-    
+    document.getElementById('filterToggle').addEventListener('click', function () {
+        const filterPanel = document.getElementById('filterPanel');
+        filterPanel.style.display = filterPanel.style.display === 'none' ? 'block' : 'none';
+    });
     

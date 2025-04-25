@@ -5,8 +5,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('toggleSidebar');
     const sidebar = document.querySelector('.sidebar'); 
     const mainContent = document.querySelector('.main-content'); 
-    
-    
     const isSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
     
     if (sidebar) {

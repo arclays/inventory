@@ -63,7 +63,7 @@
                     </div>
                     <div class="col-md-2">
                         <label for="search" class="form-label fw-bold">Search</label>
-                        <input type="text" class="form-control rounded-3" id="search" name="search" value="{{ search_query }}" placeholder="Search by customer, product, or ID">
+                        <input type="text" class="form-control rounded-3" id="search" name="search" value="{{ search_query }}" placeholder="Search by product, or ID">
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-success rounded-3 w-100"><i class="bi bi-funnel-fill me-2"></i> Apply Filters</button>
@@ -114,7 +114,7 @@
                     <i class="bi bi-currency-dollar fs-2 text-primary me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Total Earnings</h6>
-                        <h3 class="fw-bold mb-0">${{ total_cash_made|floatformat:2 }}</h3>
+                        <h3 class="fw-bold mb-0">UGX: {{ total_cash_made|floatformat:1 }}</h3>
                     </div>
                 </div>
             </div>
@@ -122,10 +122,10 @@
     </div>
 
     <!-- Bulk Actions Form -->
-    <form method="POST" action="{% url 'bulk_update_orders' %}">
+    <form method="POST" action="{% url 'bulk_update_orders' %}" id="bulkActionForm">
         {% csrf_token %}
         <div class="card border-0 shadow-sm rounded-3 mb-4">
-            <div class="card-header  text-dark d-flex justify-content-between align-items-center">
+            <div class="card-header text-dark d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i> Orders List</h5>
                 <div>
                     <select name="action" class="form-select rounded-3 d-inline-block w-auto me-2" id="bulkAction">
@@ -135,10 +135,12 @@
                     </select>
                     <select name="new_status" class="form-select rounded-3 d-inline-block w-auto me-2" id="newStatus" style="display: none;">
                         {% for status in status_choices %}
-                            <option value="{{ status }}">{{ status|title }}</option>
+                            <option value="{{ status|lower }}">{{ status|title }}</option>
                         {% endfor %}
                     </select>
-                    <button type="submit" class="btn btn-success rounded-3" id="applyBulkAction" disabled><i class="bi bi-check-circle-fill me-2"></i> Apply</button>
+                    <button type="submit" class="btn btn-success rounded-3" id="applyBulkAction" disabled>
+                        <i class="bi bi-check-circle-fill me-2"></i> Apply
+                    </button>
                 </div>
             </div>
             <div class="card-body">
@@ -179,15 +181,15 @@
                                 </td>
                                 <td>{{ order.quantity }}</td>
                                 <td>{{ order.units }}</td>
-                                <td>${{ order.price_per_unit|floatformat:2 }}</td>
-                                <td>${{ order.total_price|floatformat:2 }}</td>
+                                <td>{{ order.price_per_unit|floatformat:2 }}</td>
+                                <td>{{ order.total_price|floatformat:2 }}</td>
                                 <td>{{ order.payment_method|title }}</td>
                                 <td>{{ order.discount|floatformat:1 }}%</td>
-                                <td>${{ order.final_total|floatformat:2 }}</td>
-                                <td>{{ order.order_date }}</td>
+                                <td>{{ order.final_total|floatformat:2 }}</td>
+                                <td>{{ order.order_date|date:"Y-m-d" }}</td>
                                 <td>
-                                    <span class="badge bg-{% if order.status == 'completed' %}success{% elif order.status == 'pending' %}warning{% else %}danger{% endif %} rounded-pill">
-                                        {{ order.status|title }}
+                                    <span class="badge bg-{% if order.status == 'completed' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'canceled' %}danger{% else %}secondary{% endif %} rounded-pill">
+                                        {{ order.get_status_display }}
                                     </span>
                                 </td>
                             </tr>
@@ -335,7 +337,7 @@
                             <div class="col-md-4">
                                 <label for="finalTotal" class="form-label fw-bold">Final Total</label>
                                 <div class="input-group">
-                                    <span class="input-group-text rounded-3">$</span>
+                                    <span class="input-group-text rounded-3">UGX</span>
                                     <input type="number" id="finalTotal" name="finalTotal" class="form-control rounded-3" readonly>
                                 </div>
                             </div>

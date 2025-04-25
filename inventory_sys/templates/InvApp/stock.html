@@ -393,7 +393,7 @@
                                     {% for product in products %}
                                         <option value="{{ product.product_id }}">{{ product.name }}</option>
                                     {% endfor %}
-                                </select>
+                                 </select>
                             </div>
                             <!-- New Stock -->
                             <div class="col-md-6">
@@ -452,19 +452,10 @@
         </div>
     </div>
 
-    <!-- Edit Stock Modal (empty, will be populated via JS) -->
+    <!-- Edit Stock Modal  -->
     <div class="modal fade" id="editStockModal" tabindex="-1" aria-hidden="true">
-        <!-- Content will be loaded dynamically -->
+        <-- Content will be loaded dynamically -->
     </div>
 
-    <!-- Add Batch Modal -->
-    <div class="modal fade" id="addBatchModal" tabindex="-1" aria-hidden="true">
-        <!-- Content will be loaded dynamically -->
-    </div>
-
-    <!-- Edit Batch Modal -->
-    <div class="modal fade" id="editBatchModal" tabindex="-1" aria-hidden="true">
-        <!-- Content will be loaded dynamically -->
-    </div>
 </div>
 {% endblock %}

@@ -12,93 +12,48 @@
     <!-- Filter and Search Controls -->
     <div class="card mb-3">
         <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Category</label>
-                    <select class="form-select" id="categoryFilter">
-                        <option value="">All Categories</option>
-                        {% for category in categories %}
-                        <option value="{{ category.id }}">{{ category.name }}</option>
-                        {% endfor %}
+            <form method="GET" action="{% url 'product_list' %}" id="filterForm">
+                <div class="row g-3">
+                  <!-- Category Filter -->
+                  <div class="col-md-4">
+                    <label for="categoryFilter" class="form-label">Category</label>
+                    <select class="form-select" id="categoryFilter" name="category" onchange="this.form.submit()">
+                      <option value="">All Categories</option>
+                      {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category.id|stringformat:"s" == category_id %}selected{% endif %}>
+                          {{ category.name }}
+                        </option>
+                      {% endfor %}
                     </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Search</label>
+                  </div>
+                  <!-- Search Input -->
+                  <div class="col-md-4">
+                    <label for="stockSearch" class="form-label">Search</label>
                     <div class="input-group">
-                        <input type="text" class="form-control" id="stockSearch" placeholder="Search products...">
-                        <button class="btn btn-outline-secondary" type="button" id="clearFilters">Clear</button>
+                      <input type="text" class="form-control" id="stockSearch" name="search" placeholder="Search by product or ID" value="{{ search_query|default_if_none:'' }}">
+                      <button class="btn btn-outline-secondary" type="button" id="clearFilters">Clear</button>
                     </div>
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
+                  </div>
+                  <!-- Action Buttons -->
+                  <div class="col-md-4 d-flex align-items-end">
                     <div class="btn-group w-100">
-                        <button type="button" class="btn btn-outline-success d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#productModal">
-                            <i class="bi bi-plus-circle me-2"></i> Add Product
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            Download <i class="bi bi-download"></i>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" id="exportExcel">Excel</a></li>
-                            <li><a class="dropdown-itemANDO" href="#" id="exportPDF">PDF</a></li>
-                            <li><a class="dropdown-item" href="#" id="exportCSV">CSV</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" onclick="printStockTable()">Print</a></li>
-                        </ul>
+                      <button type="button" class="btn btn-outline-success d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#productModal">
+                        <i class="bi bi-plus-circle me-2"></i> Add Product
+                      </button>
+                      <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        Download <i class="bi bi-download"></i>
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" id="exportExcel">Excel</a></li>
+                        <li><a class="dropdown-item" href="#" id="exportPDF">PDF</a></li>
+                        <li><a class="dropdown-item" href="#" id="exportCSV">CSV</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="printStockTable()">Print</a></li>
+                      </ul>
                     </div>
+                  </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Product Modal -->
-    <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
-        <div class="modal-dialog bg-light">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold fs-2 m-3 mb-3 text-info" id="productModalLabel">Add Product Details</h5>
-                    <button type="button" class="btn-close text-bg-info" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body m-3">
-                    <form id="productForm" method="POST" action="{% url 'product_list' %}" autocomplete="off">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="name" class="form-label">Product Name</label>
-                                <input type="text" class="form-control text-bg-light" id="name" name="name" value="{{ product.name|default_if_none:'' }}" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="units" class="form-label">Units</label>
-                                <input type="text" class="form-control text-bg-light" id="units" name="units" value="{{ product.units|default_if_none:'' }}" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="categoryname" class="form-label">Category</label>
-                                <select id="categoryname" name="category_id" class="form-control text-bg-light" required>
-                                    <option value="">Select a category</option>
-                                    {% for category in categories %}
-                                    <option value="{{ category.id }}" {% if product.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="selling_price" class="form-label">Selling Price</label>
-                                <input type="number" step="0.01" class="form-control text-bg-light" id="selling_price" name="selling_price" value="{{ product.selling_price|default_if_none:0 }}" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="reorder_quantity" class="form-label">Reorder Quantity</label>
-                                <input type="number" class="form-control text-bg-light" id="reorder_quantity" name="reorder_quantity" value="{{ product.reorder_quantity|default_if_none:0 }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="reorder_level" class="form-label">Reorder Level</label>
-                                <input type="number" class="form-control text-bg-light" id="reorder_level" name="reorder_level" value="{{ product.reorder_level|default_if_none:0 }}">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-outline-info">Add Product</button>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
+              </form>
         </div>
     </div>
 

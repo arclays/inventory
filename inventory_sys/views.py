@@ -1,25 +1,24 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.contrib import messages
 from datetime import datetime, date
+from django.views.generic import View
 from django.urls import reverse
 from .models import Customer, Product, Order,User, Category, Supplier
 from django.http import HttpResponse
 from django.utils import timezone
 from .models import Order, Stock, StockAdjustment, ProductBatch
 from decimal import Decimal
-from django.db.models import F, Avg
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from django.db.models import Sum, F,  Value, Q, When, FloatField,Count , ExpressionWrapper, DecimalField
-from django.db.models.functions import TruncMonth, Coalesce
+from django.db.models import Sum, F,   Q, When, Value, Case,  FloatField,Count , ExpressionWrapper
+from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Sum, Count, F, Avg, FloatField, Case, When, Value,FloatField, Subquery, OuterRef, Q
-from django.db.models.functions import Coalesce, TruncMonth
+from django.db.models import Sum, Count, FloatField, FloatField, Subquery, OuterRef, Q
+from django.db.models.functions import  TruncMonth
 import json
 import csv
 import logging
@@ -76,20 +75,27 @@ def confirm_logout(request):
 
 
 def product_list(request):
-    # GET request handling
     categories = Category.objects.all()
-    products = Product.objects.all().order_by('-product_id')
     stocks = Stock.objects.all()
-    
+
+    category_id = request.GET.get('category', '')
+    search_query = request.GET.get('search', '').strip()
+
+    products = Product.objects.all().order_by('-product_id')
+    if category_id:
+        products = products.filter(category_id=category_id)
+    if search_query:
+        products = products.filter(
+            Q(name__icontains=search_query) | Q(product_id__icontains=search_query)
+        )
+
     # Pagination
     paginator = Paginator(products, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # POST request handling
     if request.method == 'POST':
         try:
-            # Get form data
             category_id = request.POST.get('category_id')
             name = request.POST.get('name', '').strip()
             quantity_in_stock = request.POST.get('quantity_in_stock', 0)
@@ -98,7 +104,6 @@ def product_list(request):
             reorder_quantity = request.POST.get('reorder_quantity', 0)
             reorder_level = request.POST.get('reorder_level', 0)
 
-            # Validate required fields
             if not category_id:
                 messages.error(request, "Category is required!")
                 return redirect('product_list')
@@ -107,20 +112,17 @@ def product_list(request):
                 messages.error(request, "Product name is required!")
                 return redirect('product_list')
 
-            # Check for existing product
             if Product.objects.filter(name__iexact=name).exists():
                 messages.error(request, f"Product '{name}' already exists!")
                 return redirect('product_list')
 
-            # Get category
             try:
                 category = Category.objects.get(id=category_id)
             except Category.DoesNotExist:
                 messages.error(request, "Invalid category selected!")
                 return redirect('product_list')
 
-            # Create product
-            product = Product.objects.create(
+            Product.objects.create(
                 name=name,
                 quantity_in_stock=int(quantity_in_stock),
                 units=units,
@@ -140,21 +142,42 @@ def product_list(request):
         
         return redirect('product_list')
 
+    # Handle AJAX requests
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        data = [
+            {
+                'product_id': product.product_id,
+                'name': product.name,
+                'category': product.category.name,
+                'quantity_in_stock': product.quantity_in_stock,
+                'units': product.units,
+                'selling_price': product.selling_price,
+                'reorder_quantity': product.reorder_quantity,
+                'reorder_level': product.reorder_level
+            }
+            for product in page_obj
+        ]
+        return JsonResponse({
+            'results': data,
+            'has_next': page_obj.has_next(),
+            'has_previous': page_obj.has_previous(),
+            'page_number': page_obj.number,
+            'total_pages': paginator.num_pages
+        })
+
     context = {
         'page_obj': page_obj,
         'stocks': stocks,
         'categories': categories,
+        'category_id': category_id,
+        'search_query': search_query,
     }
     return render(request, 'InvApp/product_list.html', context)
-
 
 def product_history(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
     
-    # Combine all activity
     combined_activity = []
-    
-    # Add batches
     
     for batch in product.productbatch_set.all():
 
@@ -165,8 +188,7 @@ def product_history(request, product_id):
             'quantity': batch.initial_quantity
         })
     
-    # Add orders
-    orders = product.order_set.all().order_by('-order_date')
+        orders = product.order_set.all().order_by('-order_date')
 
     for order in orders:
         combined_activity.append({
@@ -176,7 +198,6 @@ def product_history(request, product_id):
             'quantity': order.quantity
         })
     
-    # Add adjustments
     adjustments = product.stockadjustment_set.all().order_by('-created_at')
 
     for adj in adjustments:
@@ -190,12 +211,10 @@ def product_history(request, product_id):
     # # Sort by date descending
     # combined_activity.sort(key=lambda x: x['date'], reverse=True)
     
-    # Pagination
     paginator = Paginator(combined_activity, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Sales data for chart (last 12 months)
     today = datetime.now()
     sales_labels = []
     sales_data = []
@@ -203,10 +222,8 @@ def product_history(request, product_id):
     for i in range(11, -1, -1):
         month = today - timedelta(days=30*i)
         sales_labels.append(month.strftime("%b %Y"))
-        # You'll need to implement actual sales aggregation here
-        sales_data.append(0)  # Replace with actual data
+        sales_data.append(0)  
     
-    # Batch data for doughnut chart
     batch_labels = [f"Batch {batch.batch_sku}" for batch in product.productbatch_set.all()]
     batch_quantities = [batch.current_quantity for batch in product.productbatch_set.all()]
     
@@ -268,14 +285,14 @@ def customer_confirm_delete(request, customer_id):
     return render(request, 'Invapp/customer_confirm_delete.html', {'customer': customer})
 
 def product_update(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
+    product = get_object_or_404(Product, product_id=product_id)
     if request.method == 'POST':
         fields = ['name', 'buying_price', 'quantity_in_stock', 'supplier', 'units', 
                   'category', 'selling_price', 'manufacture_date', 'reorder_quantity', 'reorder_level']
 
         update_data = {field: request.POST.get(field) for field in fields if request.POST.get(field) is not None}
 
-        Product.objects.filter(id=product_id).update(**update_data)
+        Product.objects.filter(product_id=product_id).update(**update_data)
 
         messages.success(request, 'Product updated successfully!')
         return redirect('product_list')
@@ -297,17 +314,6 @@ def get_selling_price(request, product_id):
         return JsonResponse({"selling_price": product.selling_price})
     except Product.DoesNotExist:
         return JsonResponse({"selling_price": 0}, status=404)
- 
-    # GET request
-    product_batches = ProductBatch.objects.select_related('product').all().order_by('expiry_date')
-    products = Product.objects.all()
-    customers = Customer.objects.all()
-
-    return render(request, 'Invapp/order_page.html', {
-        'product_batches': product_batches,
-        'products': products,
-        'customers': customers
-    })
 
 
 def get_sales_data(request):
@@ -333,13 +339,13 @@ def report_page(request):
     selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
     today = date.today()
     
-    # Initialize totals
     total_stock_in = 0
     total_stock_out = 0
     total_adjustments_in = 0
     total_adjustments_out = 0
     total_cash_made = 0
     total_quantity_sold = 0
+    stock_adjustments= StockAdjustment.objects.count()
 
     products = Product.objects.all()
     stock_transactions = []
@@ -361,7 +367,7 @@ def report_page(request):
         total_adjustments_in += positive_adjustments
         total_adjustments_out += negative_adjustments
 
-        # Add to transactions list
+        
         stock_transactions.append({
             'product_name': product.name,
             'opening_stock': opening_stock,
@@ -373,7 +379,6 @@ def report_page(request):
             'net_adjustments': net_adjustments
         })
 
-    # Calculate overall totals
     total_opening_stock = sum(t['opening_stock'] for t in stock_transactions)
     total_closing_stock = sum(t['closing_stock'] for t in stock_transactions)
     calculated_total_closing = (
@@ -384,12 +389,10 @@ def report_page(request):
         total_adjustments_out
     )
 
-    # Additional metrics
     orders = Order.objects.filter(order_date=selected_date)
     total_customers = orders.values('customer').distinct().count()
     total_orders = orders.count()
     
-    # Calculate total cash made from sales only
     total_cash_made = Order.objects.filter(
         order_date=selected_date
     ).aggregate(total=Sum('final_total'))['total'] or 0
@@ -398,7 +401,6 @@ def report_page(request):
         order_date=selected_date
     ).aggregate(total=Sum('quantity'))['total'] or 0
 
-    # Check if all values are zero (for empty report indication)
     all_zeros = all([
         total_opening_stock == 0,
         total_stock_in == 0,
@@ -415,8 +417,6 @@ def report_page(request):
         'orders': orders,
         'products': products,
         'stock_transactions': stock_transactions,
-        
-        # Stock metrics
         'total_opening_stock': total_opening_stock,
         'total_stock_in': total_stock_in,
         'total_stock_out': total_stock_out,
@@ -424,14 +424,11 @@ def report_page(request):
         'total_adjustments_out': total_adjustments_out,
         'total_closing_stock': total_closing_stock,
         'calculated_total_closing': calculated_total_closing,
-        
-        # Order metrics
         'total_customers': total_customers,
         'total_orders': total_orders,
+        'stock_adjustments':stock_adjustments,
         'total_cash_made': total_cash_made,
         'total_quantity_sold': total_quantity_sold,
-        
-        # Flags
         'all_zeros': all_zeros,
     }
 
@@ -443,7 +440,6 @@ def home_view(request):
     selected_date = request.GET.get('orderDate', str(date.today()))
     selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
 
-    # Filter only daily data
     stocks = Stock.objects.filter(stock_date=selected_date)
     orders = Order.objects.filter(order_date=selected_date)
     stock_adjustments = StockAdjustment.objects.filter(created_at__date=selected_date)
@@ -462,7 +458,6 @@ def home_view(request):
     suppliers = Supplier.objects.count()
     batch_sku = ProductBatch.objects.all()
 
-    # Stock Data
     total_new_stock = stocks.aggregate(Sum('new_stock'))['new_stock__sum'] or 0
     total_adjustments = stock_adjustments.filter(adjustment_type='add').aggregate(Sum('quantity'))['quantity__sum'] or 0
     total_stock_in = total_new_stock + total_adjustments
@@ -593,11 +588,9 @@ def stock_adjustments(request):
 
     else:
         products = Product.objects.all()
+        product_batches =ProductBatch.objects.all()
         stock_adjustments_qs = StockAdjustment.objects.all().select_related('product')
 
-      
-
-        # Handle date range filtering using created_at field
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
 
@@ -622,6 +615,7 @@ def stock_adjustments(request):
             'stock_adjustments_list': stock_adjustments_qs,
             'selected_date': selected_date,
             'products': products,
+            'product_batches':product_batches,
             'start_date': start_date,
             'end_date': end_date,
         }
@@ -823,7 +817,7 @@ def add_stock(request):
     })
 
 
-# Set up logging
+
 logger = logging.getLogger(__name__)
 
 def report_analysis(request):
@@ -831,11 +825,9 @@ def report_analysis(request):
     thirty_days_ago = today - timedelta(days=30)
     twelve_months_ago = today - timedelta(days=365)
 
-    # Subquery to get the latest buying_price for each product
     latest_batch = ProductBatch.objects.filter(product=OuterRef('product')).order_by('-stock_date')[:1]
     buying_price_subquery = Subquery(latest_batch.values('buying_price')[:1], output_field=FloatField())
 
-    # Total inventory value using batch prices
     batch_values = ProductBatch.objects.values(
         'product__name', 'product__product_id', 'product__category__name', 'buying_price'
     ).annotate(
@@ -850,7 +842,6 @@ def report_analysis(request):
 
     total_inventory_value = sum(item['total_value'] for item in batch_values if item['total_value']) or 0.0
 
-    # Inventory data with percentage
     inventory_data = [
         {
             'name': item['product__name'],
@@ -864,7 +855,6 @@ def report_analysis(request):
         for item in batch_values
     ]
 
-    # Low stock items
     critical_threshold = 0.2
     low_stock_items = Product.objects.annotate(
         critical_level=F('reorder_level') * critical_threshold
@@ -886,7 +876,7 @@ def report_analysis(request):
         )
     )['avg_reorder'] or 0.0
 
-    # Category Analysis
+    
     category_data = Category.objects.annotate(
         product_count=Count('product'),
         batch_count=Count('product__productbatch'),
@@ -911,7 +901,6 @@ def report_analysis(request):
         'total_quantity', 'total_value', 'percentage'
     ).order_by('-total_value')
 
-    # Post-process category_data to handle null values
     category_data = [
         {
             'id': item['id'],
@@ -925,7 +914,6 @@ def report_analysis(request):
         for item in category_data
     ]
 
-    # Inventory trend
     inventory_trend = ProductBatch.objects.filter(
         stock_date__gte=twelve_months_ago
     ).annotate(
@@ -951,18 +939,17 @@ def report_analysis(request):
         inventory_trend_values.append(float(month_data['total_value'] or 0.0))
         current_month = (current_month + timedelta(days=32)).replace(day=1)
 
-    # Sales-related calculations for Summary Cards
+    
     orders = Order.objects.filter(
         order_date__gte=thirty_days_ago,
         payment_method__in=["cash", "credit_card", "mobile_money", "bank_transfer"]
     )
 
-    # Total Revenue
     total_revenue = orders.aggregate(
         total=Sum('total_price', output_field=FloatField())
     )['total'] or 0.0
 
-    # Revenue Growth
+    
     previous_period_start = thirty_days_ago - timedelta(days=30)
     previous_period_orders = Order.objects.filter(
         order_date__gte=previous_period_start,
@@ -974,7 +961,7 @@ def report_analysis(request):
     )['total'] or 0.0
     revenue_growth = ((total_revenue - previous_revenue) / previous_revenue * 100) if previous_revenue else 0.0
 
-    # Gross Profit and Margin
+   
     total_cogs = orders.annotate(
         buying_price=buying_price_subquery
     ).aggregate(
@@ -988,11 +975,11 @@ def report_analysis(request):
     gross_profit = total_revenue - total_cogs
     gross_margin = (gross_profit / total_revenue * 100) if total_revenue else 0.0
 
-    # Average Order Value and Total Orders
+    # Average Order  and Total Orders
     total_orders = orders.count()
     avg_order_value = (total_revenue / total_orders) if total_orders else 0.0
 
-    # Return Rate and Total Returns (No status field, assuming no returns)
+    # Return Rate and Total Returns 
     total_returns = 0.0
     return_rate = 0.0
 
@@ -1024,7 +1011,6 @@ def report_analysis(request):
 
         logger.debug("Top Selling Raw: %s", list(top_selling))
 
-        # Post-process top_selling to handle null values
         top_selling_processed = [
             {
                 'product__name': item['product__name'],
@@ -1181,7 +1167,12 @@ def report_analysis(request):
             output_field=FloatField()
         ),
         contribution=ExpressionWrapper(
-            (F('revenue') - F('cogs')) / (gross_profit if gross_profit else 1) * 100,
+            (F('revenue') - F('cogs')) * 100 /
+            Case(
+                When(cogs=0, then=Value(1)),
+                default=F('cogs'),
+                output_field=FloatField()
+            ),
             output_field=FloatField()
         )
     ).order_by('-profit')
@@ -1445,21 +1436,38 @@ def place_order(request):
             return redirect('order_page')
     return redirect('order_page')
 
-def bulk_update_orders(request):
-    if request.method == 'POST':
+
+
+
+
+class BulkUpdateOrdersView(View):
+    def post(self, request):
         order_ids = request.POST.getlist('order_ids')
         action = request.POST.get('action')
-        orders = Order.objects.filter(id__in=order_ids)
+        
+        if not order_ids:
+            messages.error(request, 'No orders selected.')
+            return redirect('orders_list')
+        
         if action == 'update_status':
             new_status = request.POST.get('new_status')
-            orders.update(status=new_status)
-            messages.success(request, f"Updated status for {orders.count()} orders")
+            if not new_status:
+                messages.error(request, 'No status selected.')
+                return redirect('orders_list')
+            
+            # Update orders status
+            updated_count = Order.objects.filter(id__in=order_ids).update(status=new_status)
+            messages.success(request, f'Updated status for {updated_count} order(s) to {dict(Order.STATUS_CHOICES).get(new_status, new_status)}.')
+        
         elif action == 'delete':
-            count = orders.count()
-            orders.delete()
-            messages.success(request, f"Deleted {count} orders")
-        return redirect('order_page')
-    return redirect('order_page')
+            # Delete orders
+            deleted_count, _ = Order.objects.filter(id__in=order_ids).delete()
+            messages.success(request, f'Successfully deleted {deleted_count} order(s).')
+        
+        else:
+            messages.error(request, 'Invalid action selected.')
+        
+        return redirect('orders_list')
 
 def export_orders_csv(request):
     selected_date = request.GET.get('orderDate', timezone.now().date().strftime('%Y-%m-%d'))
@@ -1524,6 +1532,7 @@ def home_view(request):
     # Subquery for buying_price
     latest_batch = ProductBatch.objects.filter(product=OuterRef('product')).order_by('-stock_date')[:1]
     buying_price_subquery = Subquery(latest_batch.values('buying_price')[:1], output_field=FloatField())
+    stock_adjustments= StockAdjustment.objects.count()
 
     # Summary Metrics
     orders = Order.objects.filter(order_date__range=[start_date, end_date])
@@ -1560,7 +1569,7 @@ def home_view(request):
         low_stock_items = low_stock_items.filter(category_id=category_id)
     low_stock_count = low_stock_items.count()
 
-    # Adjustments (assuming a StockAdjustment model or using ProductBatch changes)
+    # Adjustments
     average_adjustments = ProductBatch.objects.filter(
         stock_date__range=[start_date, end_date]
     ).aggregate(avg=Sum('initial_quantity'))['avg'] or 0
@@ -1639,6 +1648,7 @@ def home_view(request):
         'total_stock_in': total_stock_in,
         'low_stock_count': low_stock_count,
         'total_products': total_products,
+        'stock_adjustments':stock_adjustments,
         'categories': categories,
         'average_adjustments': round(average_adjustments),
         'total_cash_made': total_cash_made,

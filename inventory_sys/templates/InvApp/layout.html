@@ -20,11 +20,10 @@
     <div class="sidebar bg-light d-flex flex-column p-3" style="width: 250px; min-height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);">
         <div class="d-flex align-items-center mb-4">
             <img src="{% static 'images/logo-sm.png' %}" alt="Logo" style="height: 40px; opacity: 0.9;">
-            <h4 class="ms-2 mb-0 text-dark">Inventory App</h4>
         </div>
         <ul class="nav flex-column">
             <!-- Dashboard -->
-            <li class="nav-item mb-2">
+            <li class="nav-item mb-2 mt-4">
                 <a class="nav-link d-flex align-items-center text-dark {% if request.path == '/home/' %}active{% endif %}" href="{% url 'home' %}">
                     <i class="bi bi-speedometer2 fs-5 me-2 text-primary"></i>
                     <span>Dashboard</span>
@@ -162,6 +161,7 @@
     <script src="{% static 'js/adjust.js' %}"></script>
     <script src="{% static 'js/stocklevel.js' %}"></script>
     <script src="{% static 'js/layout.js' %}"></script>
+    <script src="{% static 'js/product.js' %}"></script>
 </body>
 </html>
 

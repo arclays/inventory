@@ -19,12 +19,36 @@
             <button class="btn btn-outline-light me-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#quickOrderModal">
                 <i class="fas fa-shopping-cart me-1"></i> Quick Order
             </button>
-            <button class="btn btn-outline-light rounded-pill" data-bs-toggle="modal" data-bs-target="#adjustStockModal">
-                <i class="fas fa-users me-1"></i> Add Customer
+            <button type="button" class="btn btn-outline-light me-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                <i class="bi bi-plus-circle-fill me-2"></i> Add Customer
             </button>
         </div>
     </div>
-
+    
+  <!-- Filter Section -->
+  <div class="position-relative mb-4">
+    <i class="bi bi-funnel-fill fs-3 text-success position-absolute end-0 me-3" style="cursor: pointer; top: 10px;" data-bs-toggle="collapse" data-bs-target="#dateRangeFilters" aria-expanded="false" aria-controls="dateRangeFilters"></i>
+    <div class="collapse" id="dateRangeFilters">
+      <div class="card col-md-6 mx-auto border-0 shadow-sm rounded-3" style="background: #ffffff;">
+        <div class="card-body p-4">
+          <form class="row g-3 align-items-center">
+            <div class="col-md-3">
+              <label for="startDate" class="form-label fw-bold">From</label>
+              <input type="date" class="form-control rounded-3" id="startDate" value="{{ default_start_date }}">
+            </div>
+            <div class="col-md-3">
+              <label for="endDate" class="form-label fw-bold">To</label>
+              <input type="date" class="form-control rounded-3" id="endDate" value="{{ default_end_date }}">
+            </div>
+           
+            <div class="col-md-3 d-flex align-items-end">
+              <button type="submit" class="btn btn-success w-100 rounded-3"><i class="bi bi-check-circle-fill me-1"></i> Apply</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
     <!-- Filters -->
     <div class="card shadow-sm mb-4 border-0 rounded-3">
         <div class="card-header py-3 d-flex justify-content-between align-items-center bg-light">
@@ -34,40 +58,24 @@
         <div class="card-body" id="filterPanel" style="display: none;">
             <form method="GET">
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label for="start_date" class="form-label fw-bold">Start Date</label>
                         <input type="date" class="form-control rounded-3" id="start_date" name="start_date" value="{{ start_date }}">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label for="end_date" class="form-label fw-bold">End Date</label>
                         <input type="date" class="form-control rounded-3" id="end_date" name="end_date" value="{{ end_date }}">
                     </div>
-                    <div class="col-md-2">
-                        <label for="category" class="form-label fw-bold">Category</label>
-                        <select id="category" name="category" class="form-select rounded-3">
-                            <option value="">All Categories</option>
-                            {% for cat in categories_list %}
-                                <option value="{{ cat.id }}" {% if cat.id|stringformat:"s" == category_id %}selected{% endif %}>
-                                    {{ cat.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="customer" class="form-label fw-bold">Customer</label>
-                        <select id="customer" name="customer" class="form-select rounded-3">
-                            <option value="">All Customers</option>
-                            {% for cust in customers %}
-                                <option value="{{ cust.id }}" {% if cust.id|stringformat:"s" == customer_id %}selected{% endif %}>
-                                    {{ cust.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="search" class="form-label fw-bold">Search</label>
-                        <input type="text" class="form-control rounded-3" id="search" name="search" value="{{ search_query }}" placeholder="Search orders or products">
-                    </div>
+                        <div class="col-md-3">
+                            <label for="reportPeriod" class="form-label fw-bold">Period</label>
+                            <select class="form-select rounded-3" id="reportPeriod">
+                              <option value="daily">Daily</option>
+                              <option value="weekly" selected>Weekly</option>
+                              <option value="monthly">Monthly</option>
+                              <option value="quarterly">Quarterly</option>
+                              <option value="yearly">Yearly</option>
+                            </select>
+                          </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-info w-100 rounded-3"><i class="bi bi-check-circle me-1"></i> Apply Filters</button>
                     </div>
@@ -150,7 +158,7 @@
                     <i class="fas fa-tools fa-2x text-info me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Stock Adjustments</h6>
-                        <h3 class="fw-bold mb-0 text-info">{{ average_adjustments }}</h3>
+                        <h3 class="fw-bold mb-0 text-info">{{ stock_adjustments }}</h3>
                     </div>
                 </div>
             </div>
@@ -161,7 +169,7 @@
                     <i class="fas fa-dollar-sign fa-2x text-success me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Total Cash Made</h6>
-                        <h3 class="fw-bold mb-0 text-success">UGX {{ total_cash_made|floatformat:2 }}</h3>
+                        <h3 class="fw-bold mb-0 text-success">UGX: {{ total_cash_made|floatformat:1 }}</h3>
                     </div>
                 </div>
             </div>
@@ -358,8 +366,10 @@
                         <h5 class="modal-title fw-bold fs-2" id="quickOrderModalLabel"><i class="fas fa-shopping-cart me-2"></i> Quick Order</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body p-4">
-                        <div class="mb-3">
+                    
+                    <div class="modal-body">
+                        <!-- Customer Selection -->
+                        <div class="mb-4">
                             <label for="orderCustomer" class="form-label fw-bold">Customer</label>
                             <select id="orderCustomer" name="orderCustomer" class="form-select rounded-3" required>
                                 <option value="">Select Customer</option>
@@ -368,55 +378,103 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label for="product" class="form-label fw-bold">Product</label>
-                            <select name="products[]" class="form-select rounded-3" required>
-                                <option value="">Select Product</option>
-                                {% for product in products %}
-                                    <option value="{{ product.product_id }}" data-price="{{ product.price_per_unit|default:0.0 }}">
-                                        {{ product.name }} (Stock: {{ product.quantity_in_stock }} {{ product.units }})
-                                    </option>
-                                {% endfor %}
-                            </select>
+
+                        <!-- Product Items -->
+                        <div id="product-container">
+                            <div class="product-item mb-4 border p-3 rounded-3" style="background: #f8f9fa;">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Product</label>
+                                        <select name="products[]" class="form-select rounded-3 product-select" required>
+                                            <option value="">Select Product</option>
+                                            {% for product in products %}
+                                                <option value="{{ product.product_id }}" data-price="{{ product.price_per_unit|default:0.0 }}">
+                                                    {{ product.name }} (Stock: {{ product.quantity_in_stock }} {{ product.units }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Batch/SKU (Optional)</label>
+                                        <select name="batch_sku[]" class="form-select rounded-3 batch-sku-select">
+                                            <option value="">No Batch</option>
+                                            {% for batch in product_batches %}
+                                                <option value="{{ batch.id }}">{{ batch.batch_sku }} (Stock: {{ batch.initial_quantity }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Quantity</label>
+                                        <input type="number" name="orderQuantity[]" class="form-control rounded-3 quantity" min="1" required />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Unit</label>
+                                        <select name="units[]" class="form-select rounded-3 unit" required>
+                                            <option value="piece">Piece</option>
+                                            <option value="kgs">Kgs</option>
+                                            <option value="litres">litres</option>
+                                            <option value="mg">mg</option>
+                                            <option value="dozen">Dozen</option>
+                                            <option value="box">Box</option>
+                                            <option value="carton">Carton</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Price/Unit</label>
+                                        <input type="number" name="price_per_unit[]" class="form-control rounded-3 price-per-unit" step="0.01" required />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Discount (%)</label>
+                                        <input type="number" name="productDiscount[]" class="form-control rounded-3 discount" min="0" max="100" value="0" step="0.1" />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Total Price</label>
+                                        <input type="number" name="totalPrice[]" class="form-control rounded-3 total-price" readonly />
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-danger rounded-3 remove-product w-100"><i class="bi bi-trash-fill"></i> Remove</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Add Product Button -->
+                        <button type="button" id="add-product" class="btn btn-info rounded-3 w-100 mb-4"><i class="bi bi-plus-circle-fill me-2"></i> Add Another Product</button>
+
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <label for="quantity" class="form-label fw-bold">Quantity</label>
-                                <input type="number" name="orderQuantity[]" class="form-control rounded-3" min="1" required />
-                            </div>
-                            <div class="col-md-4">
-                                <label for="units" class="form-label fw-bold">Unit</label>
-                                <select name="units[]" class="form-select rounded-3" required>
-                                    <option value="piece">Piece</option>
-                                    <option value="dozen">Dozen</option>
-                                    <option value="box">Box</option>
-                                    <option value="carton">Carton</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="price_per_unit" class="form-label fw-bold">Price/Unit</label>
-                                <input type="number" name="price_per_unit[]" class="form-control price-per-unit rounded-3" step="0.01" required />
-                            </div>
-                        </div>
-                        <div class="row g-3 mt-3">
-                            <div class="col-md-4">
                                 <label for="orderDate" class="form-label fw-bold">Order Date</label>
-                                <input type="date" name="orderDate" class="form-control rounded-3" value="{{ end_date }}" required>
+                                <input type="date" id="orderDate" name="orderDate" class="form-control rounded-3" value="{{ selected_date }}" required>
                             </div>
                             <div class="col-md-4">
                                 <label for="paymentMethod" class="form-label fw-bold">Payment Method</label>
-                                <select name="paymentMethod" class="form-select rounded-3" required>
-                                    <option value="cash">Cash</option>
-                                    <option value="credit_card">Credit Card</option>
-                                    <option value="mobile_money">Mobile Money</option>
-                                    <option value="bank_transfer">Bank Transfer</option>
+                                <select id="paymentMethod" name="paymentMethod" class="form-select rounded-3" required>
+                                    {% for method in payment_methods %}
+                                        <option value="{{ method }}">{{ method|title }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label for="discount" class="form-label fw-bold">Discount (%)</label>
-                                <input type="number" name="productDiscount[]" class="form-control rounded-3" min="0" max="100" value="0" step="0.1" />
+                                <label for="finalTotal" class="form-label fw-bold">Final Total</label>
+                                <div class="input-group">
+                                    <span class="input-group-text rounded-3">UGX</span>
+                                    <input type="number" id="finalTotal" name="finalTotal" class="form-control rounded-3" readonly>
+                                </div>
                             </div>
                         </div>
+
+                        <!-- Messages -->
+                        {% if messages %}
+                            <div class="mt-3">
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+                                        <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% else %}exclamation-triangle-fill{% endif %} me-2"></i>
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
@@ -427,104 +485,42 @@
         </div>
     </div>
 
-    <!-- Adjust Stock Modal -->
-    <div class="modal fade" id="adjustStockModal" tabindex="-1" aria-labelledby="adjustStockModalLabel" aria-hidden="true">
+    <!-- Adjust customer Modal -->
+    <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-3">
-                <form method="POST" action="{% url 'stock_adjustments' %}">
-                    {% csrf_token %}
-                    <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #007bff 100%); color: #fff;">
-                        <h5 class="modal-title fw-bold fs-2" id="adjustStockModalLabel"><i class="fas fa-users me-2"></i> Add Customer</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-4">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addCustomerModalLabel"><i class="bi bi-person-plus-fill me-2"></i> Add Customer</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{% url 'customer_list' %}" autocomplete="off">
+                        {% csrf_token %}
                         <div class="mb-3">
-                            <label for="product" class="form-label fw-bold">Product</label>
-                            <select name="product" class="form-select rounded-3" required>
-                                <option value="">Select Product</option>
-                                {% for product in products %}
-                                    <option value="{{ product.id }}">{{ product.name }} (Stock: {{ product.quantity_in_stock }})</option>
-                                {% endfor %}
-                            </select>
+                            <label for="name" class="form-label fw-bold">Customer Name</label>
+                            <input type="text" class="form-control rounded-3" id="name" name="name" value="{{ customer.customer.name|default_if_none:'' }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="adjustment" class="form-label fw-bold">Adjustment (Positive to add, Negative to remove)</label>
-                            <input type="number" name="adjustment" class="form-control rounded-3" required />
+                            <label for="email" class="form-label fw-bold">Email</label>
+                            <input type="email" class="form-control rounded-3" id="email" name="email" value="{{ customer.customer.email|default_if_none:'' }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="reason" class="form-label fw-bold">Reason</label>
-                            <textarea name="reason" class="form-control rounded-3" rows="4"></textarea>
+                            <label for="phone" class="form-label fw-bold">Phone No</label>
+                            <input type="text" class="form-control rounded-3" id="phone" name="phone" value="{{ customer.customer.phone|default_if_none:'' }}" required>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-info rounded-3">Adjust Stock</button>
-                    </div>
-                </form>
+                        <div class="mb-3">
+                            <label for="address" class="form-label fw-bold">Address</label>
+                            <input type="text" class="form-control rounded-3" id="address" name="address" value="{{ customer.customer.address|default_if_none:'' }}" required>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success rounded-3"><i class="bi bi-check-circle-fill me-2"></i> Save Customer</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- CSS for Enhanced Styling -->
-<style>
-    .card {
-        transition: transform 0.3s ease;
-    }
-    .card:hover {
-        transform: translateY(-5px);
-    }
-    .table th a {
-        color: #0dcaf0;
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-    .table th a:hover {
-        color: #007bff;
-        text-decoration: underline;
-    }
-    .pagination .page-link {
-        border-radius: 50%;
-        margin: 0 5px;
-        color: #0dcaf0;
-        transition: all 0.3s ease;
-    }
-    .pagination .page-item.active .page-link {
-        background-color: #0dcaf0;
-        border-color: #0dcaf0;
-    }
-    .form-control, .form-select {
-        border: 1px solid #ced4da;
-        transition: border-color 0.3s ease;
-    }
-    .form-control:focus, .form-select:focus {
-        border-color: #0dcaf0;
-        box-shadow: 0 0 5px rgba(13, 202, 240, 0.3);
-    }
-    .btn-info {
-        background-color: #0dcaf0;
-        border-color: #0dcaf0;
-        transition: all 0.3s ease;
-    }
-    .btn-info:hover {
-        background-color: #007bff;
-        border-color: #007bff;
-    }
-    canvas {
-        border: 1px solid #e9ecef;
-        padding: 10px;
-        border-radius: 10px;
-    }
-    .modal-content {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-</style>
-
-<!-- JavaScript for Filter Toggle -->
-<script>
-    document.getElementById('filterToggle').addEventListener('click', function () {
-        const filterPanel = document.getElementById('filterPanel');
-        filterPanel.style.display = filterPanel.style.display === 'none' ? 'block' : 'none';
-    });
-</script>
 {% endblock %}

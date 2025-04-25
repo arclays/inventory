@@ -71,38 +71,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-$(document).ready(function() {
-    // Real-time price calculations
-    function updateTotalPrice($productItem) {
-        const quantity = parseFloat($productItem.find('.quantity').val()) || 0;
-        const pricePerUnit = parseFloat($productItem.find('.price-per-unit').val()) || 0;
-        const discount = parseFloat($productItem.find('.discount').val()) || 0;
-        const totalPrice = quantity * pricePerUnit;
-        const discountedPrice = totalPrice * (1 - discount / 100);
-        $productItem.find('.total-price').val(discountedPrice.toFixed(2));
-        updateFinalTotal();
-    }
-
-    function updateFinalTotal() {
-        let finalTotal = 0;
-        $('.total-price').each(function() {
-            finalTotal += parseFloat($(this).val()) || 0;
-        });
-        $('#finalTotal').val(finalTotal.toFixed(2));
-    }
-
-    // Update prices on input change
-    $('#product-container').on('input', '.quantity, .price-per-unit, .discount', function() {
-        updateTotalPrice($(this).closest('.product-item'));
-    });
-
-    // Set default price from product selection
-    $('#product-container').on('change', '.product-select', function() {
-        const price = $(this).find('option:selected').data('price') || 0;
-        $(this).closest('.product-item').find('.price-per-unit').val(price.toFixed(2));
-        updateTotalPrice($(this).closest('.product-item'));
-    });
-
     // Add product
     $('#add-product').click(function() {
         const $clone = $('.product-item:first').clone();
@@ -112,13 +80,13 @@ $(document).ready(function() {
         $clone.appendTo('#product-container');
     });
 
-    // Remove product
-    $('#product-container').on('click', '.remove-product', function() {
-        if ($('.product-item').length > 1) {
-            $(this).closest('.product-item').remove();
-            updateFinalTotal();
-        }
-    });
+         // Remove product on click
+         document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("remove-product")) {
+                e.target.closest(".product-item").remove();
+            }
+        });
+
 
     // Bulk actions
     $('#selectAll').change(function() {
@@ -142,6 +110,77 @@ $(document).ready(function() {
     $('.product-item').each(function() {
         updateTotalPrice($(this));
     });
+
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const bulkActionForm = document.getElementById('bulkActionForm');
+    const bulkAction = document.getElementById('bulkAction');
+    const newStatus = document.getElementById('newStatus');
+    const applyButton = document.getElementById('applyBulkAction');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const orderCheckboxes = document.querySelectorAll('.order-checkbox');
+    
+    // Show/hide status dropdown based on action selection
+    bulkAction.addEventListener('change', function() {
+        newStatus.style.display = this.value === 'update_status' ? 'inline-block' : 'none';
+    });
+    
+    // Select all/deselect all functionality
+    selectAllCheckbox.addEventListener('change', function() {
+        orderCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateApplyButton();
+    });
+    
+    // Update apply button state based on checkbox selection
+    function updateApplyButton() {
+        const checkedBoxes = document.querySelectorAll('.order-checkbox:checked');
+        applyButton.disabled = checkedBoxes.length === 0;
+    }
+    
+    // Add event listeners to all order checkboxes
+    orderCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Uncheck "select all" if any checkbox is unchecked
+            if (!this.checked && selectAllCheckbox.checked) {
+                selectAllCheckbox.checked = false;
+            }
+            updateApplyButton();
+        });
+    });
+    
+    // Form submission validation
+    bulkActionForm.addEventListener('submit', function(e) {
+        const checkedBoxes = document.querySelectorAll('.order-checkbox:checked');
+        const selectedAction = bulkAction.value;
+        
+        if (checkedBoxes.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one order.');
+            return;
+        }
+        
+        if (selectedAction === 'update_status' && !newStatus.value) {
+            e.preventDefault();
+            alert('Please select a new status.');
+            return;
+        }
+        
+        if (selectedAction === '') {
+            e.preventDefault();
+            alert('Please select an action.');
+            return;
+        }
+        
+        // Confirm destructive actions
+        if (selectedAction === 'delete') {
+            if (!confirm(`Are you sure you want to delete ${checkedBoxes.length} order(s)? This action cannot be undone.`)) {
+                e.preventDefault();
+                return;
+            }
+        }
+    });
 });
-
-

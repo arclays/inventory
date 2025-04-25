@@ -79,8 +79,23 @@
       }
     }
   });
-  <canvas id="inventoryTrendChart" height="250"></canvas>
-<script>
+
+  
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.getElementById('searchTransactions');
+  const table = document.querySelector('table');
+  const rows = table.querySelectorAll('tbody tr');
+
+  searchInput.addEventListener('input', function () {
+      const searchTerm = this.value.toLowerCase();
+      rows.forEach(row => {
+          const productName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+          row.style.display = productName.includes(searchTerm) ? '' : 'none';
+      });
+  });
+});
+
+  
   const inventoryTrendCtx = document.getElementById('inventoryTrendChart').getContext('2d');
   const inventoryTrendChart = new Chart(inventoryTrendCtx, {
     type: 'line',
@@ -116,4 +131,9 @@
       }
     }
   });
-</script>
+
+
+
+
+
+
