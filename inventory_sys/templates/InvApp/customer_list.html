@@ -22,17 +22,10 @@
     {% endif %}
 
     <!-- Search and Add Customer -->
-    <div class="card border-0  rounded-3 mb-4" style="background: #f8f9fa;">
+    <div class="card border-0  rounded-3 mb-4">
         <div class="card-body">
             <div class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label for="searchInput" class="form-label fw-bold text-primary">Search Customers</label>
-                    <div class="input-group">
-                        <input type="text" id="searchInput" class="form-control rounded-3" placeholder="Search for a customer...">
-                        <button class="btn btn-outline-secondary rounded-3" type="button" onclick="document.getElementById('searchInput').value=''">Clear</button>
-                    </div>
-                </div>
-                <div class="col-md-8 d-flex justify-content-end">
+                <div class=" d-flex justify-content-end">
                     <button type="button" class="btn btn-success rounded-3" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
                         <i class="bi bi-plus-circle-fill me-2"></i> Add Customer
                     </button>
@@ -48,7 +41,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover table-bordered text-center">
+                    <table id="example" class="table table-striped" style="width:100%">
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
@@ -91,32 +84,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Pagination Controls -->
-    <nav aria-label="Page navigation" class="mt-4">
-        <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link rounded-3" href="?page=1">First</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link rounded-3" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-                </li>
-            {% endif %}
-            <li class="page-item disabled">
-                <span class="page-link rounded-3">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-            </li>
-            {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link rounded-3" href="?page={{ page_obj.next_page_number }}">Next</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link rounded-3" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
-
     <!-- Add Customer Modal -->
     <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
         <div class="modal-dialog">

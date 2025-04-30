@@ -4,6 +4,7 @@ from django.db.models import F
 from datetime import date
 from django.db import transaction
 
+
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True) 
     name = models.CharField(max_length=100, unique=True) 

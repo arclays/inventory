@@ -35,7 +35,6 @@ def register_view(request):
         if password != confirm_password:
             messages.error(request, "Passwords do not match.")
             return redirect('register')
-
         try:
             user = User.objects.create_user(username=username, email=email, password=password)
             user.save()
@@ -77,6 +76,7 @@ def confirm_logout(request):
 def product_list(request):
     categories = Category.objects.all()
     stocks = Stock.objects.all()
+
 
     category_id = request.GET.get('category', '')
     search_query = request.GET.get('search', '').strip()
@@ -142,7 +142,6 @@ def product_list(request):
         
         return redirect('product_list')
 
-    # Handle AJAX requests
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         data = [
             {
@@ -624,7 +623,7 @@ def stock_adjustments(request):
 
 
 def stock_view(request):
-    selected_date = request.GET.get('orderDate', str(date.today()))
+    selected_date = request.GET.get('stockDate', str(date.today()))
     try:
         selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
     except ValueError:
@@ -735,87 +734,83 @@ def stock_view(request):
     
     return render(request, 'InvApp/stock.html', context)
 
+from django.db import transaction
 
-def add_stock(request): 
+def add_stock(request):
     if request.method == 'POST':
-        product_id = request.POST.get('product_id')
-       
-        product = get_object_or_404(Product, product_id=product_id)
-
-        supplier_id = request.POST.get('supplier_id')
-
         try:
-            new_stock = int(request.POST.get('newStock', 0))
-            
-        except ValueError:
-            new_stock = 0
+            with transaction.atomic():  
+                # Get required parameters
+                product_id = request.POST.get('product_id')
+                product = get_object_or_404(Product, product_id=product_id)
+                supplier_id = request.POST.get('supplier_id')
 
-        batch_sku = request.POST.get('batch_sku')
-        try:
-            initial_quantity = int(request.POST.get('initial_quantity', 0))
-            current_quantity = int(request.POST.get('current_quantity ', 0))
-        except ValueError:
-            initial_quantity = 0
+                # Validate supplier
+                if not supplier_id:
+                    return HttpResponse("Error: Supplier is required!", status=400)
+                
+                supplier = get_object_or_404(Supplier, id=supplier_id)
 
-        try:
-            buying_price = float(request.POST.get('buying_price', 0))
-        except ValueError:
-            buying_price = 0.0
-            
-        if  supplier_id is None:
-            return HttpResponse("Error: Supplier is required!", status=400)
-        try:
-            supplier = Supplier.objects.get(id=supplier_id)
-        except Supplier.DoesNotExist:
-            return HttpResponse("Error: Supplier's data Doesn't exist", status=400) 
-        
+                # Validate and parse numerical values
+                try:
+                    new_stock = int(request.POST.get('newStock', 0))
+                    if new_stock <= 0:
+                        return HttpResponse("Error: Stock quantity must be positive!", status=400)
+                except ValueError:
+                    return HttpResponse("Error: Invalid stock quantity!", status=400)
 
-        manufacture_date = request.POST.get('manufacture_date')
-        expiry_date = request.POST.get('expiryDate')
-        stock_date = request.POST.get('stock_date') or timezone.now().date()
+                # Parse other values
+                batch_sku = request.POST.get('batch_sku', '')
+                buying_price = float(request.POST.get('buying_price', 0))
+                
+                # Parse dates with validation
+                try:
+                    manufacture_date = request.POST.get('manufacture_date')
+                    expiry_date = request.POST.get('expiryDate')
+                    stock_date = request.POST.get('stock_date') or timezone.now().date()
+                except Exception as e:
+                    return HttpResponse(f"Error: Invalid date format - {str(e)}", status=400)
 
-        # Update product stock
-        initial_quantity  = new_stock
-        current_quantity = new_stock
-        initial_stock = product.quantity_in_stock
-        total_stock = product.quantity_in_stock + new_stock
-        product.quantity_in_stock = total_stock
-        product.save()
+                # Update product stock
+                initial_stock = product.quantity_in_stock
+                total_stock = initial_stock + new_stock
+                product.quantity_in_stock = total_stock
+                product.save()
 
+                # Create the batch record
+                ProductBatch.objects.create(
+                    product=product,
+                    supplier=supplier,
+                    batch_sku=batch_sku,
+                    buying_price=buying_price,
+                    initial_quantity=new_stock,  
+                    current_quantity=new_stock,   
+                    manufacture_date=manufacture_date,
+                    stock_date=stock_date,
+                )
 
+                # Create the stock record
+                Stock.objects.create(
+                    product=product,
+                    initial_stock=initial_stock,
+                    new_stock=new_stock,
+                    total_stock=total_stock,
+                    stock_date=stock_date,
+                )
 
-        # Create the batch record
-        ProductBatch.objects.create(
-            product=product,
-            supplier=supplier,
-            batch_sku=batch_sku,
-            buying_price=buying_price,
-            initial_quantity=initial_quantity,
-            current_quantity=current_quantity,
-            expiry_date=expiry_date,
-            manufacture_date=manufacture_date,
-            stock_date=stock_date,
-        )
+                return redirect('stock')
 
-        # Create the stock record
-        Stock.objects.create(
-            product=product,
-            initial_stock=initial_stock,
-            new_stock=new_stock,
-            total_stock=total_stock,
-            stock_date=stock_date,
-        )
+        except Exception as e:
+            # Log the error here
+            return HttpResponse(f"Error processing request: {str(e)}", status=500)
 
-        return redirect('stock')
-
-    # GET request
-    total_new_stock = Stock.objects.aggregate(total=Sum('new_stock'))['total'] or 0
+    # GET request handling
     products = Product.objects.all()
-    return render(request, 'InvApp/stock.html', {
+    context = {
         'products': products,
-        'total_new_stock': total_new_stock
-    })
-
+        'total_new_stock': Stock.objects.aggregate(total=Sum('new_stock'))['total'] or 0
+    }
+    return render(request, 'InvApp/stock.html', context)
 
 
 logger = logging.getLogger(__name__)
@@ -1201,7 +1196,6 @@ def report_analysis(request):
         )
     ).order_by('-profit')
 
-    # Post-process category_profit to handle null values
     category_profit = [
         {
             'product__category__name': item['product__category__name'],
@@ -1221,7 +1215,6 @@ def report_analysis(request):
     ).order_by('expiry_date')
 
     context = {
-        # Summary Cards
         'total_revenue': total_revenue,
         'revenue_growth': round(revenue_growth, 2),
         'gross_profit': gross_profit,
@@ -1230,8 +1223,6 @@ def report_analysis(request):
         'total_orders': total_orders,
         'return_rate': round(return_rate, 2),
         'total_returns': total_returns,
-
-        # Inventory Data
         'default_start_date': thirty_days_ago,
         'default_end_date': today,
         'total_inventory_value': total_inventory_value,
@@ -1249,14 +1240,12 @@ def report_analysis(request):
         'category_names': json.dumps([cat['name'] for cat in category_data]),
         'category_values': [cat['total_value'] for cat in category_data],
 
-        # Top Selling
         'top_selling': top_selling_processed,
         'top_product_names': json.dumps(top_product_names),
         'top_product_values': top_product_values,
         'top5_percentage': round(top5_percentage, 2),
         'other_percentage': round(other_percentage, 2),
 
-        # Monthly Sales Trend
         'monthly_sales': monthly_sales_processed,
         'monthly_labels': json.dumps(monthly_labels),
         'monthly_sales_data': monthly_sales_data,
@@ -1270,19 +1259,13 @@ def report_analysis(request):
         'current_avg_order': current_avg_order,
         'previous_avg_order': previous_avg_order,
         'aov_change': round(aov_change, 2),
-
-        # Daily Sales
         'daily_sales': daily_sales,
         'total_units': total_units,
         'total_cost': total_cost,
         'total_revenue': total_revenue,
         'total_profit': total_profit,
-
-        # Profitability
         'profitability_matrix': profitability_matrix,
         'category_profit': category_profit,
-
-        # Expiry
         'near_expiry': near_expiry,
         'current_date': today.strftime("%Y-%m-%d"),
         'report_range': f"{thirty_days_ago.strftime('%b %d')} - {today.strftime('%b %d')}"
@@ -1298,6 +1281,15 @@ logger = logging.getLogger(__name__)
 def order_page(request):
     today = timezone.now().date()
     selected_date = request.GET.get('orderDate', today.strftime('%Y-%m-%d'))
+    yesterday = today - timedelta(days=1)
+    
+    orders = Order.objects.filter(order_date=today).order_by('-order_date')
+    
+    if not orders.exists():
+        orders = Order.objects.filter(order_date=yesterday).order_by('-order_date')
+    
+    if not orders.exists():
+        orders = Order.objects.order_by('-order_date')[:100]  # limit to 100 most recent
     try:
         selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
     except ValueError:
@@ -1311,25 +1303,20 @@ def order_page(request):
     sort_by = request.GET.get('sort_by', '-order_date')  # Default: newest first
     page_size = int(request.GET.get('page_size', 10))  # Default: 10 per page
 
-    # Base queryset
     orders = Order.objects.select_related('customer', 'product', 'batch_sku')
 
-    # Apply date filter
+  
     orders = orders.filter(order_date=selected_date)
 
-    # Apply customer filter
     if customer_id:
         orders = orders.filter(customer_id=customer_id)
 
-    # Apply status filter
     if status:
         orders = orders.filter(status=status)
 
-    # Apply payment method filter
     if payment_method:
         orders = orders.filter(payment_method=payment_method)
 
-    # Apply search
     if search_query:
         orders = orders.filter(
             Q(customer__name__icontains=search_query) |
@@ -1337,16 +1324,13 @@ def order_page(request):
             Q(id__icontains=search_query)
         )
 
-    # Apply sorting
     orders = orders.order_by(sort_by)
 
-    # Summary metrics
     total_customers = orders.values('customer').distinct().count()
     total_orders = orders.count()
     total_quantity = orders.aggregate(total=Sum('quantity'))['total'] or 0
     total_cash_made = orders.aggregate(total=Sum('final_total'))['total'] or 0.0
 
-    # Pagination
     paginator = Paginator(orders, page_size)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -1371,74 +1355,6 @@ def order_page(request):
     }
     return render(request, 'InvApp/order_page.html', context)
 
-def place_order(request):
-    if request.method == 'POST':
-        try:
-            customer_id = request.POST.get('orderCustomer')
-            order_date = request.POST.get('orderDate')
-            payment_method = request.POST.get('paymentMethod')
-            products = request.POST.getlist('products[]')
-            quantities = request.POST.getlist('orderQuantity[]')
-            units = request.POST.getlist('units[]')
-            price_per_units = request.POST.getlist('price_per_unit[]')
-            discounts = request.POST.getlist('productDiscount[]')
-            batch_skus = request.POST.getlist('batch_sku[]')
-
-            customer = Customer.objects.get(id=customer_id)
-            order_date = datetime.strptime(order_date, '%Y-%m-%d').date()
-
-            for i in range(len(products)):
-                product = Product.objects.get(product_id=products[i])
-                quantity = int(quantities[i])
-                discount = float(discounts[i]) if discounts[i] else 0.0
-                price_per_unit = float(price_per_units[i])
-                total_price = quantity * price_per_unit
-                final_total = total_price * (1 - discount / 100)
-
-                # Update inventory
-                if product.quantity_in_stock < quantity:
-                    messages.error(request, f"Insufficient stock for {product.name}")
-                    return redirect('order_page')
-                product.quantity_in_stock -= quantity
-                product.save()
-
-                # Handle batch
-                batch_sku = None
-                if batch_skus[i]:
-                    batch_sku = ProductBatch.objects.get(id=batch_skus[i])
-                    if batch_sku.initial_quantity < quantity:
-                        messages.error(request, f"Insufficient batch quantity for {batch_sku.batch_sku}")
-                        return redirect('order_page')
-                    batch_sku.initial_quantity -= quantity
-                    batch_sku.save()
-
-                # Create order
-                Order.objects.create(
-                    customer=customer,
-                    product=product,
-                    batch_sku=batch_sku,
-                    quantity=quantity,
-                    units=units[i],
-                    price_per_unit=price_per_unit,
-                    total_price=total_price,
-                    payment_method=payment_method,
-                    discount=discount,
-                    final_total=final_total,
-                    order_date=order_date,
-                    status='completed'
-                )
-
-            messages.success(request, "Order placed successfully!")
-            return redirect('order_page')
-        except Exception as e:
-            logger.error("Error placing order: %s", str(e))
-            messages.error(request, f"Error placing order: {str(e)}")
-            return redirect('order_page')
-    return redirect('order_page')
-
-
-
-
 
 class BulkUpdateOrdersView(View):
     def post(self, request):
@@ -1447,13 +1363,13 @@ class BulkUpdateOrdersView(View):
         
         if not order_ids:
             messages.error(request, 'No orders selected.')
-            return redirect('orders_list')
+            return redirect('orders_page')
         
         if action == 'update_status':
             new_status = request.POST.get('new_status')
             if not new_status:
                 messages.error(request, 'No status selected.')
-                return redirect('orders_list')
+                return redirect('orders_page')
             
             # Update orders status
             updated_count = Order.objects.filter(id__in=order_ids).update(status=new_status)
@@ -1467,7 +1383,7 @@ class BulkUpdateOrdersView(View):
         else:
             messages.error(request, 'Invalid action selected.')
         
-        return redirect('orders_list')
+        return redirect('order_page')
 
 def export_orders_csv(request):
     selected_date = request.GET.get('orderDate', timezone.now().date().strftime('%Y-%m-%d'))
@@ -1515,6 +1431,7 @@ def home_view(request):
     default_end_date = today.strftime('%Y-%m-%d')
 
     # Filters
+    payment_methods = request.POST.get('paymentMethod', 'cash') 
     start_date = request.GET.get('start_date', default_start_date)
     end_date = request.GET.get('end_date', default_end_date)
     category_id = request.GET.get('category')
@@ -1532,7 +1449,10 @@ def home_view(request):
     # Subquery for buying_price
     latest_batch = ProductBatch.objects.filter(product=OuterRef('product')).order_by('-stock_date')[:1]
     buying_price_subquery = Subquery(latest_batch.values('buying_price')[:1], output_field=FloatField())
-    stock_adjustments= StockAdjustment.objects.count()
+    stock_adjustments = StockAdjustment.objects.count()
+    product_batches = ProductBatch.objects.all()
+    customers = Customer.objects.all()
+    products = Product.objects.all()
 
     # Summary Metrics
     orders = Order.objects.filter(order_date__range=[start_date, end_date])
@@ -1642,14 +1562,22 @@ def home_view(request):
         stock_value_data.append(float(month_data['total_value']))
         current_month = (current_month + timedelta(days=32)).replace(day=1)
 
+    # Define payment methods 
+    payment_methods = ['cash', 'credit', 'mobile_money', 'bank_transfer']
+
     context = {
         'total_orders': total_orders,
         'total_customers': total_customers,
         'total_stock_in': total_stock_in,
         'low_stock_count': low_stock_count,
         'total_products': total_products,
-        'stock_adjustments':stock_adjustments,
+        'stock_adjustments': stock_adjustments,
         'categories': categories,
+        'customers': customers,  
+        'product_batches': product_batches,  
+        'products': products,  
+        'payment_methods': payment_methods,  
+        'selected_date': today.strftime('%Y-%m-%d'),  
         'average_adjustments': round(average_adjustments),
         'total_cash_made': total_cash_made,
         'recent_orders': orders_page_obj,
@@ -1665,7 +1593,7 @@ def home_view(request):
         'start_date': start_date.strftime('%Y-%m-%d'),
         'end_date': end_date.strftime('%Y-%m-%d'),
         'categories_list': Category.objects.all(),
-        'customers': Customer.objects.all(),
+        'customers_list': Customer.objects.all(),  # Renamed to avoid conflict with 'customers'
         'search_query': search_query,
         'category_id': category_id,
         'customer_id': customer_id,
@@ -1674,13 +1602,13 @@ def home_view(request):
     }
     return render(request, 'InvApp/home.html', context)
 
-
 def export_dashboard_csv(request, table_type):
     start_date = request.GET.get('start_date', (timezone.now().date() - timedelta(days=30)).strftime('%Y-%m-%d'))
     end_date = request.GET.get('end_date', timezone.now().date().strftime('%Y-%m-%d'))
     category_id = request.GET.get('category')
     customer_id = request.GET.get('customer')
     search_query = request.GET.get('search', '')
+    
 
     try:
         start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -1735,7 +1663,7 @@ def export_dashboard_csv(request, table_type):
             ])
         messages.success(request, "Orders exported successfully.")
     elif table_type == 'low_stock':
-        # Existing low stock export logic (unchanged for brevity)
+        # Existing low stock export logic 
         response['Content-Disposition'] = f'attachment; filename="low_stock_items_{start_date}_to_{end_date}.csv"'
         low_stock_items = Product.objects.annotate(
             critical_level=F('reorder_level') * 0.2
@@ -1790,10 +1718,10 @@ def place_order(request):
             try:
                 product_id = products[i]
                 unit_id = units[i]
-                unit_price = float(price_per_units[i])
-                total_price = float(total_prices[i])
-                quantity = int(order_quantities[i])
-                discount = float(discounts[i])
+                unit_price = float(price_per_units[i] or 0.0)  
+                total_price = float(total_prices[i] or 0.0)   
+                quantity = int(order_quantities[i] or 0)      
+                discount = float(discounts[i] or 0.0)          
                 batch_id = batch_ids[i]
 
                 product = Product.objects.get(product_id=product_id)
@@ -1821,13 +1749,8 @@ def place_order(request):
                 product.quantity_in_stock - quantity
                 product.save()
 
-                if batch :
-                    batch.initial_quantity - quantity
-                    batch.save()
-                else:
-                    batch.initial_quantity < quantity
-                    print(f"Product with  {batch} has low stock.")
-
+                batch.initial_quantity - quantity
+                batch.save()
 
             except Product.DoesNotExist:
                 print(f"Product with ID {product_id} does not exist.")

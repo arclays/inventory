@@ -5,7 +5,7 @@
 {% load static %}
 <div class="container-fluid pt-4">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style="background: linear-gradient(135deg, #ffffff 0%, #8d8c8c 100%); color: #fff;">
+    <div class="d-flex justify-content-between align-items-center mb-5 p-3 rounded " style="background: linear-gradient(135deg, #ffffff 0%, #8d8c8c 100%); color: #fff;">
         <div>
             <h1 class="fw-bold mb- text-dark"><i class="bi bi-tachometer-alt me-2"></i> Dashboard</h1>
             <nav aria-label="breadcrumb">
@@ -25,62 +25,44 @@
         </div>
     </div>
     
-  <!-- Filter Section -->
-  <div class="position-relative mb-4">
-    <i class="bi bi-funnel-fill fs-3 text-success position-absolute end-0 me-3" style="cursor: pointer; top: 10px;" data-bs-toggle="collapse" data-bs-target="#dateRangeFilters" aria-expanded="false" aria-controls="dateRangeFilters"></i>
-    <div class="collapse" id="dateRangeFilters">
-      <div class="card col-md-6 mx-auto border-0 shadow-sm rounded-3" style="background: #ffffff;">
-        <div class="card-body p-4">
-          <form class="row g-3 align-items-center">
-            <div class="col-md-3">
-              <label for="startDate" class="form-label fw-bold">From</label>
-              <input type="date" class="form-control rounded-3" id="startDate" value="{{ default_start_date }}">
-            </div>
-            <div class="col-md-3">
-              <label for="endDate" class="form-label fw-bold">To</label>
-              <input type="date" class="form-control rounded-3" id="endDate" value="{{ default_end_date }}">
-            </div>
-           
-            <div class="col-md-3 d-flex align-items-end">
-              <button type="submit" class="btn btn-success w-100 rounded-3"><i class="bi bi-check-circle-fill me-1"></i> Apply</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-    <!-- Filters -->
-    <div class="card shadow-sm mb-4 border-0 rounded-3">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center bg-light">
-            <h6 class="m-0 fw-bold text-info"><i class="bi bi-funnel me-2"></i> Filters</h6>
-            <i class="bi bi-funnel-fill fs-5 text-info" id="filterToggle" style="cursor: pointer;"></i>
-        </div>
-        <div class="card-body" id="filterPanel" style="display: none;">
-            <form method="GET">
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-3">
-                        <label for="start_date" class="form-label fw-bold">Start Date</label>
-                        <input type="date" class="form-control rounded-3" id="start_date" name="start_date" value="{{ start_date }}">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="end_date" class="form-label fw-bold">End Date</label>
-                        <input type="date" class="form-control rounded-3" id="end_date" name="end_date" value="{{ end_date }}">
-                    </div>
-                        <div class="col-md-3">
-                            <label for="reportPeriod" class="form-label fw-bold">Period</label>
-                            <select class="form-select rounded-3" id="reportPeriod">
-                              <option value="daily">Daily</option>
-                              <option value="weekly" selected>Weekly</option>
-                              <option value="monthly">Monthly</option>
-                              <option value="quarterly">Quarterly</option>
-                              <option value="yearly">Yearly</option>
-                            </select>
-                          </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-info w-100 rounded-3"><i class="bi bi-check-circle me-1"></i> Apply Filters</button>
-                    </div>
+    <!-- Filter Section -->
+    <div class="mb-4">
+        <!-- Filter Toggle Button -->
+        <button class="btn btn-success rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#dateRangeCollapse" aria-expanded="{% if request.GET.start_date or request.GET.end_date %}true{% else %}false{% endif %}" aria-controls="dateRangeCollapse">
+            <i class="bi bi-funnel-fill me-2"></i> Filter
+        </button>
+
+        <!-- Collapsible Date Range Filter -->
+        <div class="collapse mt-2 {% if request.GET.start_date or request.GET.end_date %}show{% endif %}" id="dateRangeCollapse">
+            <div class="card border-0 shadow-sm rounded-3" style="background: #f8f9fa;">
+                <div class="card-body">
+                    <form id="dateRangeForm" method="GET" action="{% url 'home' %}">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label for="start_date" class="form-label fw-bold">Start Date</label>
+                                <input type="date" class="form-control rounded-3" id="start_date" name="start_date" value="{{ start_date }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="end_date" class="form-label fw-bold">End Date</label>
+                                <input type="date" class="form-control rounded-3" id="end_date" name="end_date" value="{{ end_date }}">
+                            </div>
+                                <div class="col-md-3">
+                                    <label for="reportPeriod" class="form-label fw-bold">Period</label>
+                                    <select class="form-select rounded-3" id="reportPeriod">
+                                      <option value="daily">Daily</option>
+                                      <option value="weekly" selected>Weekly</option>
+                                      <option value="monthly">Monthly</option>
+                                      <option value="quarterly">Quarterly</option>
+                                      <option value="yearly">Yearly</option>
+                                    </select>
+                                  </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-info w-100 rounded-3"><i class="bi bi-check-circle me-1"></i> Apply Filters</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -177,10 +159,10 @@
     </div>
 
     <!-- Charts -->
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 mt-5">
         <div class="col-md-6">
             <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header  text-primary d-flex justify-content-between align-items-center">
+                <div class="card-header text-primary d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Sales Analytics</h5>
                     <i class="bi bi-bar-chart-fill fs-5"></i>
                 </div>
@@ -191,7 +173,7 @@
         </div>
         <div class="col-md-6">
             <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header  text-success d-flex justify-content-between align-items-center">
+                <div class="card-header text-success d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Product Trends</h5>
                     <i class="bi bi-graph-up fs-5"></i>
                 </div>
@@ -203,7 +185,7 @@
     </div>
 
     <!-- Tables -->
-    <div class="row g-4">
+    <div class="row g-4 mt-5">
         <div class="col-md-8">
             <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -212,7 +194,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover table-bordered">
+                        <table id="recentOrdersTable" class="table table-striped" style="width:100%">
                             <thead class="table-light">
                                 <tr>
                                     <th><a href="?sort_by=id" class="text-info text-decoration-none">Order ID</a></th>
@@ -250,37 +232,6 @@
                             </tbody>
                         </table>
                     </div>
-                    <!-- Pagination -->
-                    <nav aria-label="Orders pagination">
-                        <ul class="pagination justify-content-center mt-3">
-                            {% if orders_page_obj.has_previous %}
-                                <li class="page-item">
-                                    <a class="page-link rounded-circle" href="?orders_page=1&start_date={{ start_date }}&end_date={{ end_date }}&category={{ category_id }}&customer={{ customer_id }}&search={{ search_query }}&page_size={{ page_size }}">First</a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link rounded-circle" href="?orders_page={{ orders_page_obj.previous_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&category={{ category_id }}&customer={{ customer_id }}&search={{ search_query }}&page_size={{ page_size }}">Previous</a>
-                                </li>
-                            {% endif %}
-                            <li class="page-item disabled">
-                                <span class="page-link">Page {{ orders_page_obj.number }} of {{ orders_page_obj.paginator.num_pages }}</span>
-                            </li>
-                            {% if orders_page_obj.has_next %}
-                                <li class="page-item">
-                                    <a class="page-link rounded-circle" href="?orders_page={{ orders_page_obj.next_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&category={{ category_id }}&customer={{ customer_id }}&search={{ search_query }}&page_size={{ page_size }}">Next</a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link rounded-circle" href="?orders_page={{ orders_page_obj.paginator.num_pages }}&start_date={{ start_date }}&end_date={{ end_date }}&category={{ category_id }}&customer={{ customer_id }}&search={{ search_query }}&page_size={{ page_size }}">Last</a>
-                                </li>
-                            {% endif %}
-                            <li class="page-item ms-3">
-                                <select class="form-select rounded-3" onchange="window.location.href='?orders_page=1&start_date={{ start_date }}&end_date={{ end_date }}&category={{ category_id }}&customer={{ customer_id }}&search={{ search_query }}&page_size='+this.value">
-                                    {% for size in page_sizes %}
-                                        <option value="{{ size }}" {% if size == page_size %}selected{% endif %}>{{ size }} per page</option>
-                                    {% endfor %}
-                                </select>
-                            </li>
-                        </ul>
-                    </nav>
                 </div>
             </div>
         </div>
@@ -292,7 +243,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover table-bordered">
+                        <table id="lowStockTable" class="table table-striped" style="width:100%">
                             <thead class="table-light">
                                 <tr>
                                     <th><a href="?sort_by=name" class="text-info text-decoration-none">Product</a></th>
@@ -320,37 +271,6 @@
                             </tbody>
                         </table>
                     </div>
-                    <!-- Pagination -->
-                    <nav aria-label="Low stock pagination">
-                        <ul class="pagination justify-content-center mt-3">
-                            {% if low_stock_page_obj.has_previous %}
-                                <li class="page-item">
-                                    <a class="page-link rounded-circle" href="?low_stock_page=1&start_date={{ start_date }}&end_date={{ end_date }}&category={{ category_id }}&customer={{ customer_id }}&search={{ search_query }}&page_size={{ page_size }}">First</a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link rounded-circle" href="?low_stock_page={{ low_stock_page_obj.previous_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&category={{ category_id }}&customer={{ customer_id }}&search={{ search_query }}&page_size={{ page_size }}">Previous</a>
-                                </li>
-                            {% endif %}
-                            <li class="page-item disabled">
-                                <span class="page-link">Page {{ low_stock_page_obj.number }} of {{ low_stock_page_obj.paginator.num_pages }}</span>
-                            </li>
-                            {% if low_stock_page_obj.has_next %}
-                                <li class="page-item">
-                                    <a class="page-link rounded-circle" href="?low_stock_page={{ low_stock_page_obj.next_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&category={{ category_id }}&customer={{ customer_id }}&search={{ search_query }}&page_size={{ page_size }}">Next</a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link rounded-circle" href="?low_stock_page={{ low_stock_page_obj.paginator.num_pages }}&start_date={{ start_date }}&end_date={{ end_date }}&category={{ category_id }}&customer={{ customer_id }}&search={{ search_query }}&page_size={{ page_size }}">Last</a>
-                                </li>
-                            {% endif %}
-                            <li class="page-item ms-3">
-                                <select class="form-select rounded-3" onchange="window.location.href='?low_stock_page=1&start_date={{ start_date }}&end_date={{ end_date }}&category={{ category_id }}&customer={{ customer_id }}&search={{ search_query }}&page_size='+this.value">
-                                    {% for size in page_sizes %}
-                                        <option value="{{ size }}" {% if size == page_size %}selected{% endif %}>{{ size }} per page</option>
-                                    {% endfor %}
-                                </select>
-                            </li>
-                        </ul>
-                    </nav>
                 </div>
             </div>
         </div>
@@ -412,7 +332,7 @@
                                         <select name="units[]" class="form-select rounded-3 unit" required>
                                             <option value="piece">Piece</option>
                                             <option value="kgs">Kgs</option>
-                                            <option value="litres">litres</option>
+                                            <option value="litres">Litres</option>
                                             <option value="mg">mg</option>
                                             <option value="dozen">Dozen</option>
                                             <option value="box">Box</option>
@@ -485,7 +405,7 @@
         </div>
     </div>
 
-    <!-- Adjust customer Modal -->
+    <!-- Add Customer Modal -->
     <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-3">
@@ -522,5 +442,4 @@
         </div>
     </div>
 </div>
-
 {% endblock %}

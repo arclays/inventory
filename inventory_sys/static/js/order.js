@@ -184,3 +184,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+    document.getElementById('startDate').addEventListener('change', function() {
+        document.getElementById('endDate').min = this.value;
+    });
+    document.getElementById('endDate').addEventListener('change', function() {
+        document.getElementById('startDate').max = this.value;
+    });

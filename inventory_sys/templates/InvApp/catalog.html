@@ -14,12 +14,12 @@
     <!-- Main Tabs -->
     <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist" style="border-bottom: 2px solid #0dcaf0;">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active rounded-top px-4 py-2" id="category-tab" data-bs-toggle="tab" data-bs-target="#category" type="button" role="tab" style="background: linear-gradient(180deg, #0dcaf0 0%, #e9ecef 100%); color: #fff;">
+            <button class="nav-link tab-button  active rounded-top px-4 py-2" id="category-tab" data-bs-toggle="tab" data-bs-target="#category" type="button" role="tab" >
                 <i class="bi bi-tags-fill me-2"></i> Category
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link rounded-top px-4 py-2" id="supplier-tab" data-bs-toggle="tab" data-bs-target="#supplier" type="button" role="tab" style="background: linear-gradient(180deg, #28a745 0%, #e9ecef 100%); color: #fff;">
+            <button class="nav-link tab-button rounded-top px-4 py-2" id="supplier-tab" data-bs-toggle="tab" data-bs-target="#supplier" type="button" role="tab" style="background: linear-gradient(180deg, #28a745 0%, #e9ecef 100%); color: #fff;">
                 <i class="bi bi-truck me-2"></i> Supplier
             </button>
         </li>
@@ -37,17 +37,9 @@
                     </button>
                 </div>
                 <div class="card-body">
-                    <!-- Search -->
-                    <div class="col-md-6 mb-3">
-                        <div class="input-group">
-                            <input type="text" id="searchCategoryInput" class="form-control rounded-3" placeholder="Search for a category...">
-                            <button class="btn btn-outline-secondary rounded-3" type="button" onclick="document.getElementById('searchCategoryInput').value=''">Clear</button>
-                        </div>
-                    </div>
-
                     <!-- Category Table -->
-                    <div class="table-responsive" style="max-height: 300px;">
-                        <table class="table table-hover table-bordered">
+                    <div class="table-responsive">
+                        <table id="example" class="table  table-hover table-striped" style="width:100%">   
                             <thead class="table-light">
                                 <tr>
                                     <th class="text-primary">Name <i class="bi bi-arrow-down-up sort-icon" data-column="name"></i></th>
@@ -84,31 +76,6 @@
                             </tbody>
                         </table>
                     </div>
-
-                    <!-- Pagination for Categories -->
-                    <nav aria-label="Category pagination" class="mt-3">
-                        <ul class="pagination justify-content-center">
-                            {% if categories.has_previous %}
-                                <li class="page-item">
-                                    <a class="page-link rounded-3" href="?category_page={{ categories.previous_page_number }}">Previous</a>
-                                </li>
-                            {% else %}
-                                <li class="page-item disabled"><span class="page-link rounded-3">Previous</span></li>
-                            {% endif %}
-                            {% for num in categories.paginator.page_range %}
-                                <li class="page-item {% if categories.number == num %}active{% endif %}">
-                                    <a class="page-link rounded-3" href="?category_page={{ num }}">{{ num }}</a>
-                                </li>
-                            {% endfor %}
-                            {% if categories.has_next %}
-                                <li class="page-item">
-                                    <a class="page-link rounded-3" href="?category_page={{ categories.next_page_number }}">Next</a>
-                                </li>
-                            {% else %}
-                                <li class="page-item disabled"><span class="page-link rounded-3">Next</span></li>
-                            {% endif %}
-                        </ul>
-                    </nav>
                 </div>
             </div>
         </div>
@@ -123,17 +90,9 @@
                     </button>
                 </div>
                 <div class="card-body">
-                    <!-- Search -->
-                    <div class="col-md-6 mb-3">
-                        <div class="input-group">
-                            <input type="text" id="searchSupplierInput" class="form-control rounded-3" placeholder="Search for a supplier...">
-                            <button class="btn btn-outline-secondary rounded-3" type="button" onclick="document.getElementById('searchSupplierInput').value=''">Clear</button>
-                        </div>
-                    </div>
-
                     <!-- Supplier Table -->
                     <div class="table-responsive">
-                        <table class="table table-hover table-bordered">
+                        <table id="example" class="table  table-hover table-striped" style="width:100%">   
                             <thead class="table-light">
                                 <tr>
                                     <th class="text-primary">Name <i class="bi bi-arrow-down-up sort-icon" data-column="name"></i></th>

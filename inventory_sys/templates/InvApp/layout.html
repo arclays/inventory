@@ -13,14 +13,97 @@
     <link rel="stylesheet" type="text/css" href="{% static 'style/style.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'style/report.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'style/layout.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'style/product.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'style/order.css' %}">
-</head>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+
+<style>
+    .sidebar {
+        width: 250px;
+        height: calc(100vh - 56px);
+        position: fixed;
+        left: 0;
+        top: 56px;
+        z-index: 1000;
+        transition: transform 0.3s ease;
+        background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+        overflow-y: auto;
+    }
+
+    .content {
+        margin-left: 250px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        min-height: calc(100vh - 56px);
+        padding-top: 76px;
+    }
+
+    .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1100;
+        width: 100%;
+        padding-right: 250px;
+        transition: all 0.3s ease;
+    }
+
+    /* Fix modal z-index */
+    .modal {
+        z-index: 1200;
+    }
+
+    .modal-backdrop {
+        z-index: 1190;
+    }
+
+    .profile-avatar {
+        width: 32px;
+        height: 32px;
+        margin-right: 8px;
+    }
+
+    @media (min-width: 769px) {
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+        
+        .sidebar.collapsed ~ .content,
+        .sidebar.collapsed ~ .navbar {
+            margin-left: 0;
+            padding-right: 0;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+            top: 56px;
+            height: calc(100vh - 56px);
+        }
+        
+        .sidebar.active {
+            transform: translateX(0);
+        }
+        
+        .content,
+        .navbar {
+            margin-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        
+        .content {
+            padding-top: 76px;
+        }
+    }
+</style>
+    </head>
+
 <body>
     <!-- Sidebar -->
-    <div class="sidebar bg-light d-flex flex-column p-3" style="width: 250px; min-height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);">
-        <div class="d-flex align-items-center mb-4">
-            <img src="{% static 'images/logo-sm.png' %}" alt="Logo" style="height: 40px; opacity: 0.9;">
-        </div>
+    <div class="sidebar bg-light ">
         <ul class="nav flex-column">
             <!-- Dashboard -->
             <li class="nav-item mb-2 mt-4">
@@ -66,10 +149,10 @@
                         <i class="bi bi-exclamation-triangle fs-6 me-2 text-primary"></i>
                         <span>Stock</span>
                     </a>
-                    <a class="nav-link d-flex align-items-center text-dark ps-4 {% if request.path == '/report/' %}active{% endif %}" href="{% url 'report' %}">
+                    <!-- <a class="nav-link d-flex align-items-center text-dark ps-4 {% if request.path == '/report/' %}active{% endif %}" href="{% url 'report' %}">
                         <i class="bi bi-arrow-left-right fs-6 me-2 text-primary"></i>
                         <span>Stock Transactions</span>
-                    </a>
+                    </a> -->
                     <a class="nav-link d-flex align-items-center text-dark ps-4 {% if request.path == '/stock_adjustments/' %}active{% endif %}" href="{% url 'stock_adjustments' %}">
                         <i class="bi bi-wrench fs-6 me-2 text-primary"></i>
                         <span>Adjustments</span>
@@ -93,16 +176,15 @@
         </ul>
     </div>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="padding-left: 270px;">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">    
         <div class="container-fluid align-items-center">
+            
             <a class="navbar-brand" href="{% url 'home' %}">
                 <img src="{% static 'images/logo-sm.png' %}" alt="AllStocK Logo" style="height: 32px; margin-right: 8px;"> AllStocK
             </a>
             <button class="btn btn-sm btn-outline-light ms-2 me-3 sidebar-toggle" id="toggleSidebar">
                 <i class="bi bi-list"></i>
-            </button>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav align-items-center">
@@ -137,31 +219,64 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="content" style="margin-left: 20px; padding-top: 10px;">
+    <main class="content" >
         <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    {% block content %}{% endblock %}
-                </div>
-            </div>
+            {% block content %}{% endblock %}
         </div>
     </main>
 
-    <!-- JavaScript Files -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/moment/min/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="{% static 'js/sidebar.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> -->
     <script src="{% static 'js/screen.js' %}"></script>
     <script src="{% static 'js/order.js' %}"></script>
     <script src="{% static 'js/charts.js' %}"></script>
     <script src="{% static 'js/adjust.js' %}"></script>
     <script src="{% static 'js/stocklevel.js' %}"></script>
-    <script src="{% static 'js/layout.js' %}"></script>
     <script src="{% static 'js/product.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.js"></script>  
+    <script>
+        new DataTable('#example');
+        
+document.addEventListener('DOMContentLoaded', function () {
+    const sidebar = document.querySelector('.sidebar');
+    const toggleButton = document.querySelector('#toggleSidebar');
+   
+
+    function toggleSidebar() {
+        if (window.innerWidth <= 768) {
+            sidebar.classList.toggle('active');
+        } else {
+            sidebar.classList.toggle('collapsed');
+        }
+    }
+
+    toggleButton.addEventListener('click', toggleSidebar);
+
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768 && 
+            !sidebar.contains(e.target) && 
+            !toggleButton.contains(e.target) && 
+            sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+        }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            sidebar.classList.remove('active');
+        } else {
+            sidebar.classList.remove('collapsed');
+        }
+    });
+});
+        </script>
 </body>
 </html>
 

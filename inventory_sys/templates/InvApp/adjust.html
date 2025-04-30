@@ -78,10 +78,6 @@
         <div class="card-header text-primary d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="bi bi-table me-2"></i> Adjustment Records</h5>
             <div class="d-flex gap-2">
-                <div class="input-group input-group-sm" style="width: 200px;">
-                    <input type="text" id="searchInput" class="form-control rounded-start-3" placeholder="Search...">
-                    <button class="btn btn-outline-light rounded-end-3" type="button" onclick="document.getElementById('searchInput').value=''">Clear</button>
-                </div>
                 <button class="btn btn-sm btn-success rounded-3" id="printBtn" data-bs-toggle="tooltip" title="Print Table">
                     <i class="bi bi-printer"></i>
                 </button>
@@ -89,7 +85,7 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle mb-0" id="adjustmentsTable">
+                    <table id="example" class="table table-hover table-striped align-middle mb-0" id="adjustmentsTable" style="width:100%">
                     <thead class="table-light">
                         <tr>
                             <th>No</th>
@@ -152,67 +148,18 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="9" class="text-center py-4">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-database-x fs-1 text-success mb-2"></i>
-                                    <h5 class="text-muted">No adjustments found</h5>
-                                    <p class="text-muted">Create a new adjustment</p>
-                                    <button type="button" class="btn btn-success rounded-3 mt-2" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal">
-                                        <i class="bi bi-plus-circle-fill me-2"></i> Create Adjustment
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-        </div>
-        {% if stock_adjustments_list.has_other_pages %}
-        <div class="card-footer bg-white">
-            <nav aria-label="Adjustments pagination">
-                <ul class="pagination justify-content-end mb-0">
-                    {% if stock_adjustments_list.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link rounded-3" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                            First
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link rounded-3" href="?page={{ stock_adjustments_list.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                            Previous
-                        </a>
-                    </li>
-                    {% endif %}
-                    <li class="page-item disabled">
-                        <span class="page-link rounded-3">
-                            Page {{ stock_adjustments_list.number }} of {{ stock_adjustments_list.paginator.num_pages }}
-                        </span>
-                    </li>
-                    {% if stock_adjustments_list.has_next %}
-                    <li class="page-item">
-                        <a class="page-link rounded-3" href="?page={{ stock_adjustments_list.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                            Next
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link rounded-3" href="?page={{ stock_adjustments_list.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                            Last
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-        </div>
-        {% endif %}
+        </div>  
     </div>
 
     <!-- Stock Adjustment Modal -->
     <div class="modal fade" id="stockAdjustmentModal" tabindex="-1" aria-labelledby="stockAdjustmentModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content rounded-3">
-                <div class="modal-header bg-primary text-white">
+                <div class="modal-header" style="background: linear-gradient(135deg, #0dcaf0 0%, #007bff 100%); color: #fff;">    
                     <h5 class="modal-title" id="stockAdjustmentModalLabel">
                         <i class="bi bi-clipboard2-plus-fill me-2"></i> New Stock Adjustment
                     </h5>
@@ -284,8 +231,8 @@
     {% for adjustment in stock_adjustments_list %}
     <div class="modal fade" id="editAdjustmentModal{{ adjustment.id }}" tabindex="-1" aria-labelledby="editAdjustmentModalLabel{{ adjustment.id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content rounded-3">
-                <div class="modal-header bg-primary text-white">
+            <div class="modal-content rounded-3">  
+                <div class="modal-header" style="background: linear-gradient(135deg, #0dcaf0 0%, #007bff 100%); color: #fff;">    
                     <h5 class="modal-title" id="editAdjustmentModalLabel{{ adjustment.id }}">
                         <i class="bi bi-pencil-fill me-2"></i> Edit Stock Adjustment
                     </h5>

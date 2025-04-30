@@ -24,9 +24,13 @@
         <div class="card-body">
             <form method="GET" action="{% url 'order_page' %}">
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-2">
-                        <label for="orderDate" class="form-label fw-bold">Date</label>
-                        <input type="date" class="form-control rounded-3" id="orderDate" name="orderDate" value="{{ selected_date }}">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Date Range</label>
+                        <div class="input-group">
+                            <input type="date" class="form-control rounded-3" id="startDate" name="startDate" value="{{ selected_date_start }}">
+                            <span class="input-group-text">to</span>
+                            <input type="date" class="form-control rounded-3" id="endDate" name="endDate" value="{{ selected_date_end }}">
+                        </div>
                     </div>
                     <div class="col-md-2">
                         <label for="customer" class="form-label fw-bold">Customer</label>
@@ -60,10 +64,6 @@
                                 </option>
                             {% endfor %}
                         </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="search" class="form-label fw-bold">Search</label>
-                        <input type="text" class="form-control rounded-3" id="search" name="search" value="{{ search_query }}" placeholder="Search by product, or ID">
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-success rounded-3 w-100"><i class="bi bi-funnel-fill me-2"></i> Apply Filters</button>
@@ -111,7 +111,7 @@
         <div class="col-md-3 mb-3">
             <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
                 <div class="card-body d-flex align-items-center">
-                    <i class="bi bi-currency-dollar fs-2 text-primary me-3"></i>
+                    <i class="bi bi-currency-shillings fs-2 text-primary me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Total Earnings</h6>
                         <h3 class="fw-bold mb-0">UGX: {{ total_cash_made|floatformat:1 }}</h3>
@@ -126,6 +126,7 @@
         {% csrf_token %}
         <div class="card border-0 shadow-sm rounded-3 mb-4">
             <div class="card-header text-dark d-flex justify-content-between align-items-center">
+                
                 <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i> Orders List</h5>
                 <div>
                     <select name="action" class="form-select rounded-3 d-inline-block w-auto me-2" id="bulkAction">
@@ -146,7 +147,7 @@
             <div class="card-body">
                 <!-- Order Table -->
                 <div class="table-responsive">
-                    <table class="table table-hover table-bordered">
+                        <table id="example" class="table table-striped" style="width:100%">
                         <thead class="table-light">
                             <tr>
                                 <th><input type="checkbox" id="selectAll"></th>
@@ -169,9 +170,9 @@
                             {% for order in orders %}
                             <tr>
                                 <td><input type="checkbox" name="order_ids" value="{{ order.id }}" class="order-checkbox"></td>
-                                <td>{{ order.id }}</td>
-                                <td>{{ order.customer.name }}</td>
-                                <td>{{ order.product.name }}</td>
+                                <td>{{ order.id|default:"N/A" }}</td>
+                                <td>{{ order.customer.name|default:"N/A" }}</td>
+                                <td>{{ order.product.name|default:"N/A" }}</td>
                                 <td>
                                     {% if order.batch_sku %}
                                         {{ order.batch_sku.batch_sku }}
@@ -179,27 +180,21 @@
                                         <span class="text-muted">N/A</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ order.quantity }}</td>
-                                <td>{{ order.units }}</td>
-                                <td>{{ order.price_per_unit|floatformat:2 }}</td>
-                                <td>{{ order.total_price|floatformat:2 }}</td>
-                                <td>{{ order.payment_method|title }}</td>
-                                <td>{{ order.discount|floatformat:1 }}%</td>
-                                <td>{{ order.final_total|floatformat:2 }}</td>
-                                <td>{{ order.order_date|date:"Y-m-d" }}</td>
+                                <td>{{ order.quantity|default:0 }}</td>
+                                <td>{{ order.units|default:"N/A" }}</td>
+                                <td>{{ order.price_per_unit|floatformat:2|default:"0.00" }}</td>
+                                <td>{{ order.total_price|floatformat:2|default:"0.00" }}</td>
+                                <td>{{ order.payment_method|title|default:"N/A" }}</td>
+                                <td>{{ order.discount|floatformat:1|default:"0.0" }}%</td>
+                                <td>{{ order.final_total|floatformat:2|default:"0.00" }}</td>
+                                <td>{{ order.order_date|date:"Y-m-d"|default:"N/A" }}</td>
                                 <td>
                                     <span class="badge bg-{% if order.status == 'completed' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'canceled' %}danger{% else %}secondary{% endif %} rounded-pill">
-                                        {{ order.get_status_display }}
+                                        {{ order.get_status_display|default:"N/A" }}
                                     </span>
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr>
-                                <td colspan="14" class="text-center text-muted py-4">
-                                    <i class="bi bi-cart fs-1 text-success"></i>
-                                    <h5 class="mt-2">No orders found for this date.</h5>
-                                </td>
-                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -208,45 +203,13 @@
         </div>
     </form>
 
-    <!-- Pagination -->
-    <nav aria-label="Page navigation" class="mt-4">
-        <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link rounded-3" href="?page=1&orderDate={{ selected_date }}&customer={{ request.GET.customer }}&status={{ request.GET.status }}&payment_method={{ request.GET.payment_method }}&search={{ search_query }}&sort_by={{ sort_by }}&page_size={{ current_page_size }}">First</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link rounded-3" href="?page={{ page_obj.previous_page_number }}&orderDate={{ selected_date }}&customer={{ request.GET.customer }}&status={{ request.GET.status }}&payment_method={{ request.GET.payment_method }}&search={{ search_query }}&sort_by={{ sort_by }}&page_size={{ current_page_size }}">Previous</a>
-                </li>
-            {% endif %}
-            <li class="page-item disabled">
-                <span class="page-link rounded-3">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-            </li>
-            {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link rounded-3" href="?page={{ page_obj.next_page_number }}&orderDate={{ selected_date }}&customer={{ request.GET.customer }}&status={{ request.GET.status }}&payment_method={{ request.GET.payment_method }}&search={{ search_query }}&sort_by={{ sort_by }}&page_size={{ current_page_size }}">Next</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link rounded-3" href="?page={{ page_obj.paginator.num_pages }}&orderDate={{ selected_date }}&customer={{ request.GET.customer }}&status={{ request.GET.status }}&payment_method={{ request.GET.payment_method }}&search={{ search_query }}&sort_by={{ sort_by }}&page_size={{ current_page_size }}">Last</a>
-                </li>
-            {% endif %}
-            <li class="page-item ms-3">
-                <select class="form-select rounded-3" onchange="window.location.href='?page=1&orderDate={{ selected_date }}&customer={{ request.GET.customer }}&status={{ request.GET.status }}&payment_method={{ request.GET.payment_method }}&search={{ search_query }}&sort_by={{ sort_by }}&page_size='+this.value">
-                    {% for size in page_sizes %}
-                        <option value="{{ size }}" {% if size == current_page_size %}selected{% endif %}>{{ size }} per page</option>
-                    {% endfor %}
-                </select>
-            </li>
-        </ul>
-    </nav>
-
     <!-- Place Order Modal -->
     <div class="modal fade" id="placeOrderModal" tabindex="-1" aria-labelledby="placeOrderModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content rounded-3">
                 <form method="POST" action="{% url 'place_order' %}">
                     {% csrf_token %}
-                    <div class="modal-header bg-primary text-white">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #0dcaf0 0%, #007bff 100%); color: #fff;">
                         <h5 class="modal-title" id="placeOrderModalLabel"><i class="bi bi-cart-plus-fill me-2"></i> Place New Order</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>

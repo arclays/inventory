@@ -30,6 +30,7 @@ urlpatterns = [
     path('orders/export/', views.export_orders_csv, name='export_orders_csv'),
     path('report_analysis/', views.report_analysis, name='report_analysis'),
     path('export_dashboard_csv/', views.export_dashboard_csv, name='export_dashboard_csv'),
+    
 ]
  
 

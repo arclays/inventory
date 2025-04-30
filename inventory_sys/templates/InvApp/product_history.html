@@ -19,13 +19,13 @@
     <!-- Summary Cards -->
     <div class="row mb-4">
         <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-body">
                     <h5 class="text-muted mb-3"><i class="bi bi-info-circle me-2"></i> Basic Info</h5>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between">
                             <span class="fw-bold">Product ID:</span>
-                            <span>{{ product.product_id }}</span>
+                            <span >{{ product.product_id }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
                             <span class="fw-bold">Category:</span>
@@ -40,7 +40,7 @@
             </div>
         </div>
         <div class="col-md-4 mb-3">
-            <div class="card border-0   h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+            <div class="card border-0 shadow-sm  h-100" >
                 <div class="card-body">
                     <h5 class="text-muted mb-3"><i class="bi bi-box-seam me-2"></i> Stock Info</h5>
                     <ul class="list-group list-group-flush">
@@ -61,7 +61,7 @@
             </div>
         </div>
         <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-body">
                     <h5 class="text-muted mb-3"><i class="bi bi-graph-up me-2"></i> Performance</h5>
                     <ul class="list-group list-group-flush">
@@ -75,7 +75,7 @@
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
                             <span class="fw-bold">Stock Status:</span>
-                            <span class="badge bg-{% if product.quantity_in_stock < product.reorder_level %}danger{% elif product.quantity_in_stock == product.reorder_level %}warning{% else %}success{% endif %}">
+                            <span class="badge px-3 py-2 fs-5  bg-{% if product.quantity_in_stock < product.reorder_level %}danger{% elif product.quantity_in_stock == product.reorder_level %}warning{% else %}success{% endif %}">
                                 {% if product.quantity_in_stock < product.reorder_level %}Low Stock
                                 {% elif product.quantity_in_stock == product.reorder_level %}Reorder Level
                                 {% else %}In Stock{% endif %}
@@ -87,34 +87,34 @@
         </div>
     </div>
 
-    <!-- Main Tabs -->
-    <ul class="nav nav-tabs mb-4" id="historyTabs" role="tablist" style="border-bottom: 2px solid #0dcaf0;">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active rounded-top px-4 py-2" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button" role="tab" style="background: linear-gradient(180deg, #0dcaf0 0%, #e9ecef 100%); color: #fff;">
-                <i class="bi bi-activity me-2"></i> Activity Timeline
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link rounded-top px-4 py-2" id="batches-tab" data-bs-toggle="tab" data-bs-target="#batches" type="button" role="tab" style="background: linear-gradient(180deg, #28a745 0%, #e9ecef 100%); color: #fff;">
-                <i class="bi bi-boxes me-2"></i> Batch History
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link rounded-top px-4 py-2" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab" style="background: linear-gradient(180deg, #17a2b8 0%, #e9ecef 100%); color: #fff;">
-                <i class="bi bi-cart me-2"></i> Orders
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link rounded-top px-4 py-2" id="adjustments-tab" data-bs-toggle="tab" data-bs-target="#adjustments" type="button" role="tab" style="background: linear-gradient(180deg, #ffc107 0%, #e9ecef 100%); color: #fff;">
-                <i class="bi bi-sliders me-2"></i> Adjustments
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link rounded-top px-4 py-2" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab" style="background: linear-gradient(180deg, #dc3545 0%, #e9ecef 100%); color: #fff;">
-                <i class="bi bi-graph-up-arrow me-2"></i> Analytics
-            </button>
-        </li>
-    </ul>
+<!-- Main Tabs -->
+<ul class="nav nav-tabs mb-4" id="historyTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link tab-button active rounded-top px-4 py-2" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button" role="tab">
+            <i class="bi bi-activity me-2"></i> Activity Timeline
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link tab-button rounded-top px-4 py-2" id="batches-tab" data-bs-toggle="tab" data-bs-target="#batches" type="button" role="tab">
+            <i class="bi bi-boxes me-2"></i> Batch History
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link tab-button rounded-top px-4 py-2" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab">
+            <i class="bi bi-cart me-2"></i> Orders
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link tab-button rounded-top px-4 py-2" id="adjustments-tab" data-bs-toggle="tab" data-bs-target="#adjustments" type="button" role="tab">
+            <i class="bi bi-sliders me-2"></i> Adjustments
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link tab-button rounded-top px-4 py-2" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
+            <i class="bi bi-graph-up-arrow me-2"></i> Analytics
+        </button>
+    </li>
+</ul>
 
     <!-- Tab Content -->
     <div class="tab-content mt-3" id="historyTabsContent">
@@ -131,15 +131,15 @@
                             <div class="timeline-badge bg-{% if event.event_type == 'order' %}primary{% elif event.event_type == 'adjustment' %}warning{% elif event.event_type == 'batch' %}info{% else %}secondary{% endif %}">
                                 <i class="bi bi-{% if event.event_type == 'order' %}cart{% elif event.event_type == 'adjustment' %}sliders{% elif event.event_type == 'batch' %}box{% else %}activity{% endif %}"></i>
                             </div>
-                            <div class="timeline-card border-0 shadow-sm  rounded-3" style="background: linear-gradient(135deg, #b9e4f5 0%, #8d8c8c 100%); color: #000000;">
+                            <div class="timeline-card border-0 shadow-sm  rounded-3">
                                 <div class="timeline-header">
-                                    <span class="text-muted float-end">{{ event.date }}</span>
+                                    <span class="text-danger float-end">{{ event.date }}</span>
                                 </div>
-                                <div class="timeline-body">
+                                <div class="timeline-body fs-6 fw-bold">
                                     {{ event.description }}
                                 </div>
-                                <div class="timeline-footer ">
-                                    <span class="text-muted">By {{ event.customer.name }}</span>
+                                <div class="timeline-footer fs-5">
+                                    <span class="text-muted ">By {{ event.customer.name }}</span>
                                     {% if event.quantity %}
                                     <span class="badge bg-light text-dark ms-2">{{ event.quantity }} {{ product.units }}</span>
                                     {% endif %}
@@ -183,7 +183,7 @@
         <!-- Batch History Tab -->
         <div class="tab-pane fade" id="batches" role="tabpanel">
             <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-success text-white">
+                <div class="card-header  text-dark">
                     <h5 class="mb-0">Batch History</h5>
                 </div>
                 <div class="card-body">
@@ -255,7 +255,7 @@
         <!-- Orders Tab -->
         <div class="tab-pane fade" id="orders" role="tabpanel">
             <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <div class="card-header text-dark d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Orders</h5>
                     <div>
                         <input type="text" class="form-control form-control-sm rounded-3" placeholder="Search orders..." id="orderSearch">
@@ -333,7 +333,7 @@
         <!-- Adjustments Tab -->
         <div class="tab-pane fade" id="adjustments" role="tabpanel">
             <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-warning text-white">
+                <div class="card-header text-dark">
                     <h5 class="mb-0">Adjustments</h5>
                 </div>
                 <div class="card-body">
@@ -408,31 +408,31 @@
         <!-- Analytics Tab -->
         <div class="tab-pane fade" id="analytics" role="tabpanel">
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-6">
                     <div class="card border-0 shadow-sm rounded-3 mb-4">
-                        <div class="card-header bg-primary text-white">
+                        <div class="card-header  text-dark">
                             <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i> Sales Trends</h5>
                         </div>
                         <div class="card-body">
-                            <canvas id="salesChart" height="300" style="background: #f8f9fa; border-radius: 10px;"></canvas>
+                            <canvas id="salesChart" height="200" style="background: #f8f9fa; border-radius: 10px;"></canvas>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="card border-0 shadow-sm rounded-3 mb-4">
-                        <div class="card-header bg-secondary text-white">
+                        <div class="card-header  text-dark">
                             <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i> Stock Composition</h5>
                         </div>
                         <div class="card-body">
-                            <canvas id="stockChart" height="300" style="background: #f8f9fa; border-radius: 10px;"></canvas>
+                            <canvas id="stockChart" height="200" style="background: #f8f9fa; border-radius: 10px;"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <div class="card border-0 shadow-sm rounded-3">
-                        <div class="card-header bg-info text-white">
+                        <div class="card-header text-dark">
                             <h5 class="mb-0"><i class="bi bi-lightbulb me-2"></i> Inventory Suggestions</h5>
                         </div>
                         <div class="card-body">
@@ -453,10 +453,6 @@
                                     </span>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">Expected Reorder Date:</span>
-                                    <span>{{ product.suggested_reorder_date|date:"Y-m-d"|default:"-" }}</span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <span class="fw-bold">Expiring Soon:</span>
                                     <span class="badge bg-{% if product.expiring_batches.exists %}warning{% else %}success{% endif %} rounded-pill">
                                         {% if product.expiring_batches.exists %}
@@ -470,7 +466,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <!-- <div class="col-md-6">
                     <div class="card border-0 shadow-sm rounded-3">
                         <div class="card-header bg-success text-white">
                             <h5 class="mb-0"><i class="bi bi-speedometer2 me-2"></i> Performance Metrics</h5>
@@ -511,7 +507,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>

@@ -1,0 +1,15 @@
+
+.tab-button {
+    background: linear-gradient(135deg, #ffffff 0%, #8d8c8c 100%) !important;
+    color: #000000 !important;
+    transition: all 0.3s ease;
+}
+
+.tab-button.active {
+    background: linear-gradient(180deg, #0dcaf0 0%, #e9ecef 100%) !important;
+    color: #ffffff !important;
+}
+
+.tab-button:hover {
+    opacity: 0.9;
+}

@@ -97,43 +97,43 @@
       </div>
     </div>
   </div>
+<!-- Main Tabs -->
+<ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist" style="border-bottom: 2px solid #0dcaf0;">
+  <li class="nav-item" role="presentation">
+      <button class="nav-link tab-button active rounded-top px-5 py-3" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab">
+          <i class="bi bi-box-seam me-2 fs-6"></i> <span class="fs-6">Inventory</span>
+      </button>
+  </li>
+  <li class="nav-item" role="presentation">
+      <button class="nav-link tab-button rounded-top px-5 py-3" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab">
+          <i class="bi bi-graph-up me-2 fs-6"></i> <span class="fs-6">Sales</span>
+      </button>
+  </li>
+  <li class="nav-item" role="presentation">
+      <button class="nav-link tab-button rounded-top px-5 py-3" id="expiry-tab" data-bs-toggle="tab" data-bs-target="#expiry" type="button" role="tab">
+          <i class="bi bi-clock me-2 fs-6"></i> <span class="fs-6">Product Expiry</span>
+      </button>
+  </li>
+</ul>
 
-  <!-- Main Tabs -->
-  <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist" style="border-bottom: 2px solid #0dcaf0;">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active rounded-top px-4 py-2" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab" style="background: linear-gradient(180deg, #0dcaf0 0%, #e9ecef 100%); color: #fff;">
-        <i class="bi bi-box-seam me-2"></i> Inventory
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link rounded-top px-4 py-2" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab" style="background: linear-gradient(180deg, #28a745 0%, #e9ecef 100%); color: #fff;">
-        <i class="bi bi-graph-up me-2"></i> Sales
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link rounded-top px-4 py-2" id="expiry-tab" data-bs-toggle="tab" data-bs-target="#expiry" type="button" role="tab" style="background: linear-gradient(180deg, #dc3545 0%, #e9ecef 100%); color: #fff;">
-        <i class="bi bi-clock me-2"></i> Product Expiry
-      </button>
-    </li>
-  </ul>
 
   <!-- Main Tab Content -->
   <div class="tab-content mt-3" id="mainTabsContent">
-    <div class="tab-pane fade show active" id="inventory" role="tabpanel">
+    <div class="tab-pane fade show active" id="inventory" role="tabpanel" >
       <!-- Inventory Sub-Tabs -->
-      <ul class="nav nav-pills mb-3" id="inventorySubTabs" role="tablist">
+      <ul class="nav nav-pills mb-3" id="inventorySubTabs" role="tablist" style="border-bottom: 2px solid #0dcaf0;">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active px-3 py-2 me-2 rounded-pill" id="totalInventory-tab" data-bs-toggle="pill" data-bs-target="#totalInventory" type="button" role="tab" style="background: #0dcaf0; color: #fff;">
+          <button class="nav-link tab-button active px-3 py-2 me-2 " id="totalInventory-tab" data-bs-toggle="pill" data-bs-target="#totalInventory" type="button" role="tab" >
             Inventory Valuation
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link px-3 py-2 me-2 rounded-pill" id="lowStock-tab" data-bs-toggle="pill" data-bs-target="#lowStock" type="button" role="tab" style="background: #ffc107; color: #fff;">
+          <button class="nav-link tab-button px-3 py-2 me-2 " id="lowStock-tab" data-bs-toggle="pill" data-bs-target="#lowStock" type="button" role="tab" >
             Stock Alerts
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link px-3 py-2 rounded-pill" id="categoryOverview-tab" data-bs-toggle="pill" data-bs-target="#categoryOverview" type="button" role="tab" style="background: #17a2b8; color: #fff;">
+          <button class="nav-link tab-button px-3 py-2" id="categoryOverview-tab" data-bs-toggle="pill" data-bs-target="#categoryOverview" type="button" role="tab">
             Category Analysis
           </button>
         </li>
@@ -148,7 +148,7 @@
             </div>
             <div class="card-body">
               <div class="table-responsive">
-                <table class="table table-hover table-bordered">
+                  <table id="example" class="table table-striped" style="width:100%">
                   <thead class="table-light">
                     <tr>
                       <th>Product</th>
@@ -186,7 +186,7 @@
         <!-- Stock Alerts -->
         <div class="tab-pane fade" id="lowStock" role="tabpanel">
           <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-header bg-warning text-white">
+            <div class="card-header text-white">
               <h5 class="mb-0">Stock Alerts</h5>
             </div>
             <div class="card-body">
@@ -285,12 +285,12 @@
         <!-- Category Analysis -->
         <div class="tab-pane fade" id="categoryOverview" role="tabpanel">
           <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-header bg-info text-white">
+            <div class="card-header text-white">
               <h5 class="mb-0">Category Analysis</h5>
             </div>
             <div class="card-body">
               <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover" id="example">
                   <thead class="table-light">
                     <tr>
                       <th>Category</th>
@@ -383,22 +383,22 @@
       <!-- Sales Sub-Tabs -->
       <ul class="nav nav-tabs mb-3" id="salesSubTabs" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active px-3 py-2 me-2" id="top-selling-tab" data-bs-toggle="pill" data-bs-target="#salesTopSellings" type="button" style="background: #28a745; color: #fff;">
+          <button class="nav-link tab-button active px-3 py-2 me-2" id="top-selling-tab" data-bs-toggle="pill" data-bs-target="#salesTopSellings" type="button" >
             <i class="bi bi-trophy me-2"></i> Top Performers
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link px-3 py-2 me-2" id="monthly-tab" data-bs-toggle="pill" data-bs-target="#salesMonthly" type="button" style="background: #007bff; color: #fff;">
+          <button class="nav-link tab-button px-3 py-2 me-2" id="monthly-tab" data-bs-toggle="pill" data-bs-target="#salesMonthly" type="button" >
             <i class="bi bi-calendar me-2"></i> Trend Analysis
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link px-3 py-2 me-2" id="daily-tab" data-bs-toggle="pill" data-bs-target="#salesDaily" type="button" style="background: #17a2b8; color: #fff;">
+          <button class="nav-link tab-button px-3 py-2 me-2" id="daily-tab" data-bs-toggle="pill" data-bs-target="#salesDaily" type="button">
             <i class="bi bi-list me-2"></i> Transaction Details
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link px-3 py-2" id="profitability-tab" data-bs-toggle="pill" data-bs-target="#profitability" type="button" style="background: #ffc107; color: #fff;">
+          <button class="nav-link tab-button px-3 py-2" id="profitability-tab" data-bs-toggle="pill" data-bs-target="#profitability" type="button" >
             <i class="bi bi-chart-pie me-2"></i> Profitability
           </button>
         </li>
@@ -410,12 +410,12 @@
           <div class="row">
             <div class="col-md-8">
               <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <div class="card-header  text-dark d-flex justify-content-between align-items-center">
                   <h5 class="mb-0">Top Selling Products</h5>
                 </div>
                 <div class="card-body">
                   <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table id="example"  class="table table-striped" style="width:100%">
                       <thead class="table-light">
                         <tr>
                           <th>Rank</th>
@@ -453,7 +453,7 @@
             </div>
             <div class="col-md-4">
               <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-header bg-secondary text-white">
+                <div class="card-header text-dark">
                   <h5 class="mb-0">Sales Distribution</h5>
                 </div>
                 <div class="card-body">
@@ -471,7 +471,7 @@
         <!-- Monthly Sales Trend -->
         <div class="tab-pane fade" id="salesMonthly" role="tabpanel">
           <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header  text-dark">
               <h5 class="mb-0">Sales Trend Analysis</h5>
             </div>
             <div class="card-body">
@@ -521,7 +521,7 @@
                 </div>
               </div>
               <div class="table-responsive">
-                <table class="table table-bordered">
+                <table id="example"  class="table table-striped" style="width:100%">
                   <thead class="table-light">
                     <tr>
                       <th>Month/Year</th>
@@ -559,12 +559,12 @@
         <!-- Daily Sales Details -->
         <div class="tab-pane fade" id="salesDaily" role="tabpanel">
           <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <div class="card-header  text-dark d-flex justify-content-between align-items-center">
               <h5 class="mb-0">Daily Transaction Report</h5>
             </div>
             <div class="card-body">
               <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table id="example" class="table table-striped" style="width:100%">
                   <thead>
                     <tr>
                       <th>Date</th>
@@ -634,7 +634,7 @@
           <div class="row">
             <div class="col-md-6">
               <div class="card border-0  rounded-3 mb-4">
-                <div class="card-header bg-warning text-white">
+                <div class="card-header  text-dark">
                   <h5 class="mb-0">Profitability by Category</h5>
                 </div>
                 <div class="card-body">
@@ -644,7 +644,7 @@
             </div>
             <div class="col-md-6">
               <div class="card border-0  rounded-3 mb-4">
-                <div class="card-header bg-dark text-white">
+                <div class="card-header  text-dark">
                   <h5 class="mb-0">Margin Distribution</h5>
                 </div>
                 <div class="card-body">
@@ -654,7 +654,7 @@
             </div>
           </div>
           <div class="card border-0 rounded-3">
-            <div class="card-header bg-success text-white">
+            <div class="card-header  text-dark">
               <h5 class="mb-0">Product Profitability Matrix</h5>
             </div>
             <div class="card-body">
@@ -697,7 +697,7 @@
     <!-- Product Expiry  -->
     <div class="tab-pane fade" id="expiry" role="tabpanel">
       <div class="card border-0  rounded-3">
-        <div class="card-header bg-danger text-white">
+        <div class="card-header  text-dark">
           <h5 class="mb-0">Products Near Expiry</h5>
         </div>
         <div class="card-body">
