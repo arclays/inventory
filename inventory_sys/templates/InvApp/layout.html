@@ -30,6 +30,17 @@
         background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
         overflow-y: auto;
     }
+    .sidebar .nav-link.active {
+        background-color: #e3f2fd !important; 
+        border-radius: 8px;
+        border-left: 4px solid #0d6efd !important; 
+        color: #042c7a !important;
+        font-weight: 500;
+    }
+    
+    .sidebar .nav-link.active i {
+        color: #0d6efd !important; 
+    }
 
     .content {
         margin-left: 250px;
@@ -63,6 +74,11 @@
         width: 32px;
         height: 32px;
         margin-right: 8px;
+    }
+    .sidebar.active{
+        background: linear-gradient(135deg, #fcfcfc 0%, #1e1e1f 100%);
+        color: #ffffff;
+
     }
 
     @media (min-width: 769px) {
@@ -102,63 +118,73 @@
     </head>
 
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar bg-light ">
-        <ul class="nav flex-column">
-            <!-- Dashboard -->
-            <li class="nav-item mb-2 mt-4">
-                <a class="nav-link d-flex align-items-center text-dark {% if request.path == '/home/' %}active{% endif %}" href="{% url 'home' %}">
-                    <i class="bi bi-speedometer2 fs-5 me-2 text-primary"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <!-- Products Menu -->
-            <li class="nav-item mb-2">
-                <a class="nav-link d-flex align-items-center text-dark" data-bs-toggle="collapse" href="#products-menu" aria-expanded="false">
-                    <i class="bi bi-box-seam fs-5 me-2 text-primary"></i>
+<div class="sidebar bg-light">
+    <ul class="nav flex-column">
+        <!-- Dashboard -->
+        <li class="nav-item mb-2 mt-4">
+            <a class="nav-link d-flex align-items-center text-dark {% if request.path == '/home/' %}active{% endif %}" href="{% url 'home' %}">
+                <i class="bi bi-speedometer2 fs-5 me-2 text-primary"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+
+        <!-- Products Menu -->
+        <li class="nav-item mb-2">
+            <a class="nav-link d-flex align-items-center text-dark {% if 'products' in request.path or 'catalog' in request.path %}active{% endif %}" 
+               data-bs-toggle="collapse" 
+               href="#products-menu" 
+               aria-expanded="{% if 'products' in request.path or 'catalog' in request.path %}true{% else %}false{% endif %}">
+                <i class="bi bi-box-seam fs-5 me-2 text-primary"></i>
+                <span>Products</span>
+                <i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <div id="products-menu" class="collapse {% if 'products' in request.path or 'catalog' in request.path %}show{% endif %}">
+                <a class="nav-link d-flex align-items-center ps-4 {% if request.path == '/products/' %}active{% endif %}" href="{% url 'product_list' %}">
+                    <i class="bi bi-plus-circle fs-6 me-2 text-primary"></i>
                     <span>Products</span>
-                    <i class="bi bi-chevron-down ms-auto text-primary"></i>
                 </a>
-                <div id="products-menu" class="collapse">
-                    <a class="nav-link d-flex align-items-center text-dark ps-4 {% if request.path == '/products/' %}active{% endif %}" href="{% url 'product_list' %}">
-                        <i class="bi bi-plus-circle fs-6 me-2 text-primary"></i>
-                        <span>Products</span>
-                    </a>
-                    <a class="nav-link d-flex align-items-center text-dark ps-4 {% if request.path == '/catalog/' %}active{% endif %}" href="{% url 'catalog' %}">
-                        <i class="bi bi-list-ul fs-6 me-2 text-primary"></i>
-                        <span>Catalog</span>
-                    </a>
-                </div>
-            </li>
-            <!-- Orders -->
-            <li class="nav-item mb-2">
-                <a class="nav-link d-flex align-items-center text-dark {% if request.path == '/order_page/' %}active{% endif %}" href="{% url 'order_page' %}">
-                    <i class="bi bi-cart3 fs-5 me-2 text-primary"></i>
-                    <span>Orders</span>
+                <a class="nav-link d-flex align-items-center ps-4 {% if request.path == '/catalog/' %}active{% endif %}" href="{% url 'catalog' %}">
+                    <i class="bi bi-list-ul fs-6 me-2 text-primary"></i>
+                    <span>Catalog</span>
                 </a>
-            </li>
-            <!-- Stock Management Menu -->
-            <li class="nav-item mb-2">
-                <a class="nav-link d-flex align-items-center text-dark" data-bs-toggle="collapse" href="#stock-menu" aria-expanded="false">
-                    <i class="bi bi-box fs-5 me-2 text-primary"></i>
-                    <span>Stock Management</span>
-                    <i class="bi bi-chevron-down ms-auto text-primary"></i>
+            </div>
+        </li>
+
+        <!-- Orders -->
+        <li class="nav-item mb-2">
+            <a class="nav-link d-flex align-items-center text-dark {% if 'order' in request.path %}active{% endif %}" href="{% url 'order_page' %}">
+                <i class="bi bi-cart3 fs-5 me-2 text-primary"></i>
+                <span>Orders</span>
+            </a>
+        </li>
+
+        <!-- Stock Management Menu -->
+        <li class="nav-item mb-2">
+            <a class="nav-link d-flex align-items-center text-dark {% if 'stock' in request.path %}active{% endif %}" 
+               data-bs-toggle="collapse" 
+               href="#stock-menu" 
+               aria-expanded="{% if 'stock' in request.path %}true{% else %}false{% endif %}">
+                <i class="bi bi-box fs-5 me-2 text-primary"></i>
+                <span>Stock Management</span>
+                <i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <div id="stock-menu" class="collapse {% if 'stock' in request.path %}show{% endif %}">
+                <a class="nav-link d-flex align-items-center ps-4 {% if request.path == '/stock/' %}active{% endif %}" href="{% url 'stock' %}">
+                    <i class="bi bi-exclamation-triangle fs-6 me-2 text-primary"></i>
+                    <span>Stock</span>
                 </a>
-                <div id="stock-menu" class="collapse">
-                    <a class="nav-link d-flex align-items-center text-dark ps-4 {% if request.path == '/stock/' %}active{% endif %}" href="{% url 'stock' %}">
-                        <i class="bi bi-exclamation-triangle fs-6 me-2 text-primary"></i>
-                        <span>Stock</span>
-                    </a>
-                    <!-- <a class="nav-link d-flex align-items-center text-dark ps-4 {% if request.path == '/report/' %}active{% endif %}" href="{% url 'report' %}">
-                        <i class="bi bi-arrow-left-right fs-6 me-2 text-primary"></i>
-                        <span>Stock Transactions</span>
-                    </a> -->
-                    <a class="nav-link d-flex align-items-center text-dark ps-4 {% if request.path == '/stock_adjustments/' %}active{% endif %}" href="{% url 'stock_adjustments' %}">
-                        <i class="bi bi-wrench fs-6 me-2 text-primary"></i>
-                        <span>Adjustments</span>
-                    </a>
-                </div>
-            </li>
+                <a class="nav-link d-flex align-items-center ps-4 {% if 'adjustments' in request.path %}active{% endif %}" href="{% url 'stock_adjustments' %}">
+                    <i class="bi bi-wrench fs-6 me-2 text-primary"></i>
+                    <span>Adjustments</span>
+                </a>
+                <a class="nav-link d-flex align-items-center ps-4 {% if 'report_page' in request.path %}active{% endif %}" href="{% url 'report' %}">
+                    <i class="bi bi-wrench fs-6 me-2 text-primary"></i>
+                    <span>stock_translations</span>
+                </a>
+            </div>
+           
+        </li>
+
             <!-- Report & Analysis -->
             <li class="nav-item mb-2">
                 <a class="nav-link d-flex align-items-center text-dark {% if request.path == '/report_analysis/' %}active{% endif %}" href="{% url 'report_analysis' %}">
@@ -229,18 +255,23 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> -->
     <script src="{% static 'js/screen.js' %}"></script>
     <script src="{% static 'js/order.js' %}"></script>
     <script src="{% static 'js/charts.js' %}"></script>
     <script src="{% static 'js/adjust.js' %}"></script>
+    <script src="{% static 'js/transaction.js' %}"></script>
     <script src="{% static 'js/stocklevel.js' %}"></script>
     <script src="{% static 'js/product.js' %}"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.js"></script>  
-    <script>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+
         new DataTable('#example');
         
 document.addEventListener('DOMContentLoaded', function () {

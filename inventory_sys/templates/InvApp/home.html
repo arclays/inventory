@@ -74,7 +74,7 @@
                     <i class="fas fa-shopping-cart fa-2x text-info me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Total Orders</h6>
-                        <h3 class="fw-bold mb-0 text-info">{{ total_orders }}</h3>
+                        <h3 class="fw-bold mb-0 count-up text-info" data-target="{{ total_orders }}"></h3>{{ total_orders }}</h3>
                     </div>
                 </div>
             </div>
@@ -85,7 +85,7 @@
                     <i class="fas fa-users fa-2x text-success me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Total Customers</h6>
-                        <h3 class="fw-bold mb-0 text-success">{{ total_customers }}</h3>
+                        <h3 class="fw-bold mb-0 count-up text-success" data-target="{{ total_customers }}"></h3>{{ total_customers }}</h3>
                     </div>
                 </div>
             </div>
@@ -96,7 +96,7 @@
                     <i class="fas fa-warehouse fa-2x text-info me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">New Stock In</h6>
-                        <h3 class="fw-bold mb-0 text-info">{{ total_stock_in }}</h3>
+                        <h3 class="fw-bold mb-0 count-up text-info" data-target="{{ total_stock_in }}"></h3>{{ total_stock_in }}</h3>
                     </div>
                 </div>
             </div>
@@ -107,7 +107,7 @@
                     <i class="fas fa-exclamation-triangle fa-2x text-warning me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Low Stock Items</h6>
-                        <h3 class="fw-bold mb-0 text-warning">{{ low_stock_count }}</h3>
+                        <h3 class="fw-bold mb-0 count-up text-warning" data-target="{{ low_stock_count}}"></h3>{{ low_stock_count }}</h3>
                     </div>
                 </div>
             </div>
@@ -118,7 +118,7 @@
                     <i class="fas fa-box fa-2x text-dark me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Total Products</h6>
-                        <h3 class="fw-bold mb-0 text-dark">{{ total_products }}</h3>
+                        <h3 class="fw-bold mb-0 count-up text-dark" data-target="{{ total_products }}"></h3>{{ total_products }}</h3>
                     </div>
                 </div>
             </div>
@@ -129,7 +129,7 @@
                     <i class="fas fa-layer-group fa-2x text-secondary me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Total Categories</h6>
-                        <h3 class="fw-bold mb-0 text-secondary">{{ categories }}</h3>
+                        <h3 class="fw-bold mb-0 count-up text-secondary" data-target="{{ categories}}"></h3>{{ categories }}</h3>
                     </div>
                 </div>
             </div>
@@ -140,7 +140,7 @@
                     <i class="fas fa-tools fa-2x text-info me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Stock Adjustments</h6>
-                        <h3 class="fw-bold mb-0 text-info">{{ stock_adjustments }}</h3>
+                        <h3 class="fw-bold mb-0 count-up text-info" data-target="{{ stock_adjustments }}"></h3>{{ stock_adjustments }}</h3>
                     </div>
                 </div>
             </div>
@@ -151,7 +151,7 @@
                     <i class="fas fa-dollar-sign fa-2x text-success me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Total Cash Made</h6>
-                        <h3 class="fw-bold mb-0 text-success">UGX: {{ total_cash_made|floatformat:1 }}</h3>
+                        <h3 class="fw-bold mb-0 count-up text-success" data-target="{{ total_cash_made }}"></h3>UGX: {{ total_cash_made|floatformat:1 }}</h3>
                     </div>
                 </div>
             </div>

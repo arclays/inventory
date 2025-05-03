@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
 from django.core.paginator import Paginator
 from django.contrib import messages
+from django.db import transaction
 from datetime import datetime, date
 from django.views.generic import View
 from django.urls import reverse
@@ -11,6 +13,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from .models import Order, Stock, StockAdjustment, ProductBatch
 from decimal import Decimal
+from dateutil.relativedelta import relativedelta
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.db.models import Sum, F,   Q, When, Value, Case,  FloatField,Count , ExpressionWrapper
@@ -25,6 +28,7 @@ import logging
 
 
 
+
 def register_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -32,18 +36,26 @@ def register_view(request):
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
 
+        if not all([email, username, password, confirm_password]):
+            messages.error(request, "All fields are required.")
+            return redirect('register')
+
         if password != confirm_password:
             messages.error(request, "Passwords do not match.")
             return redirect('register')
+
         try:
             user = User.objects.create_user(username=username, email=email, password=password)
             user.save()
             messages.success(request, "Registration successful. You can now log in.")
             return redirect('login')
+
+        except IntegrityError:
+            messages.error(request, "Username already exists. Please choose another.")
         except Exception as e:
-            messages.error(request, str(e))
-            print(f"Redirecting to register due to error: {e}")
-            return redirect('register')
+            messages.error(request, f"An error occurred: {str(e)}")
+
+        return redirect('register')
 
     return render(request, 'Invapp/register.html')
 
@@ -64,6 +76,7 @@ def login_view(request):
     next_url = request.GET.get('next', '')
     return render(request, 'Invapp/login.html', {'next': next_url})
 
+
 def logout_view(request):
     return render(request, 'Invapp/logout.html')   
 
@@ -73,10 +86,74 @@ def confirm_logout(request):
     return redirect('login')
 
 
+@login_required
+def home_view(request):
+    selected_date = request.GET.get('orderDate', str(date.today()))
+    selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
+
+    stocks = Stock.objects.filter(stock_date=selected_date)
+    orders = Order.objects.filter(order_date=selected_date)
+    stock_adjustments = StockAdjustment.objects.filter(created_at__date=selected_date)
+
+    low_stock_items = Product.objects.filter(quantity_in_stock__lt=F('reorder_level')).values(
+        'name', 'quantity_in_stock', 'reorder_level', 'reorder_quantity'
+    )
+
+    total_orders = orders.count()
+    total_customers = orders.values('customer').distinct().count()
+    total_cash_made = orders.aggregate(Sum('final_total'))['final_total__sum'] or 0
+    total_quantity = orders.aggregate(Sum('quantity'))['quantity__sum'] or 0
+    total_products = Product.objects.count()
+    low_stock_count = low_stock_items.count()
+    categories = Category.objects.count()
+    suppliers = Supplier.objects.count()
+    batch_sku = ProductBatch.objects.all()
+
+    total_new_stock = stocks.aggregate(Sum('new_stock'))['new_stock__sum'] or 0
+    total_adjustments = stock_adjustments.filter(adjustment_type='add').aggregate(Sum('quantity'))['quantity__sum'] or 0
+    total_stock_in = total_new_stock + total_adjustments
+
+    tol_adjustments = stock_adjustments.filter(adjustment_type='subtract').aggregate(Sum('quantity'))['quantity__sum'] or 0
+    stock_out = total_quantity + tol_adjustments
+    adjust_total = total_adjustments + tol_adjustments
+    average_adjustments = adjust_total
+
+    total_quantity_in_stock = Product.objects.aggregate(Sum('quantity_in_stock'))['quantity_in_stock__sum'] or 0
+
+    recent_orders = orders.order_by('-order_date')[:5].select_related('customer')
+
+    context = {
+        'stock_out': stock_out,
+        'total_orders': total_orders,
+        'categories': categories,
+        'batch_sku': batch_sku,
+        'suppliers': suppliers,
+        'total_customers': total_customers,
+        'total_cash_made': total_cash_made,
+        'total_quantity': total_quantity,
+        'total_products': total_products,
+        'total_stock_in': total_stock_in,
+        'total_stock_out': tol_adjustments,
+        'total_quantity_in_stock': total_quantity_in_stock,
+        'low_stock_items': low_stock_items,
+        'recent_orders': recent_orders,
+        'low_stock_count': low_stock_count,
+        'adjust_total': adjust_total,
+        'total_new_stock': total_new_stock,
+        'total_adjustments': total_adjustments,
+        'tol_adjustments': tol_adjustments,
+        'average_adjustments': average_adjustments,
+        'selected_date': selected_date,
+    }
+
+    return render(request, 'InvApp/home.html', context)
+
+
+
+
 def product_list(request):
     categories = Category.objects.all()
     stocks = Stock.objects.all()
-
 
     category_id = request.GET.get('category', '')
     search_query = request.GET.get('search', '').strip()
@@ -201,27 +278,27 @@ def product_history(request, product_id):
 
     for adj in adjustments:
         combined_activity.append({
-            'date': adj.created_at,
+            'date': adj.created_at.date(),
             'event_type': 'adjustment',
             'description': f"Stock adjustment: {adj.quantity} {product.units} ({adj.reason})",
             'quantity': adj.quantity
         })
     
-    # # Sort by date descending
-    # combined_activity.sort(key=lambda x: x['date'], reverse=True)
+     # Sort by date descending
+    combined_activity.sort(key=lambda x: x['date'], reverse=True)
     
     paginator = Paginator(combined_activity, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+   
     today = datetime.now()
     sales_labels = []
     sales_data = []
-    
+
     for i in range(11, -1, -1):
-        month = today - timedelta(days=30*i)
-        sales_labels.append(month.strftime("%b %Y"))
-        sales_data.append(0)  
+     month = today - relativedelta(months=i)
+     sales_labels.append(month.strftime("%b %Y"))
+     sales_data.append(0) 
     
     batch_labels = [f"Batch {batch.batch_sku}" for batch in product.productbatch_set.all()]
     batch_quantities = [batch.current_quantity for batch in product.productbatch_set.all()]
@@ -234,7 +311,7 @@ def product_history(request, product_id):
         'sales_labels': sales_labels,
         'sales_data': sales_data,
         'batch_labels': batch_labels,
-        'batch_quantities': batch_quantities,
+        'batch_quantities' : batch_quantities,
     }
     
     return render(request, 'InvApp/product_history.html', context)
@@ -307,12 +384,12 @@ def product_confirm_delete(request, product_id):
     return render(request, 'Invapp/product_confirm_delete.html', {'product': product})
 
 
-def get_selling_price(request, product_id):
-    try:
-        product = Product.objects.get(product_id=product_id)
-        return JsonResponse({"selling_price": product.selling_price})
-    except Product.DoesNotExist:
-        return JsonResponse({"selling_price": 0}, status=404)
+# def get_selling_price(request, product_id):
+#     try:
+#         product = Product.objects.get(product_id=product_id)
+#         return JsonResponse({"selling_price": product.selling_price})
+#     except Product.DoesNotExist:
+#         return JsonResponse({"selling_price": 0}, status=404)
 
 
 def get_sales_data(request):
@@ -322,6 +399,7 @@ def get_sales_data(request):
     data = [order['total_quantity'] for order in orders]
 
     return JsonResponse({'labels': labels, 'data': data})
+
 
 def get_stock_data(request):
     products = Product.objects.all()
@@ -333,69 +411,112 @@ def get_stock_data(request):
 
 
 def report_page(request):
-    
     selected_date_str = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
-    selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
-    today = date.today()
-    
+    selected_category = request.GET.get('category', '')
+
+    try:
+        selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        selected_date = datetime.today().date()
+        selected_date_str = selected_date.strftime('%Y-%m-%d')
+
+    prev_date = selected_date - timedelta(days=1)
+
     total_stock_in = 0
     total_stock_out = 0
-    total_adjustments_in = 0
-    total_adjustments_out = 0
+    total_adjustments = 0
     total_cash_made = 0
     total_quantity_sold = 0
-    stock_adjustments= StockAdjustment.objects.count()
-
-    products = Product.objects.all()
+    stock_adjustments = StockAdjustment.objects.filter(created_at__date=selected_date).count()
     stock_transactions = []
 
-    for product in products:
-        stock_in = Stock.objects.filter(product=product, stock_date=selected_date ).aggregate(total=Sum('new_stock'))['total'] or 0
-        stock_out = Order.objects.filter( product=product,order_date=selected_date).aggregate(total=Sum('quantity'))['total'] or 0
+    products = Product.objects.select_related('category').all()
+    if selected_category:
+        products = products.filter(category__id=selected_category)
 
-        positive_adjustments = StockAdjustment.objects.filter(product=product,created_at__date=selected_date,adjustment_type='add').aggregate(total=Sum('quantity'))['total'] or 0
-        negative_adjustments = StockAdjustment.objects.filter(product=product,created_at__date=selected_date,adjustment_type='subtract' ).aggregate(total=Sum('quantity'))['total'] or 0
+    for product in products:
+        # Stock In: new_stock + positive adjustments
+        stock_in = Stock.objects.filter(
+            product=product,
+            stock_date=selected_date
+        ).aggregate(total=Sum('new_stock'))['total'] or 0
+
+        positive_adjustments = StockAdjustment.objects.filter(
+            product=product,
+            created_at__date=selected_date,
+            adjustment_type='add'
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+
+        stock_in_total = stock_in + positive_adjustments
+
+        # Stock Out: orders + negative adjustments
+        stock_out = Order.objects.filter(
+            product=product,
+            order_date=selected_date
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+
+        negative_adjustments = StockAdjustment.objects.filter(
+            product=product,
+            created_at__date=selected_date,
+            adjustment_type='subtract'
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+
+        stock_out_total = stock_out + negative_adjustments
 
         net_adjustments = positive_adjustments - negative_adjustments
 
-        opening_stock = product.quantity_in_stock - stock_in - net_adjustments + stock_out
-        closing_stock = opening_stock + stock_in + positive_adjustments - stock_out - negative_adjustments
+        prev_new_stock = Stock.objects.filter(
+            product=product,
+            stock_date__lte=prev_date
+        ).aggregate(total=Sum('new_stock'))['total'] or 0
 
-        total_stock_in += stock_in
-        total_stock_out += stock_out
-        total_adjustments_in += positive_adjustments
-        total_adjustments_out += negative_adjustments
+        prev_positive_adjustments = StockAdjustment.objects.filter(
+            product=product,
+            created_at__date__lte=prev_date,
+            adjustment_type='add'
+        ).aggregate(total=Sum('quantity'))['total'] or 0
 
-        
+        prev_negative_adjustments = StockAdjustment.objects.filter(
+            product=product,
+            created_at__date__lte=prev_date,
+            adjustment_type='subtract'
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+
+        prev_orders = Order.objects.filter(
+            product=product,
+            order_date__lte=prev_date
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+
+        opening_stock = (prev_new_stock or 0) + (prev_positive_adjustments or 0) - (prev_orders or 0) - (prev_negative_adjustments or 0)
+
+        closing_stock = stock_in + stock_out
+
+        total_stock_in += stock_in_total
+        total_stock_out += stock_out_total
+        total_adjustments += net_adjustments
+
         stock_transactions.append({
             'product_name': product.name,
             'opening_stock': opening_stock,
-            'stock_in': stock_in,
-            'stock_out': stock_out,
-            'positive_adjustments': positive_adjustments,
-            'negative_adjustments': negative_adjustments,
+            'stock_in': stock_in_total,
+            'stock_out': stock_out_total,
+            'net_adjustments': net_adjustments,
             'closing_stock': closing_stock,
-            'net_adjustments': net_adjustments
+            'category_name': product.category.name if product.category else 'N/A'
         })
 
     total_opening_stock = sum(t['opening_stock'] for t in stock_transactions)
     total_closing_stock = sum(t['closing_stock'] for t in stock_transactions)
-    calculated_total_closing = (
-        total_opening_stock + 
-        total_stock_in + 
-        total_adjustments_in - 
-        total_stock_out - 
-        total_adjustments_out
-    )
 
     orders = Order.objects.filter(order_date=selected_date)
     total_customers = orders.values('customer').distinct().count()
     total_orders = orders.count()
-    
+    categories = Category.objects.all()
+
     total_cash_made = Order.objects.filter(
         order_date=selected_date
     ).aggregate(total=Sum('final_total'))['total'] or 0
-    
+
     total_quantity_sold = Order.objects.filter(
         order_date=selected_date
     ).aggregate(total=Sum('quantity'))['total'] or 0
@@ -404,8 +525,7 @@ def report_page(request):
         total_opening_stock == 0,
         total_stock_in == 0,
         total_stock_out == 0,
-        total_adjustments_in == 0,
-        total_adjustments_out == 0,
+        total_adjustments == 0,
         total_closing_stock == 0,
         total_cash_made == 0,
         total_quantity_sold == 0
@@ -413,88 +533,25 @@ def report_page(request):
 
     context = {
         'selected_date': selected_date_str,
+        'selected_category': selected_category,
         'orders': orders,
+        'categories': categories,
         'products': products,
         'stock_transactions': stock_transactions,
         'total_opening_stock': total_opening_stock,
         'total_stock_in': total_stock_in,
         'total_stock_out': total_stock_out,
-        'total_adjustments_in': total_adjustments_in,
-        'total_adjustments_out': total_adjustments_out,
+        'total_adjustments': total_adjustments,
         'total_closing_stock': total_closing_stock,
-        'calculated_total_closing': calculated_total_closing,
         'total_customers': total_customers,
         'total_orders': total_orders,
-        'stock_adjustments':stock_adjustments,
+        'stock_adjustments': stock_adjustments,
         'total_cash_made': total_cash_made,
         'total_quantity_sold': total_quantity_sold,
         'all_zeros': all_zeros,
     }
 
     return render(request, 'InvApp/report.html', context)
-
-
-@login_required
-def home_view(request):
-    selected_date = request.GET.get('orderDate', str(date.today()))
-    selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
-
-    stocks = Stock.objects.filter(stock_date=selected_date)
-    orders = Order.objects.filter(order_date=selected_date)
-    stock_adjustments = StockAdjustment.objects.filter(created_at__date=selected_date)
-
-    low_stock_items = Product.objects.filter(quantity_in_stock__lt=F('reorder_level')).values(
-        'name', 'quantity_in_stock', 'reorder_level', 'reorder_quantity'
-    )
-
-    total_orders = orders.count()
-    total_customers = orders.values('customer').distinct().count()
-    total_cash_made = orders.aggregate(Sum('final_total'))['final_total__sum'] or 0
-    total_quantity = orders.aggregate(Sum('quantity'))['quantity__sum'] or 0
-    total_products = Product.objects.count()
-    low_stock_count = low_stock_items.count()
-    categories = Category.objects.count()
-    suppliers = Supplier.objects.count()
-    batch_sku = ProductBatch.objects.all()
-
-    total_new_stock = stocks.aggregate(Sum('new_stock'))['new_stock__sum'] or 0
-    total_adjustments = stock_adjustments.filter(adjustment_type='add').aggregate(Sum('quantity'))['quantity__sum'] or 0
-    total_stock_in = total_new_stock + total_adjustments
-
-    tol_adjustments = stock_adjustments.filter(adjustment_type='subtract').aggregate(Sum('quantity'))['quantity__sum'] or 0
-    stock_out = total_quantity + tol_adjustments
-    adjust_total = total_adjustments + tol_adjustments
-    average_adjustments = adjust_total
-
-    total_quantity_in_stock = Product.objects.aggregate(Sum('quantity_in_stock'))['quantity_in_stock__sum'] or 0
-
-    recent_orders = orders.order_by('-order_date')[:5].select_related('customer')
-
-    context = {
-        'stock_out': stock_out,
-        'total_orders': total_orders,
-        'categories': categories,
-        'batch_sku': batch_sku,
-        'suppliers': suppliers,
-        'total_customers': total_customers,
-        'total_cash_made': total_cash_made,
-        'total_quantity': total_quantity,
-        'total_products': total_products,
-        'total_stock_in': total_stock_in,
-        'total_stock_out': tol_adjustments,
-        'total_quantity_in_stock': total_quantity_in_stock,
-        'low_stock_items': low_stock_items,
-        'recent_orders': recent_orders,
-        'low_stock_count': low_stock_count,
-        'adjust_total': adjust_total,
-        'total_new_stock': total_new_stock,
-        'total_adjustments': total_adjustments,
-        'tol_adjustments': tol_adjustments,
-        'average_adjustments': average_adjustments,
-        'selected_date': selected_date,
-    }
-
-    return render(request, 'InvApp/home.html', context)
 
 
 
@@ -538,6 +595,9 @@ def catalog(request):
     }
 
     return render(request, 'InvApp/catalog.html', context)
+
+
+
 def stock_adjustments(request):
     selected_date = request.GET.get('date', datetime.today().strftime('%Y-%m-%d'))
 
@@ -559,7 +619,6 @@ def stock_adjustments(request):
         batch = ProductBatch.objects.get(id=batch_id) 
         if not batch:
             batch = None
-
         
         adjustment = StockAdjustment.objects.create(
             product=product,
@@ -622,6 +681,7 @@ def stock_adjustments(request):
         return render(request, 'InvApp/adjust.html', context)
 
 
+
 def stock_view(request):
     selected_date = request.GET.get('stockDate', str(date.today()))
     try:
@@ -669,7 +729,6 @@ def stock_view(request):
 
     stock_alerts = get_stock_alerts()
 
-    # Chart data
     top_products = Stock.objects.values(
         'product__name'
     ).annotate(
@@ -683,7 +742,6 @@ def stock_view(request):
         total_stock=Sum('total_stock')
     ).order_by('-count')
 
-    # Batch processing
     def annotate_batch_status(queryset):
         today = date.today()
         for batch in queryset:
@@ -734,24 +792,24 @@ def stock_view(request):
     
     return render(request, 'InvApp/stock.html', context)
 
-from django.db import transaction
+
+
 
 def add_stock(request):
     if request.method == 'POST':
         try:
             with transaction.atomic():  
-                # Get required parameters
+                # Get  parameters
                 product_id = request.POST.get('product_id')
                 product = get_object_or_404(Product, product_id=product_id)
                 supplier_id = request.POST.get('supplier_id')
 
-                # Validate supplier
+                # Validate 
                 if not supplier_id:
                     return HttpResponse("Error: Supplier is required!", status=400)
                 
                 supplier = get_object_or_404(Supplier, id=supplier_id)
 
-                # Validate and parse numerical values
                 try:
                     new_stock = int(request.POST.get('newStock', 0))
                     if new_stock <= 0:
@@ -759,11 +817,10 @@ def add_stock(request):
                 except ValueError:
                     return HttpResponse("Error: Invalid stock quantity!", status=400)
 
-                # Parse other values
+            
                 batch_sku = request.POST.get('batch_sku', '')
                 buying_price = float(request.POST.get('buying_price', 0))
                 
-                # Parse dates with validation
                 try:
                     manufacture_date = request.POST.get('manufacture_date')
                     expiry_date = request.POST.get('expiryDate')
@@ -784,7 +841,8 @@ def add_stock(request):
                     batch_sku=batch_sku,
                     buying_price=buying_price,
                     initial_quantity=new_stock,  
-                    current_quantity=new_stock,   
+                    current_quantity=new_stock,
+                    expiry_date=expiry_date,  
                     manufacture_date=manufacture_date,
                     stock_date=stock_date,
                 )
@@ -801,10 +859,8 @@ def add_stock(request):
                 return redirect('stock')
 
         except Exception as e:
-            # Log the error here
             return HttpResponse(f"Error processing request: {str(e)}", status=500)
 
-    # GET request handling
     products = Product.objects.all()
     context = {
         'products': products,
@@ -813,8 +869,9 @@ def add_stock(request):
     return render(request, 'InvApp/stock.html', context)
 
 
-logger = logging.getLogger(__name__)
 
+
+logger = logging.getLogger(__name__)
 def report_analysis(request):
     today = timezone.now().date()
     thirty_days_ago = today - timedelta(days=30)
