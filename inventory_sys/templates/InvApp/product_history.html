@@ -347,7 +347,6 @@
                                     <th>Quantity</th>
                                     <th>Reason</th>
                                     <th>User</th>
-                                    <th>Notes</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -364,8 +363,7 @@
                                         {{ adj.quantity }} {{ product.units }}
                                     </td>
                                     <td>{{ adj.reason }}</td>
-                                    <td>{{ adj.user.username }}</td>
-                                    <td>{{ adj.notes|default:"-" }}</td>
+                                    <td>{{ request.user}}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>

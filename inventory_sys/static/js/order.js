@@ -106,7 +106,6 @@ document.addEventListener("DOMContentLoaded", function () {
         $('#newStatus').toggle(action === 'update_status');
     });
 
-    // Initialize default prices
     $('.product-item').each(function() {
         updateTotalPrice($(this));
     });
@@ -122,12 +121,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectAllCheckbox = document.getElementById('selectAll');
     const orderCheckboxes = document.querySelectorAll('.order-checkbox');
     
-    // Show/hide status dropdown based on action selection
     bulkAction.addEventListener('change', function() {
         newStatus.style.display = this.value === 'update_status' ? 'inline-block' : 'none';
     });
     
-    // Select all/deselect all functionality
     selectAllCheckbox.addEventListener('change', function() {
         orderCheckboxes.forEach(checkbox => {
             checkbox.checked = this.checked;
@@ -135,16 +132,13 @@ document.addEventListener('DOMContentLoaded', function() {
         updateApplyButton();
     });
     
-    // Update apply button state based on checkbox selection
     function updateApplyButton() {
         const checkedBoxes = document.querySelectorAll('.order-checkbox:checked');
         applyButton.disabled = checkedBoxes.length === 0;
     }
     
-    // Add event listeners to all order checkboxes
     orderCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
-            // Uncheck "select all" if any checkbox is unchecked
             if (!this.checked && selectAllCheckbox.checked) {
                 selectAllCheckbox.checked = false;
             }
@@ -152,7 +146,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Form submission validation
     bulkActionForm.addEventListener('submit', function(e) {
         const checkedBoxes = document.querySelectorAll('.order-checkbox:checked');
         const selectedAction = bulkAction.value;
@@ -175,7 +168,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Confirm destructive actions
         if (selectedAction === 'delete') {
             if (!confirm(`Are you sure you want to delete ${checkedBoxes.length} order(s)? This action cannot be undone.`)) {
                 e.preventDefault();

@@ -234,7 +234,7 @@
                                         <select name="products[]" class="form-select rounded-3 product-select" required>
                                             <option value="">Select Product</option>
                                             {% for product in products %}
-                                                <option value="{{ product.product_id }}" data-price="{{ product.price_per_unit|default:0.0 }}">
+                                                <option value="{{ product.product_id }}" data-price="{{ product.selling_price|default:0.0 }}">
                                                     {{ product.name }} (Stock: {{ product.quantity_in_stock }} {{ product.units }})
                                                 </option>
                                             {% endfor %}
@@ -328,5 +328,4 @@
         </div>
     </div>
 </div>
-
 {% endblock %}

@@ -117,8 +117,10 @@
                                 </div>
                             </td>
                             <td>
-                                {% if adjustment.batch_sku %}
-                                    {{ adjustment.batch_sku.batch_sku }}
+                                {% if adjustment.batch.batch_sku %}
+
+                                    {{ adjustment.batch.batch_sku }}
+                                    
                                 {% else %}
                                     <span class="text-muted">N/A</span>
                                 {% endif %}
@@ -154,7 +156,6 @@
             </div>
         </div>  
     </div>
-
     <!-- Stock Adjustment Modal -->
     <div class="modal fade" id="stockAdjustmentModal" tabindex="-1" aria-labelledby="stockAdjustmentModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -303,4 +304,38 @@
     </div>
     {% endfor %}
 </div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Stock adjustment calculations
+        function updateStockCalculations(prefix = '') {
+            const productSelect = document.getElementById(`product_id${prefix}`);
+            const adjustmentType = document.getElementById(`adjustment_type${prefix}`);
+            const quantityInput = document.getElementById(`quantity${prefix}`);
+            const currentStockInput = document.getElementById(`current_stock${prefix}`);
+            const afterAdjustmentInput = document.getElementById(`after_adjustment${prefix}`);
+    
+            function updateFields() {
+                const selectedOption = productSelect.options[productSelect.selectedIndex];
+                const currentStock = selectedOption ? parseInt(selectedOption.dataset.stock) || 0 : 0;
+                const quantity = parseInt(quantityInput.value) || 0;
+                const isAdd = adjustmentType.value === 'add';
+                
+                currentStockInput.value = currentStock;
+                afterAdjustmentInput.value = isAdd ? currentStock + quantity : currentStock - quantity;
+            }
+    
+            productSelect.addEventListener('change', updateFields);
+            adjustmentType.addEventListener('change', updateFields);
+            quantityInput.addEventListener('input', updateFields);
+            updateFields();
+        }
+    
+        updateStockCalculations();
+        // {% for adjustment in stock_adjustments_list %}
+        // updateStockCalculations('_{{ adjustment.id }}');
+        // {% endfor %}
+    });
+    </script>
 {% endblock %}
