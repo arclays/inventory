@@ -1,480 +1,210 @@
-{% extends "InvApp/layout.html" %}
-{% block title %}Dashboard{% endblock %}
 
-{% block content %}
-{% load static %}
-<div class="container-fluid pt-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-5 p-3 rounded " style="background: linear-gradient(135deg, #ffffff 0%, #8d8c8c 100%); color: #fff;">
-        <div>
-            <h1 class="fw-bold mb- text-dark"><i class="bi bi-tachometer-alt me-2"></i> Dashboard</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0" style="background: none;">
-                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-dark text-decoration-none">Home</a></li>
-                    <li class="breadcrumb-item active" aria-current="page" style="color: #1077df;">Dashboard</li>
-                </ol>
-            </nav>
-        </div>
-        <div>
-            <button class="btn btn-outline-light me-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#quickOrderModal">
-                <i class="fas fa-shopping-cart me-1"></i> Quick Order
-            </button>
-            <button type="button" class="btn btn-outline-light me-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
-                <i class="bi bi-plus-circle-fill me-2"></i> Add Customer
-            </button>
-        </div>
-    </div>
+def product_history(request, product_id):
+
+    product = Product.objects.get(product_id=product_id)
     
-  <!-- Filter Section -->
+    product_batches = ProductBatch.objects.filter(product=product).select_related('product', 'supplier').order_by('-stock_date')
+    
+    for batch in product_batches:
+        activities = []
+        for order in Order.objects.filter(batch_sku=batch.batch_sku).select_related('customer'):
+            activities.append({
+                'date': order.order_date,
+                'activity_type': 'Order',
+                'quantity': -order.quantity, 
+                'reference': f"Order #{order.id}",
+                'user': order.customer or {'username': 'System'}
+            })
+        # Adjustments
+        for adj in StockAdjustment.objects.filter(batch=batch).select_related('user'):
+            activities.append({
+                'date': adj.created_at,
+                'activity_type': adj.get_adjustment_type_display(),
+                'quantity': adj.quantity if adj.adjustment_type == 'add' else -adj.quantity,
+                'reference': adj.reason,
+                'user': adj.user or {'username': 'System'}
+            })
+        # Batch receipt
+        activities.append({
+            'date': batch.stock_date,
+            'activity_type': 'Received',
+            'quantity': batch.initial_quantity,
+            'reference': 'Batch Receipt',
+            'user': {'username': 'System'}
+        })
+        activities.sort(key=lambda x: x['date'], reverse=True)
+        batch.activities = activities
+    
+    # Combined activity
+    combined_activity = []
+    for batch in product_batches:
+        combined_activity.append({
+            'date': batch.stock_date,
+            'event_type': 'batch',
+            'description': f"Batch {batch.batch_sku} added with {batch.initial_quantity} {product.units}",
+            'quantity': batch.initial_quantity,
+            'customer': {'name': 'System'}
+        })
+    
+    orders = Order.objects.filter(product=product).select_related('batch', 'customer').order_by('-order_date')
+    for order in orders:
+        combined_activity.append({
+            'date': order.order_date,
+            'event_type': 'order',
+            'description': f"Order #{order.id} placed for {order.quantity} {product.units}" + (f" from batch {order.batch.batch_sku}" if order.batch else ""),
+            'quantity': order.quantity,
+            'customer': order.customer or {'name': 'System'}
+        })
+    
+    adjustments = StockAdjustment.objects.filter(product=product).select_related('batch', 'user').order_by('-created_at')
+    for adj in adjustments:
+        combined_activity.append({
+            'date': adj.created_at.date(),
+            'event_type': 'adjustment',
+            'description': f"Stock {adj.adjustment_type} of {adj.quantity} {product.units} ({adj.reason})" + (f" for batch {adj.batch.batch_sku}" if adj.batch else ""),
+            'quantity': adj.quantity if adj.adjustment_type == 'add' else -adj.quantity,
+            'customer': adj.user or {'name': 'System'}
+        })
+    
+    # Sort by date descending
+    combined_activity.sort(key=lambda x: x['date'], reverse=True)
+    
+    # Paginate combined activity
+    activity_paginator = Paginator(combined_activity, 10)
+    activity_page = request.GET.get('page', 1)
+    combined_activity = activity_paginator.get_page(activity_page)
+    
+    # Paginate orders
+    orders_paginator = Paginator(orders, 10)
+    orders_page = request.GET.get('page', 1)
+    orders = orders_paginator.get_page(orders_page)
+    
+    # Paginate adjustments
+    adjustments_paginator = Paginator(adjustments, 10)
+    adjustments_page = request.GET.get('page', 1)
+    adjustments = adjustments_paginator.get_page(adjustments_page)
+    
+    # Sales data for last 12 months
+    today = datetime.now().date()
+    sales_labels = []
+    sales_data = []
+    for i in range(11, -1, -1):
+        month_start = (today - relativedelta(months=i)).replace(day=1)
+        month_end = (month_start + relativedelta(months=1)) - timedelta(days=1)
+        sales_labels.append(month_start.strftime("%b %Y"))
+        monthly_sales = Order.objects.filter(
+            product=product,
+            order_date__gte=month_start,
+            order_date__lte=month_end
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+        sales_data.append(monthly_sales)
+    
+    # Batch data for charts
+    batch_labels = [f"Batch {batch.batch_sku}" for batch in product_batches]
+    batch_quantities = [batch.current_quantity for batch in product_batches]
+    
+    # Product metrics
+    thirty_days_ago = today - timedelta(days=30)
+    total_sold_last_30_days = Order.objects.filter(
+        product=product, order_date__gte=thirty_days_ago
+    ).aggregate(total=Sum('quantity'))['total'] or 0
+    
+    yearly_sales = Order.objects.filter(
+        product=product, order_date__gte=today - timedelta(days=365)
+    ).aggregate(total=Sum('quantity'))['total'] or 0
+    avg_monthly_sales = yearly_sales / 12 if yearly_sales else 0
+    
+    suggested_reorder_quantity = product.reorder_level * 2 if product.reorder_level else 0
+    
+    expiring_batches_count = product_batches.filter(
+        expiry_date__lte=today + timedelta(days=30),
+        expiry_date__gte=today
+    ).count()
+    
+    context = {
+        'product': product,
+        'product_batches': product_batches,  # Added for Batch History tab
+        'combined_activity': combined_activity,
+        'orders': orders,
+        'adjustments': adjustments,
+        'total_sold_last_30_days': total_sold_last_30_days,
+        'avg_monthly_sales': avg_monthly_sales,
+        'suggested_reorder_quantity': suggested_reorder_quantity,
+        'expiring_batches_count': expiring_batches_count,
+        'sales_labels': sales_labels,
+        'sales_data': sales_data,
+        'batch_labels': batch_labels,
+        'batch_quantities': batch_quantities,
+        'active_tab': request.GET.get('tab', 'activity'),
+    }
+    
+    return render(request, 'InvApp/product_history.html', context)
 
-  <div class="float-end">
-    <form method="GET" action="{% url 'home' %}" class="d-inline-block me-2">
-        <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-calendar"></i></span>
-            <input type="text" name="daterange" id="daterange" class="form-control" value="{{ start_date }} - {{ end_date }}" readonly aria-label="Select date range">
-            <button type="submit" class="btn btn-primary">Apply</button>
-            <a href="{% url 'home' %}" class="btn btn-secondary">Reset</a>
-        </div>
-        <input type="hidden" name="start_date" id="start_date">
-        <input type="hidden" name="end_date" id="end_date">
-        <!-- Preserve other filters -->
-    </form>
-</div>
 
-  <div class="position-relative mb-4">
-    <i class="bi bi-funnel-fill fs-3 text-success position-absolute end-0 me-3" style="cursor: pointer; top: 10px;" data-bs-toggle="collapse" data-bs-target="#dateRangeFilters" aria-expanded="false" aria-controls="dateRangeFilters"></i>
-    <div class="collapse" id="dateRangeFilters">
-      <div class="card col-md-6 mx-auto border-0 shadow-sm rounded-3" style="background: #ffffff;">
-        <div class="card-body p-4">
-          <form class="row g-3 align-items-center">
-            <div class="col-md-3">
-              <label for="startDate" class="form-label fw-bold">From</label>
-              <input type="date" class="form-control rounded-3" id="startDate" value="{{ default_start_date }}">
-            </div>
-            <div class="col-md-3">
-              <label for="endDate" class="form-label fw-bold">To</label>
-              <input type="date" class="form-control rounded-3" id="endDate" value="{{ default_end_date }}">
-            </div>
-           
-            <div class="col-md-3 d-flex align-items-end">
-              <button type="submit" class="btn btn-success w-100 rounded-3"><i class="bi bi-check-circle-fill me-1"></i> Apply</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-    <!-- Filters -->
-    <div class="card shadow-sm mb-4 border-0 rounded-3">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center bg-light">
-            <h6 class="m-0 fw-bold text-info"><i class="bi bi-funnel me-2"></i> Filters</h6>
-            <i class="bi bi-funnel-fill fs-5 text-info" id="filterToggle" style="cursor: pointer;"></i>
-        </div>
-        <div class="card-body" id="filterPanel" style="display: none;">
-            <form method="GET">
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-3">
-                        <label for="start_date" class="form-label fw-bold">Start Date</label>
-                        <input type="date" class="form-control rounded-3" id="start_date" name="start_date" value="{{ start_date }}">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="end_date" class="form-label fw-bold">End Date</label>
-                        <input type="date" class="form-control rounded-3" id="end_date" name="end_date" value="{{ end_date }}">
-                    </div>
-                        <div class="col-md-3">
-                            <label for="reportPeriod" class="form-label fw-bold">Period</label>
-                            <select class="form-select rounded-3" id="reportPeriod">
-                              <option value="daily">Daily</option>
-                              <option value="weekly" selected>Weekly</option>
-                              <option value="monthly">Monthly</option>
-                              <option value="quarterly">Quarterly</option>
-                              <option value="yearly">Yearly</option>
-                            </select>
-                          </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-info w-100 rounded-3"><i class="bi bi-check-circle me-1"></i> Apply Filters</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <!-- Summary Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100 border-0 rounded-3" style="background: #f8f9fa; border-left: 4px solid #0dcaf0;">
-                <div class="card-body d-flex align-items-center">
-                    <i class="fas fa-shopping-cart fa-2x text-info me-3"></i>
-                    <div>
-                        <h6 class="text-muted mb-0">Total Orders</h6>
-                        <h3 class="fw-bold mb-0 text-info">{{ total_orders }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100 border-0 rounded-3" style="background: #f8f9fa; border-left: 4px solid #28a745;">
-                <div class="card-body d-flex align-items-center">
-                    <i class="fas fa-users fa-2x text-success me-3"></i>
-                    <div>
-                        <h6 class="text-muted mb-0">Total Customers</h6>
-                        <h3 class="fw-bold mb-0 text-success">{{ total_customers }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100 border-0 rounded-3" style="background: #f8f9fa; border-left: 4px solid #17a2b8;">
-                <div class="card-body d-flex align-items-center">
-                    <i class="fas fa-warehouse fa-2x text-info me-3"></i>
-                    <div>
-                        <h6 class="text-muted mb-0">New Stock In</h6>
-                        <h3 class="fw-bold mb-0 text-info">{{ total_stock_in }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100 border-0 rounded-3" style="background: #f8f9fa; border-left: 4px solid #ffc107;">
-                <div class="card-body d-flex align-items-center">
-                    <i class="fas fa-exclamation-triangle fa-2x text-warning me-3"></i>
-                    <div>
-                        <h6 class="text-muted mb-0">Low Stock Items</h6>
-                        <h3 class="fw-bold mb-0 text-warning">{{ low_stock_count }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100 border-0 rounded-3" style="background: #f8f9fa; border-left: 4px solid #343a40;">
-                <div class="card-body d-flex align-items-center">
-                    <i class="fas fa-box fa-2x text-dark me-3"></i>
-                    <div>
-                        <h6 class="text-muted mb-0">Total Products</h6>
-                        <h3 class="fw-bold mb-0 text-dark">{{ total_products }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100 border-0 rounded-3" style="background: #f8f9fa; border-left: 4px solid #6c757d;">
-                <div class="card-body d-flex align-items-center">
-                    <i class="fas fa-layer-group fa-2x text-secondary me-3"></i>
-                    <div>
-                        <h6 class="text-muted mb-0">Total Categories</h6>
-                        <h3 class="fw-bold mb-0 text-secondary">{{ categories }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100 border-0 rounded-3" style="background: #f8f9fa; border-left: 4px solid #0dcaf0;">
-                <div class="card-body d-flex align-items-center">
-                    <i class="fas fa-tools fa-2x text-info me-3"></i>
-                    <div>
-                        <h6 class="text-muted mb-0">Stock Adjustments</h6>
-                        <h3 class="fw-bold mb-0 text-info">{{ stock_adjustments }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100 border-0 rounded-3" style="background: #f8f9fa; border-left: 4px solid #28a745;">
-                <div class="card-body d-flex align-items-center">
-                    <i class="fas fa-dollar-sign fa-2x text-success me-3"></i>
-                    <div>
-                        <h6 class="text-muted mb-0">Total Cash Made</h6>
-                        <h3 class="fw-bold mb-0 text-success">UGX: {{ total_cash_made|floatformat:1 }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    
+def product_history(request, product_id):
+product = get_object_or_404(Product, pk=product_id)
 
-    <!-- Charts -->
-    <div class="row g-4 mb-4 mt-5">
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header  text-primary d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Sales Analytics</h5>
-                    <i class="bi bi-bar-chart-fill fs-5"></i>
-                </div>
-                <div class="card-body">
-                    <canvas id="salesChart" height="200" style="background: #f8f9fa; border-radius: 10px;"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header  text-success d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Product Trends</h5>
-                    <i class="bi bi-graph-up fs-5"></i>
-                </div>
-                <div class="card-body">
-                    <canvas id="stockChart" height="200" style="background: #f8f9fa; border-radius: 10px;"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
+combined_activity = []
 
-    <!-- Tables -->
-    <div class="row g-4 mt-5">
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="card-title text-info mb-0">Recent Orders</h5>
-                    <a href="{% url 'order_page' %}" class="btn btn-sm btn-outline-info">View All</a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                            <table id="example" class="table table-striped" style="width:100%">
-                            <thead class="table-light">
-                                <tr>
-                                    <th><a href="?sort_by=id" class="text-info text-decoration-none">Order ID</a></th>
-                                    <th><a href="?sort_by=customer__name" class="text-info text-decoration-none">Customer</a></th>
-                                    <th><a href="?sort_by=product__name" class="text-info text-decoration-none">Product</a></th>
-                                    <th>Batch/SKU</th>
-                                    <th><a href="?sort_by=quantity" class="text-info text-decoration-none">Qty</a></th>
-                                    <th><a href="?sort_by=final_total" class="text-info text-decoration-none">Amount</a></th>
-                                    <th><a href="?sort_by=status" class="text-info text-decoration-none">Status</a></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for order in recent_orders %}
-                                <tr>
-                                    <td>{{ order.id }}</td>
-                                    <td>{{ order.customer.name }}</td>
-                                    <td>{{ order.product.name }}</td>
-                                    <td>{{ order.batch_sku.batch_sku|default:"N/A" }}</td>
-                                    <td>{{ order.quantity }}</td>
-                                    <td>UGX {{ order.final_total|floatformat:2 }}</td>
-                                    <td>
-                                        <span class="badge bg-{% if order.status == 'completed' %}success{% elif order.status == 'pending' %}warning{% else %}danger{% endif %}">
-                                            {{ order.status|title }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
-                                        <i class="bi bi-info-circle fs-3"></i>
-                                        <p>No recent orders.</p>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="card-title text-info mb-0">Low Stock Items</h5>
-                    <a href="{% url 'stock' %}" class="btn btn-sm btn-outline-info">View All</a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-bordered">
-                            <table id="example" class="table table-striped" style="width:100%">
-                            <thead class="table-light">
-                                <tr>
-                                    <th><a href="?sort_by=name" class="text-info text-decoration-none">Product</a></th>
-                                    <th><a href="?sort_by=category__name" class="text-info text-decoration-none">Category</a></th>
-                                    <th><a href="?sort_by=quantity_in_stock" class="text-info text-decoration-none">Current Stock</a></th>
-                                    <th><a href="?sort_by=reorder_level" class="text-info text-decoration-none">Reorder Level</a></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in low_stock_items %}
-                                <tr>
-                                    <td>{{ item.name }}</td>
-                                    <td>{{ item.category.name }}</td>
-                                    <td>{{ item.quantity_in_stock }}</td>
-                                    <td>{{ item.reorder_level }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">
-                                        <i class="bi bi-check-circle fs-3 text-success"></i>
-                                        <p>No low stock items.</p>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+for batch in product.productbatch_set.all():
 
-    <!-- Quick Order Modal -->
-    <div class="modal fade" id="quickOrderModal" tabindex="-1" aria-labelledby="quickOrderModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content rounded-3">
-                <form method="POST" action="{% url 'place_order' %}">
-                    {% csrf_token %}
-                    <div class="modal-header" style="background: linear-gradient(135deg, #0dcaf0 0%, #007bff 100%); color: #fff;">
-                        <h5 class="modal-title fw-bold fs-2" id="quickOrderModalLabel"><i class="fas fa-shopping-cart me-2"></i> Quick Order</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    
-                    <div class="modal-body">
-                        <!-- Customer Selection -->
-                        <div class="mb-4">
-                            <label for="orderCustomer" class="form-label fw-bold">Customer</label>
-                            <select id="orderCustomer" name="orderCustomer" class="form-select rounded-3" required>
-                                <option value="">Select Customer</option>
-                                {% for customer in customers %}
-                                    <option value="{{ customer.id }}">{{ customer.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+    combined_activity.append({
+        'date': batch.stock_date,
+        'event_type': 'batch',
+        'description': f"Batch {batch.batch_sku} added with {batch.initial_quantity} {product.units}",
+        'quantity': batch.initial_quantity
+    })
 
-                        <!-- Product Items -->
-                        <div id="product-container">
-                            <div class="product-item mb-4 border p-3 rounded-3" style="background: #f8f9fa;">
-                                <div class="row g-3">
-                                    <div class="col-md-3">
-                                        <label class="form-label fw-bold">Product</label>
-                                        <select name="products[]" class="form-select rounded-3 product-select" required>
-                                            <option value="">Select Product</option>
-                                            {% for product in products %}
-                                                <option value="{{ product.product_id }}" data-price="{{ product.price_per_unit|default:0.0 }}">
-                                                    {{ product.name }} (Stock: {{ product.quantity_in_stock }} {{ product.units }})
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label fw-bold">Batch/SKU (Optional)</label>
-                                        <select name="batch_sku[]" class="form-select rounded-3 batch-sku-select">
-                                            <option value="">No Batch</option>
-                                            {% for batch in product_batches %}
-                                                <option value="{{ batch.id }}">{{ batch.batch_sku }} (Stock: {{ batch.initial_quantity }})</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label fw-bold">Quantity</label>
-                                        <input type="number" name="orderQuantity[]" class="form-control rounded-3 quantity" min="1" required />
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label fw-bold">Unit</label>
-                                        <select name="units[]" class="form-select rounded-3 unit" required>
-                                            <option value="piece">Piece</option>
-                                            <option value="kgs">Kgs</option>
-                                            <option value="litres">litres</option>
-                                            <option value="mg">mg</option>
-                                            <option value="dozen">Dozen</option>
-                                            <option value="box">Box</option>
-                                            <option value="carton">Carton</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label fw-bold">Price/Unit</label>
-                                        <input type="number" name="price_per_unit[]" class="form-control rounded-3 price-per-unit" step="0.01" required />
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label fw-bold">Discount (%)</label>
-                                        <input type="number" name="productDiscount[]" class="form-control rounded-3 discount" min="0" max="100" value="0" step="0.1" />
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label fw-bold">Total Price</label>
-                                        <input type="number" name="totalPrice[]" class="form-control rounded-3 total-price" readonly />
-                                    </div>
-                                    <div class="col-md-2 d-flex align-items-end">
-                                        <button type="button" class="btn btn-danger rounded-3 remove-product w-100"><i class="bi bi-trash-fill"></i> Remove</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    orders = product.order_set.all().order_by('-order_date')
 
-                        <!-- Add Product Button -->
-                        <button type="button" id="add-product" class="btn btn-info rounded-3 w-100 mb-4"><i class="bi bi-plus-circle-fill me-2"></i> Add Another Product</button>
+for order in orders:
+    combined_activity.append({
+        'date': order.order_date,
+        'event_type': 'order',
+        'user': order.customer,
+        'quantity': order.quantity
+    })
 
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label for="orderDate" class="form-label fw-bold">Order Date</label>
-                                <input type="date" id="orderDate" name="orderDate" class="form-control rounded-3" value="{{ selected_date }}" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="paymentMethod" class="form-label fw-bold">Payment Method</label>
-                                <select id="paymentMethod" name="paymentMethod" class="form-select rounded-3" required>
-                                    {% for method in payment_methods %}
-                                        <option value="{{ method }}">{{ method|title }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="finalTotal" class="form-label fw-bold">Final Total</label>
-                                <div class="input-group">
-                                    <span class="input-group-text rounded-3">UGX</span>
-                                    <input type="number" id="finalTotal" name="finalTotal" class="form-control rounded-3" readonly>
-                                </div>
-                            </div>
-                        </div>
+adjustments = product.stockadjustment_set.all().order_by('-created_at')
 
-                        <!-- Messages -->
-                        {% if messages %}
-                            <div class="mt-3">
-                                {% for message in messages %}
-                                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
-                                        <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% else %}exclamation-triangle-fill{% endif %} me-2"></i>
-                                        {{ message }}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-info rounded-3">Place Order</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+for adj in adjustments:
+    combined_activity.append({
+        'date': adj.created_at.date(),
+        'event_type': 'adjustment',
+        'description': f"Stock adjustment: {adj.quantity} {product.units} ({adj.reason})",
+        'quantity': adj.quantity
+    })
 
-    <!-- Adjust customer Modal -->
-    <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content rounded-3">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="addCustomerModalLabel"><i class="bi bi-person-plus-fill me-2"></i> Add Customer</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form method="POST" action="{% url 'customer_list' %}" autocomplete="off">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="name" class="form-label fw-bold">Customer Name</label>
-                            <input type="text" class="form-control rounded-3" id="name" name="name" value="{{ customer.customer.name|default_if_none:'' }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label fw-bold">Email</label>
-                            <input type="email" class="form-control rounded-3" id="email" name="email" value="{{ customer.customer.email|default_if_none:'' }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="phone" class="form-label fw-bold">Phone No</label>
-                            <input type="text" class="form-control rounded-3" id="phone" name="phone" value="{{ customer.customer.phone|default_if_none:'' }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="address" class="form-label fw-bold">Address</label>
-                            <input type="text" class="form-control rounded-3" id="address" name="address" value="{{ customer.customer.address|default_if_none:'' }}" required>
-                        </div>
-                        <div class="modal-footer border-0">
-                            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-success rounded-3"><i class="bi bi-check-circle-fill me-2"></i> Save Customer</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+ # Sort by date descending
+combined_activity.sort(key=lambda x: x['date'], reverse=True)
 
-{% endblock %}
+paginator = Paginator(combined_activity, 10)
+page_number = request.GET.get('page')
+page_obj = paginator.get_page(page_number)
+
+today = datetime.now()
+sales_labels = []
+sales_data = []
+
+for i in range(11, -1, -1):
+ month = today - relativedelta(months=i)
+ sales_labels.append(month.strftime("%b %Y"))
+ sales_data.append(0) 
+
+batch_labels = [f"Batch {batch.batch_sku}" for batch in product.productbatch_set.all()]
+batch_quantities = [batch.current_quantity for batch in product.productbatch_set.all()]
+
+context = {
+    'product': product,
+    'combined_activity': page_obj,
+    'orders': orders,
+    'adjustments': adjustments,
+    'sales_labels': sales_labels,
+    'sales_data': sales_data,
+    'batch_labels': batch_labels,
+    'batch_quantities' : batch_quantities,
+}
+
+return render(request, 'InvApp/product_history.html', context)

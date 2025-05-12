@@ -2,75 +2,72 @@
 {% block title %}Products{% endblock %}
 
 {% block content %}
-    <div class="container-fluid py-5  min-vh-100">
-        <!-- Header --> 
-        <div class="text-center mb-5">
-            <h1 class="display-4 fw-bold text-dark"><i class="bi bi-box-seam me-2"></i> Product List</h1>
-            <p class="text-muted">Manage your Products with ease</p>
-        </div>  
+<div class="container-fluid py-5 min-vh-100">
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-dark"><i class="bi bi-box-seam me-2"></i> Product List</h1>
+        <p class="text-muted">Manage your Products with ease</p>
+    </div>
 
     <!-- Filter and Search Controls -->
-<div class="card mb-3">
-    <div class="card-body">
-        <form method="GET" action="{% url 'product_list' %}" id="filterForm">
-            <div class="row g-3">
-                <!-- Category Filter -->
-                <div class="col-md-6">
-                    <label for="categoryFilter" class="form-label">Category</label>
-                    <select class="form-select" id="categoryFilter" name="category" onchange="this.form.submit()">
-                        <option value="">All Categories</option>
-                        {% for category in categories %}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form method="GET" action="{% url 'product_list' %}" id="filterForm">
+                <div class="row g-3 align-items-end">
+                    <!-- Category Filter -->
+                    <div class="col-md-6">
+                        <label for="categoryFilter" class="form-label">Category</label>
+                        <select class="form-select" id="categoryFilter" name="category" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
                             <option value="{{ category.id }}" {% if category.id|stringformat:"s" == category_id %}selected{% endif %}>
                                 {{ category.name }}
                             </option>
-                        {% endfor %}
-                    </select>
-                </div>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                <!-- Action Buttons -->
-                <div class="col-md-6 d-flex align-items-end">
-                    <div class="d-flex flex-wrap flex-md-nowrap gap-2 w-100 justify-content-md-end">
-                        <!-- Add Product Button -->
-                        <button type="button" class="btn btn-success d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#productModal">
-                            <i class="bi bi-plus-circle me-2"></i>
-                            Add Product
-                        </button>
-
-                        <!-- Download Dropdown -->
-                        <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle d-flex align-items-center"  type="button" ata-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-download me-2"></i>
-                                Download
+                    <!-- Action Buttons -->
+                    <div class="col-md-6">
+                        <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+                            <!-- Add Product Button -->
+                            <button type="button" class="btn btn-success d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#productModal">
+                                <i class="bi bi-plus-circle me-2"></i>Add Product
                             </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" id="exportExcel">Excel</a></li>
-                                <li><a class="dropdown-item" href="#" id="exportPDF">PDF</a></li>
-                                <li><a class="dropdown-item" href="#" id="exportCSV">CSV</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#" id="printTable">Print</a></li>
-                            </ul>
-                        </div>
 
-                        <!-- Reset Filters Button -->
-                        <a href="{% url 'product_list' %}" 
-                           class="btn btn-outline-secondary d-flex align-items-center">
-                            <i class="bi bi-arrow-counterclockwise me-2"></i>
-                            Reset Filters
-                        </a>
+                            <!-- Download Dropdown -->
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-download me-2"></i>Download
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="">Excel</a></li>
+                                    <li><a class="dropdown-item" href="">PDF</a></li>
+                                    <li><a class="dropdown-item" href="">CSV</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="javascript:window.print()">Print</a></li>
+                                </ul>
+                            </div>
+
+                            <!-- Reset Filters Button -->
+                            <a href="{% url 'product_list' %}" class="btn btn-outline-secondary d-flex align-items-center">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Filters
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
+
     <!-- Product Table -->
-    <div class="table-responsive mt-3">
-        <table id="example" class="table table-striped" style="width:100%">
+    <div class="table-responsive mt-4">
+        <table id="example" class="table table-striped table-hover" style="width:100%">
             <thead class="table-light">
                 <tr>
                     <th>No</th>
                     <th>Name</th>
-                    <th>Stock</th>
+                    <th class="text-center">Stock in</th>
                     <th>Units</th>
                     <th>Category</th>
                     <th>Price Per Unit</th>
@@ -79,7 +76,7 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody class="table-group-divider fs-6">
+            <tbody class="table-group-divider">
                 {% for product in page_obj %}
                 <tr>
                     <td>{{ product.product_id }}</td>
@@ -93,7 +90,7 @@
                     <td>{{ product.quantity_in_stock }}</td>
                     <td>{{ product.units }}</td>
                     <td>{{ product.category.name }}</td>
-                    <td>UGX:{{ product.selling_price }}</td>
+                    <td>UGX: {{ product.selling_price }}</td>
                     <td>{{ product.reorder_quantity }}</td>
                     <td>{{ product.reorder_level }}</td>
                     <td>
@@ -107,112 +104,14 @@
                         </div>
                     </td>
                 </tr>
-                <!-- Create Product Modal -->
-<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-info text-white">
-                <h3 class="modal-title fw-bold" id="productModalLabel">
-                    <i class="bi bi-box-seam me-2"></i>Add New Product
-                </h3>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            
-            <div class="modal-body p-4">
-                <form method="POST" action="{% url 'product_list' %}">
-                    {% csrf_token %}
-                    <div class="row g-4">
-                        <!-- Product Name -->
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <input type="text" class="form-control" id="productName" name="name" 
-                                       placeholder="Product Name" required>
-                                <label for="productName" class="text-muted">
-                                    <i class="bi bi-tag me-2"></i>Product Name
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Category Selection -->
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <select class="form-select" id="productCategory" name="category_id" required>
-                                    <option value="">Select Category</option>
-                                    {% for category in categories %}
-                                    <option value="{{ category.id }}">{{ category.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <label for="productCategory" class="text-muted">
-                                    <i class="bi bi-diagram-3 me-2"></i>Category
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Pricing Section -->
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <input type="number" step="0.01" class="form-control" id="sellingPrice" 
-                                       name="selling_price" placeholder="Selling Price" required>
-                                <label for="sellingPrice" class="text-muted">
-                                    <i class="bi bi-currency-dollar me-2"></i>Selling Price(UGX)
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Units -->
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <input type="text" class="form-control" id="productUnits" 
-                                       name="units" placeholder="Units" required>
-                                <label for="productUnits" class="text-muted">
-                                    <i class="bi bi-box2 me-2"></i>Units
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Inventory Management -->
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <input type="number" class="form-control" id="reorderQuantity" 
-                                       name="reorder_quantity" placeholder="Reorder Quantity">
-                                <label for="reorderQuantity" class="text-muted">
-                                    <i class="bi bi-arrow-repeat me-2"></i>Reorder Quantity
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <input type="number" class="form-control" id="reorderLevel" 
-                                       name="reorder_level" placeholder="Reorder Level">
-                                <label for="reorderLevel" class="text-muted">
-                                    <i class="bi bi-clipboard2-pulse me-2"></i>Reorder Level
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer border-0 pt-4">
-                        <button type="button" class="btn btn-lg btn-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-2"></i>Cancel
-                        </button>
-                        <button type="submit" class="btn btn-lg btn-info">
-                            <i class="bi bi-save me-2"></i>Add Product
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
                 <!-- Delete Modal -->
                 <div class="modal fade" id="deleteProductModal{{ product.product_id }}" tabindex="-1" aria-labelledby="deleteProductModalLabel{{ product.product_id }}" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Confirm Deletion</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title" id="deleteProductModalLabel{{ product.product_id }}">Confirm Deletion</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 Are you sure you want to delete "{{ product.name }}"?
@@ -227,55 +126,65 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Update Modal -->
                 <div class="modal fade" id="updateProductModal{{ product.product_id }}" tabindex="-1" aria-labelledby="updateProductModalLabel{{ product.product_id }}" aria-hidden="true">
-                    <div class="modal-dialog bg-light">
+                    <div class="modal-dialog modal-lg">
                         <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title fw-bold fs-2 text-info">Update Product</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <div class="modal-header bg-info text-white">
+                                <h5 class="modal-title fw-bold" id="updateProductModalLabel{{ product.product_id }}">Update Product</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <form method="POST" action="{% url 'product_update' product.product_id %}">
                                     {% csrf_token %}
-                                    <input type="hidden" name="product_id" value="{{ product.product_id }}">
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="name{{ product.product_id }}" class="form-label">Product Name</label>
-                                            <input type="text" class="form-control text-bg-light" id="name{{ product.product_id }}" name="name" value="{{ product.name|default_if_none:'' }}" required>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="name{{ product.product_id }}" name="name" value="{{ product.name|default_if_none:'' }}" required>
+                                                <label for="name{{ product.product_id }}">Product Name</label>
+                                            </div>
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="units{{ product.product_id }}" class="form-label">Units</label>
-                                            <input type="text" class="form-control text-bg-light" id="units{{ product.product_id }}" name="units" value="{{ product.units|default_if_none:'' }}" required>
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="units{{ product.product_id }}" name="units" value="{{ product.units|default_if_none:'' }}" required>
+                                                <label for="units{{ product.product_id }}">Units</label>
+                                            </div>
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="categoryname{{ product.product_id }}" class="form-label">Category</label>
-                                            <select id="categoryname{{ product.product_id }}" name="category_id" class="form-control text-bg-light" required>
-                                                <option value="">Select a category</option>
-                                                {% for category in categories %}
-                                                <option value="{{ category.id }}" {% if product.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>
-                                                {% endfor %}
-                                            </select>
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <select class="form-select" id="categoryname{{ product.product_id }}" name="category_id" required>
+                                                    <option value="">Select a category</option>
+                                                    {% for category in categories %}
+                                                    <option value="{{ category.id }}" {% if product.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <label for="categoryname{{ product.product_id }}">Category</label>
+                                            </div>
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="selling_price{{ product.product_id }}" class="form-label">Selling Price</label>
-                                            <input type="number" step="0.01" class="form-control text-bg-light" id="selling_price{{ product.product_id }}" name="selling_price" value="{{ product.selling_price|default_if_none:0 }}" required>
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input type="number" step="0.01" min="0" class="form-control" id="selling_price{{ product.product_id }}" name="selling_price" value="{{ product.selling_price|default_if_none:0 }}" required>
+                                                <label for="selling_price{{ product.product_id }}">Selling Price (UGX)</label>
+                                            </div>
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="reorder_quantity{{ product.product_id }}" class="form-label">Reorder Quantity</label>
-                                            <input type="number" class="form-control text-bg-light" id="reorder_quantity{{ product.product_id }}" name="reorder_quantity" value="{{ product.reorder_quantity|default_if_none:0 }}">
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input type="number" min="0" class="form-control" id="reorder_quantity{{ product.product_id }}" name="reorder_quantity" value="{{ product.reorder_quantity|default_if_none:0 }}">
+                                                <label for="reorder_quantity{{ product.product_id }}">Reorder Quantity</label>
+                                            </div>
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="reorder_level{{ product.product_id }}" class="form-label">Reorder Level</label>
-                                            <input type="number" class="form-control text-bg-light" id="reorder_level{{ product.product_id }}" name="reorder_level" value="{{ product.reorder_level|default_if_none:0 }}">
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input type="number" min="0" class="form-control" id="reorder_level{{ product.product_id }}" name="reorder_level" value="{{ product.reorder_level|default_if_none:0 }}">
+                                                <label for="reorder_level{{ product.product_id }}">Reorder Level</label>
+                                            </div>
                                         </div>
                                     </div>
-                                    <button type="submit" class="btn btn-outline-info">Update Product</button>
+                                    <div class="mt-4">
+                                        <button type="submit" class="btn btn-info">Update Product</button>
+                                    </div>
                                 </form>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             </div>
                         </div>
                     </div>
@@ -283,6 +192,76 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <!-- Create Product Modal -->
+    <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h3 class="modal-title fw-bold" id="productModalLabel">
+                        <i class="bi bi-box-seam me-2"></i>Add New Product
+                    </h3>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{% url 'product_list' %}">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="productName" name="name" placeholder="Product Name" required>
+                                    <label for="productName">Product Name</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="productCategory" name="category_id" required>
+                                        <option value="">Select Category</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="productCategory">Category</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="number" step="0.01" min="0" class="form-control" id="sellingPrice" name="selling_price" placeholder="Selling Price" required>
+                                    <label for="sellingPrice">Selling Price (UGX)</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="productUnits" name="units" placeholder="Units" required>
+                                    <label for="productUnits">Units</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="number" min="0" class="form-control" id="reorderQuantity" name="reorder_quantity" placeholder="Reorder Quantity">
+                                    <label for="reorderQuantity">Reorder Quantity</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="number" min="0" class="form-control" id="reorderLevel" name="reorder_level" placeholder="Reorder Level">
+                                    <label for="reorderLevel">Reorder Level</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 mt-4">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </button>
+                            <button type="submit" class="btn btn-info">
+                                <i class="bi bi-save me-2"></i>Add Product
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

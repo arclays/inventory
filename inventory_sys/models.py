@@ -37,6 +37,7 @@ class User(models.Model):
     email = models.EmailField(max_length=100, unique=True)
     username = models.CharField(max_length=50)
     password = models.CharField(max_length=100)
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
 
 
 class Customer(models.Model):

@@ -245,7 +245,7 @@
                                         <select name="batch_sku[]" class="form-select rounded-3 batch-sku-select">
                                             <option value="">No Batch</option>
                                             {% for batch in product_batches %}
-                                                <option value="{{ batch.id }}">{{ batch.batch_sku }} (Stock: {{ batch.initial_quantity }})</option>
+                                                <option value="{{ batch.id }}">{{ batch.batch_sku }} (Stock: {{ batch.current_quantity }})</option>
                                             {% endfor %}
                                         </select>
                                     </div>

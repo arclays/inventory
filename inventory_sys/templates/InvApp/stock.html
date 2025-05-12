@@ -41,7 +41,7 @@
     <!-- Main Tabs -->
     <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist" style="border-bottom: 2px solid #0dcaf0;">
         <li class="nav-item" role="presentation">
-            <button class="nav-link  tab-button rounded-top px-4 py-2" id="stock-tab" data-bs-toggle="tab" data-bs-target="#stock" type="button" role="tab" style="background: linear-gradient(180deg, #0dcaf0 0%, #e9ecef 100%); color: #fff;">
+            <button class="nav-link active tab-button rounded-top px-4 py-2" id="stock-tab" data-bs-toggle="tab" data-bs-target="#stock" type="button" role="tab" style="background: linear-gradient(180deg, #0dcaf0 0%, #e9ecef 100%); color: #fff;">
                 <i class="bi bi-box-seam me-2"></i> Stock Management
             </button>
         </li>
@@ -57,7 +57,7 @@
         <!-- Stock Management Tab -->
         <div class="tab-pane fade show active" id="stock" role="tabpanel">
             <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header  text-dark d-flex justify-content-between align-items-center">
+                <div class="card-header text-dark d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i> Stock Management - {{ selected_date }}</h5>
                 </div>
                 <div class="card-body">
@@ -131,10 +131,9 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Stock Table -->
                     <div class="table-responsive">
-                         <table id="example" class="table table-striped  table-hover stock-table" style="width:100%">
+                        <table id="example" class="table table-striped table-hover stock-table" style="width:100%">
                             <thead class="table-light">
                                 <tr>
                                     <th>No</th>
@@ -144,7 +143,7 @@
                                     <th>Total Stock <i class="bi bi-arrow-down-up sort-icon" data-column="4"></i></th>
                                     <th>Category <i class="bi bi-arrow-down-up sort-icon" data-column="5"></i></th>
                                     <th>Stock Date <i class="bi bi-arrow-down-up sort-icon" data-column="6"></i></th>
-                                    <th>Status</th>
+376                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -179,7 +178,6 @@
                                     </td>
                                 </tr>
                                 {% empty %}
-                               
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -187,60 +185,13 @@
                 </div>
             </div>
         </div>
-
         <!-- Stock Batch Tab -->
         <div class="tab-pane fade" id="stockBatch" role="tabpanel">
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header  text-dark">
+            <div class="card border-0 rounded-3">
+                <div class="card-header text-dark">
                     <h5 class="mb-0"><i class="bi bi-stack me-2"></i> Stock Batch</h5>
                 </div>
                 <div class="card-body">
-                    <!-- Filter  -->
-                    <div class="card border-0 shadow-sm rounded-3 mb-4" style="background: #f8f9fa;">
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Stock Batches</label>
-                                    <select class="form-select rounded-3 batch-category-filter">
-                                        <option value="">All Batches</option>
-                                        {% for batch in product_batches %}
-                                        <option value="{{ batch.id }}">{{ batch.batch_sku }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Stock Status</label>
-                                    <select class="form-select rounded-3 batch-status-filter">
-                                        <option value="">All</option>
-                                        <option value="expired">Expired</option>
-                                        <option value="expiring-soon">Expiring Soon</option>
-                                        <option value="good">Good</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Search</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control rounded-3 date-search" placeholder="Search by date...">
-                                        <button class="btn btn-outline-secondary rounded-3 clear-batch-filters" type="button">Clear</button>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 d-flex align-items-end">
-                                    <div class="btn-group w-100">
-                                        <button type="button" class="btn btn-outline-dark rounded-3 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-download"></i> Download
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item export-batch-excel" href="#">Excel</a></li>
-                                            <li><a class="dropdown-item export-batch-pdf" href="#">PDF</a></li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li><a class="dropdown-item print-batch" href="#">Print</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Batch Table -->
                     <div class="table-responsive">
                         <table id="example" class="table table-hover table-striped batch-table" style="width:100%">    
@@ -326,7 +277,7 @@
                 <form method="POST" action="{% url 'add_stock' %}">
                     {% csrf_token %}
                     <div class="modal-header" style="background: linear-gradient(135deg, #0dcaf0 0%, #007bff 100%); color: #fff;">
-                        <h5 class="modal-title fw-bold fs-2" id="quickOrderModalLabel"><i class="fas fa-shopping-cart me-2"></i> Quick Order</h5>
+                        <h5 class="modal-title fw-bold fs-2" id="addStockModalLabel"><i class="bi bi-plus-circle me-2"></i> Add Stock</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -344,7 +295,7 @@
                             <!-- New Stock -->
                             <div class="col-md-6">
                                 <label for="newStock" class="form-label fw-bold">New Stock</label>
-                                <input type="number" id="newStock" name="newStock" class="form-control rounded-3" required>
+                                <input type="number" id="newStock" name="newStock" class="form-control rounded-3" min="1" required>
                             </div>
                             <!-- Batch SKU -->
                             <div class="col-md-6">
@@ -359,7 +310,7 @@
                                 <label class="form-label fw-bold">Buying Price (per unit)</label>
                                 <div class="input-group">
                                     <span class="input-group-text rounded-3">UGX</span>
-                                    <input type="number" step="0.01" name="buying_price" class="form-control rounded-3" required>
+                                    <input type="number" step="0.01" name="buying_price" class="form-control rounded-3" min="0" required>
                                 </div>
                             </div>
                             <!-- Supplier -->
@@ -385,7 +336,7 @@
                             <!-- Expiry Date -->
                             <div class="col-md-6">
                                 <label for="expiryDate" class="form-label fw-bold">Expiry Date</label>
-                                <input type="date" id="expiryDate" name="expiryDate" class="form-control rounded-3">
+                                <input type="date" id="expiryDate" name="expiryDate" class="form-control rounded-3" min="{% now 'Y-m-d' %}">
                             </div>
                         </div>
                     </div>
@@ -398,9 +349,84 @@
         </div>
     </div>
 
-    <!-- Edit Stock Modal  -->
-    <div class="modal fade" id="editStockModal" tabindex="-1" aria-hidden="true">
-        
+    <!-- Edit Stock Modal -->
+    <div class="modal fade" id="editStockModal" tabindex="-1" aria-labelledby="editStockModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-3">
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <div class="modal-header" style="background: linear-gradient(135deg, #0dcaf0 0%, #007bff 100%); color: #fff;">
+                        <h5 class="modal-title fw-bold fs-2" id="editStockModalLabel"><i class="bi bi-pencil me-2"></i> Edit Stock</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="stock_id" id="editStockId">
+                        <div class="row g-3">
+                            <!-- Product -->
+                            <div class="col-md-6">
+                                <label for="editProductName" class="form-label fw-bold">Product Name</label>
+                                <select id="editProductName" name="product_id" class="form-select rounded-3" required>
+                                    <option value="">Select a product</option>
+                                    {% for product in products %}
+                                        <option value="{{ product.product_id }}">{{ product.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- New Stock -->
+                            <div class="col-md-6">
+                                <label for="editNewStock" class="form-label fw-bold">New Stock</label>
+                                <input type="number" id="editNewStock" name="newStock" class="form-control rounded-3" min="1" required>
+                            </div>
+                            <!-- Batch SKU -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Batch SKU</label>
+                                <div class="input-group">
+                                    <input type="text" name="batch_sku" id="editBatchSku" class="form-control rounded-3" placeholder="PROD-001-0425">
+                                    <span class="input-group-text rounded-3" id="editSkuPreview"></span>
+                                </div>
+                            </div>
+                            <!-- Buying Price -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Buying Price (per unit)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text rounded-3">UGX</span>
+                                    <input type="number" step="0.01" name="buying_price" id="editBuyingPrice" class="form-control rounded-3" min="0" required>
+                                </div>
+                            </div>
+                            <!-- Supplier -->
+                            <div class="col-md-6">
+                                <label for="editSupplierName" class="form-label fw-bold">Supplier</label>
+                                <select id="editSupplierName" name="supplier_id" class="form-select rounded-3" required>
+                                    <option value="">Select a supplier</option>
+                                    {% for supplier in suppliers %}
+                                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- Stock Date -->
+                            <div class="col-md-6">
+                                <label for="editStockDate" class="form-label fw-bold">StockIn Date</label>
+                                <input type="date" id="editStockDate" name="stock_date" class="form-control rounded-3" required>
+                            </div>
+                            <!-- Manufacture Date -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Manufacture Date</label>
+                                <input type="date" name="manufacture_date" id="editManufactureDate" class="form-control rounded-3" max="{% now 'Y-m-d' %}" required>
+                            </div>
+                            <!-- Expiry Date -->
+                            <div class="col-md-6">
+                                <label for="editExpiryDate" class="form-label fw-bold">Expiry Date</label>
+                                <input type="date" id="editExpiryDate" name="expiryDate" class="form-control rounded-3" min="{% now 'Y-m-d' %}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-success rounded-3"><i class="bi bi-check-circle-fill me-2"></i> Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
 </div>

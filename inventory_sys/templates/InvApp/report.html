@@ -72,7 +72,7 @@
                         <div class="card-body d-flex align-items-center">
                             <i class="bi bi-plus-square-fill fs-2 text-success me-3"></i>
                             <div>
-                                <h6 class="text-muted mb-0">Stock In</h6>
+                                <h6 class="text-muted mb-0">New Stock In</h6>
                                 <h3 class="fw-bold mb-0 count-up" data-target="{{ total_stock_in }}">{{ total_stock_in }}</h3>
                             </div>
                         </div>
@@ -97,7 +97,7 @@
                             <i class="bi bi-boxes fs-2 text-primary me-3"></i>
                             <div>
                                 <h6 class="text-muted mb-0">Closing Stock</h6>
-                                <h3 class="fw-bold mb-0 count-up" data-target="{{ total_stock_in }}">{{  total_stock_in }}</h3>
+                                <h3 class="fw-bold mb-0 count-up" data-target="{{ closing_stock }}">{{closing_stock }}</h3>
                             </div>
                         </div>
                     </div>
@@ -117,29 +117,34 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle mb-0" id="example">
+                <table class="table table-hover table-bordered align-middle mb-0">
                     <thead class="table-light">
-                        <tr>
-                            <th onclick="sortTable(0)">No <i class="bi bi-arrow-down-up"></i></th>
-                            <th onclick="sortTable(1)">Product <i class="bi bi-arrow-down-up"></i></th>
-                            <th onclick="sortTable(2)">Opening Stock <i class="bi bi-arrow-down-up"></i></th>
-                            <th onclick="sortTable(3)">Stock In <i class="bi bi-arrow-down-up"></i></th>
-                            <th onclick="sortTable(4)">Stock Out <i class="bi bi-arrow-down-up"></i></th>
-                            <th onclick="sortTable(5)">Adjustments <i class="bi bi-arrow-down-up"></i></th>
-                            <th>Category</th>
-                        </tr>
-                    </thead>
+                        <thead>
+                            <tr>
+                              <th rowspan="2" onclick="sortTable(0)">No <i class="bi bi-arrow-down-up"></i></th>
+                              <th rowspan="2" onclick="sortTable(1)">Product <i class="bi bi-arrow-down-up"></i></th>
+                              <th rowspan="2" onclick="sortTable(3)">Stock In <i class="bi bi-arrow-down-up"></i></th>
+                              <th rowspan="2" onclick="sortTable(4)">Stock Out <i class="bi bi-arrow-down-up"></i></th>
+                              <th colspan="2" onclick="sortTable(5)">Adjustments <i class="bi bi-arrow-down-up"></i></th>
+                              <th rowspan="2">Category</th>
+                            </tr>
+                            <tr>
+                              <th>Negative</th>
+                              <th>Postive</th>
+                            </tr>
+                          </thead>
+                          
                     <tbody>
                         {% for entry in stock_transactions %}
                         <tr>
                             <td>{{ forloop.counter }}</td>
                             <td class="fw-bold">{{ entry.product_name }}</td>
-                            <td>{{ entry.opening_stock }}</td>
                             <td class="text-success">{{ entry.stock_in }}</td>
                             <td class="text-danger">{{ entry.stock_out }}</td>
-                            <td>{{ entry.net_adjustments }}</td>
+                            <td class="text-danger">{{ entry.negative_adjustments }}</td>
+                            <td class="text-success">{{ entry.positive_adjustments }}</td>
                             <td>{{ entry.category_name }}</td>
-                        </tr>
+                          </tr>
                         {% empty %}
                         <tr>
                             <td colspan="7" class="text-center py-4">

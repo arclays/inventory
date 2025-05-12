@@ -17,7 +17,7 @@
         </div>
         <div>
             <button class="btn btn-outline-light me-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#quickOrderModal">
-                <i class="fas fa-shopping-cart me-1"></i> Quick Order
+                <i class="bi bi-cart3 me-2 "></i> Quick Order
             </button>
             <button type="button" class="btn btn-outline-light me-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
                 <i class="bi bi-plus-circle-fill me-2"></i> Add Customer
@@ -95,8 +95,8 @@
                 <div class="card-body d-flex align-items-center">
                     <i class="fas fa-warehouse fa-2x text-info me-3"></i>
                     <div>
-                        <h6 class="text-muted mb-0">New Stock In</h6>
-                        <h3 class="fw-bold mb-0 count-up text-info" data-target="{{ total_stock_in }}"></h3>{{ total_stock_in }}</h3>
+                        <h6 class="text-muted mb-0">Total Stock Available</h6>
+                        <h3 class="fw-bold mb-0 count-up text-info" data-target="{{ total_stock_in }}"></h3>{{ total_opening_stock }}</h3>
                     </div>
                 </div>
             </div>
@@ -283,7 +283,7 @@
                 <form method="POST" action="{% url 'place_order' %}">
                     {% csrf_token %}
                     <div class="modal-header" style="background: linear-gradient(135deg, #0dcaf0 0%, #007bff 100%); color: #fff;">
-                        <h5 class="modal-title fw-bold fs-2" id="quickOrderModalLabel"><i class="fas fa-shopping-cart me-2"></i> Quick Order</h5>
+                        <h5 class="modal-title fw-bold fs-2" id="quickOrderModalLabel"><i class="fas fa-shopping-cart me-2"></i><i class="bi bi-cart3 me-2 "></i> Quick Order</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     

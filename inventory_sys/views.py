@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
+from .forms import UserProfileForm
+from .models import User
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.db import transaction
@@ -22,12 +24,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Sum, Count, FloatField, FloatField, Subquery, OuterRef, Q
 from django.db.models.functions import  TruncMonth
-import json
-import csv
-import logging
-
-
-
+import json,logging,csv
 
 def register_view(request):
     if request.method == 'POST':
@@ -77,6 +74,39 @@ def login_view(request):
     return render(request, 'Invapp/login.html', {'next': next_url})
 
 
+
+
+@login_required
+def edit_profile(request):
+    try:
+        if request.method == 'POST':
+            # Pass request.FILES only if files are present
+            form = UserProfileForm(
+                data=request.POST,
+                files=request.FILES if request.FILES else None,
+                instance=request.user
+            )
+            if form.is_valid():
+                user = form.save(commit=False)
+                password = form.cleaned_data.get('password')
+                if password:
+                    user.set_password(password)  # Assumes Django's password hashing
+                user.save()
+                messages.success(request, 'Profile updated successfully!')
+                return redirect('home')  # Replace with your dashboard URL
+            else:
+                messages.error(request, 'Please correct the errors below.')
+                logger.warning(f"Form validation failed: {form.errors}")
+        else:
+            form = UserProfileForm(instance=request.user)
+        
+        return render(request, 'InvApp/layout.html', {'form': form, 'user': request.user})
+    except Exception as e:
+        logger.error(f"Error in edit_profile: {str(e)}")
+        messages.error(request, 'An unexpected error occurred. Please try again.')
+        return render(request, 'InvApp/layout.html', {'form': UserProfileForm(instance=request.user), 'user': request.user})   
+
+
 def logout_view(request):
     return render(request, 'Invapp/logout.html')   
 
@@ -92,14 +122,14 @@ def home_view(request):
     default_start_date = (today - timedelta(days=30)).strftime('%Y-%m-%d')
     default_end_date = today.strftime('%Y-%m-%d')
 
-    # Filters
+    
     payment_methods = request.POST.get('paymentMethod', 'cash') 
     start_date = request.GET.get('start_date', default_start_date)
     end_date = request.GET.get('end_date', default_end_date)
     category_id = request.GET.get('category')
     customer_id = request.GET.get('customer')
     search_query = request.GET.get('search', '')
-    page_size = int(request.GET.get('page_size', 5))  # Default: 5 per table
+    page_size = int(request.GET.get('page_size', 5)) 
 
     try:
         start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -108,7 +138,7 @@ def home_view(request):
         start_date = today - timedelta(days=30)
         end_date = today
 
-    # Subquery for buying_price
+    
     latest_batch = ProductBatch.objects.filter(product=OuterRef('product')).order_by('-stock_date')[:1]
     buying_price_subquery = Subquery(latest_batch.values('buying_price')[:1], output_field=FloatField())
     stock_adjustments = StockAdjustment.objects.count()
@@ -116,7 +146,7 @@ def home_view(request):
     customers = Customer.objects.all()
     products = Product.objects.all()
 
-    # Summary Metrics
+    
     orders = Order.objects.filter(order_date__range=[start_date, end_date])
     if category_id:
         orders = orders.filter(product__category_id=category_id)
@@ -156,10 +186,10 @@ def home_view(request):
         stock_date__range=[start_date, end_date]
     ).aggregate(avg=Sum('initial_quantity'))['avg'] or 0
 
-    # Recent Orders
+    
     recent_orders = orders.select_related('batch_sku').order_by('-order_date')[:10]
     
-    # Paginate Tables
+    
     low_stock_paginator = Paginator(low_stock_items, page_size)
     orders_paginator = Paginator(recent_orders, page_size)
     low_stock_page = request.GET.get('low_stock_page')
@@ -167,7 +197,7 @@ def home_view(request):
     low_stock_page_obj = low_stock_paginator.get_page(low_stock_page)
     orders_page_obj = orders_paginator.get_page(orders_page)
 
-    # Sales Chart Data
+    
     monthly_sales = orders.annotate(
         month=TruncMonth('order_date'),
         buying_price=buying_price_subquery
@@ -195,7 +225,6 @@ def home_view(request):
         profit_data.append(float(month_data['total_profit']))
         current_month = (current_month + timedelta(days=32)).replace(day=1)
 
-    # Stock Chart Data
     stock_trend = ProductBatch.objects.filter(
         stock_date__range=[start_date, end_date]
     ).annotate(
@@ -224,7 +253,6 @@ def home_view(request):
         stock_value_data.append(float(month_data['total_value']))
         current_month = (current_month + timedelta(days=32)).replace(day=1)
 
-    # Define payment methods 
     payment_methods = ['cash', 'credit', 'mobile_money', 'bank_transfer']
 
     context = {
@@ -255,7 +283,7 @@ def home_view(request):
         'start_date': start_date.strftime('%Y-%m-%d'),
         'end_date': end_date.strftime('%Y-%m-%d'),
         'categories_list': Category.objects.all(),
-        'customers_list': Customer.objects.all(),  # Renamed to avoid conflict with 'customers'
+        'customers_list': Customer.objects.all(),  
         'search_query': search_query,
         'category_id': category_id,
         'customer_id': customer_id,
@@ -270,6 +298,7 @@ def home_view(request):
 def product_list(request):
     categories = Category.objects.all()
     stocks = Stock.objects.all()
+    product_batches = ProductBatch.objects.all()
 
     category_id = request.GET.get('category', '')
     search_query = request.GET.get('search', '').strip()
@@ -363,74 +392,145 @@ def product_list(request):
         'categories': categories,
         'category_id': category_id,
         'search_query': search_query,
+        'product_batches':product_batches,
     }
     return render(request, 'InvApp/product_list.html', context)
 
-def product_history(request, product_id):
-    product = get_object_or_404(Product, pk=product_id)
-    
-    combined_activity = []
-    
-    for batch in product.productbatch_set.all():
 
+
+def product_history(request, product_id):
+
+    product = Product.objects.get(pk=product_id)
+    
+    product_batches = ProductBatch.objects.filter(product=product).select_related('product', 'supplier').order_by('-stock_date')
+    
+    for batch in product_batches:
+        activities = []
+        for order in Order.objects.filter(batch_sku__batch_sku=batch.batch_sku).select_related('customer'):
+            activities.append({
+                'date': order.order_date,
+                'activity_type': 'Order',
+                'quantity': -order.quantity, 
+                'reference': f"Order #{order.id}",
+            })
+    for adj in StockAdjustment.objects.filter(batch=batch):
+        activities.append({
+        'date': adj.created_at,
+        'activity_type': adj.get_adjustment_type_display(),
+        'quantity': adj.quantity if adj.adjustment_type == 'add' else -adj.quantity,
+        'reference': adj.reason,
+        'user': {'name': request.user}
+    })
+        activities.append({
+            'date': batch.stock_date,
+            'activity_type': 'Received',
+            'quantity': batch.initial_quantity,
+            'reference': 'Batch Receipt',
+            'user': {'name': request.user}
+        })
+        # activities.sort(key=lambda x: x['datetime'], reverse=True)
+    
+    # Combined activity
+    combined_activity = []
+    for batch in product_batches:
         combined_activity.append({
             'date': batch.stock_date,
             'event_type': 'batch',
             'description': f"Batch {batch.batch_sku} added with {batch.initial_quantity} {product.units}",
-            'quantity': batch.initial_quantity
+            'quantity': batch.initial_quantity,
+            'customer': {'name': request.user}
         })
     
-        orders = product.order_set.all().order_by('-order_date')
-
+    orders = Order.objects.filter(product=product).select_related('batch_sku', 'customer').order_by('-order_date')
     for order in orders:
         combined_activity.append({
             'date': order.order_date,
             'event_type': 'order',
-            'user': order.customer,
-            'quantity': order.quantity
+            'description': f"Order #{order.id} placed for {order.quantity} {product.units}" + (f" from batch_sku {order.batch_sku.batch_sku}" if order.batch_sku else ""),
+            'quantity': order.quantity,
+            'customer': order.customer,
         })
     
-    adjustments = product.stockadjustment_set.all().order_by('-created_at')
-
+    adjustments = StockAdjustment.objects.filter(product=product).select_related('batch').order_by('-created_at')
     for adj in adjustments:
         combined_activity.append({
             'date': adj.created_at.date(),
             'event_type': 'adjustment',
-            'description': f"Stock adjustment: {adj.quantity} {product.units} ({adj.reason})",
-            'quantity': adj.quantity
+            'description': f"Stock {adj.adjustment_type} of {adj.quantity} {product.units} ({adj.reason})" + (f" for batch {adj.batch.batch_sku}" if adj.batch else ""),
+            'quantity': adj.quantity if adj.adjustment_type == 'add' else -adj.quantity,
+            'user': {'name': request.user}
         })
     
-     # Sort by date descending
     combined_activity.sort(key=lambda x: x['date'], reverse=True)
     
-    paginator = Paginator(combined_activity, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-   
-    today = datetime.now()
+    activity_paginator = Paginator(combined_activity, 10)
+    activity_page = request.GET.get('page', 1)
+    combined_activity = activity_paginator.get_page(activity_page)
+    
+    orders_paginator = Paginator(orders, 10)
+    orders_page = request.GET.get('page', 1)
+    orders = orders_paginator.get_page(orders_page)
+    
+    
+    adjustments_paginator = Paginator(adjustments, 10)
+    adjustments_page = request.GET.get('page', 1)
+    adjustments = adjustments_paginator.get_page(adjustments_page)
+    
+    today = datetime.now().date()
     sales_labels = []
     sales_data = []
-
     for i in range(11, -1, -1):
-     month = today - relativedelta(months=i)
-     sales_labels.append(month.strftime("%b %Y"))
-     sales_data.append(0) 
+        month_start = (today - relativedelta(months=i)).replace(day=1)
+        month_end = (month_start + relativedelta(months=1)) - timedelta(days=1)
+        sales_labels.append(month_start.strftime("%b %Y"))
+        monthly_sales = Order.objects.filter(
+            product=product,
+            order_date__gte=month_start,
+            order_date__lte=month_end
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+        sales_data.append(monthly_sales)
     
-    batch_labels = [f"Batch {batch.batch_sku}" for batch in product.productbatch_set.all()]
-    batch_quantities = [batch.current_quantity for batch in product.productbatch_set.all()]
+    # Batch data for charts
+    batch_labels = [f"Batch {batch.batch_sku}" for batch in product_batches]
+    batch_quantities = [batch.current_quantity for batch in product_batches]
+    
+    # Product metrics
+    thirty_days_ago = today - timedelta(days=30)
+    total_sold_last_30_days = Order.objects.filter(
+        product=product, order_date__gte=thirty_days_ago
+    ).aggregate(total=Sum('quantity'))['total'] or 0
+    
+    yearly_sales = Order.objects.filter(
+        product=product, order_date__gte=today - timedelta(days=365)
+    ).aggregate(total=Sum('quantity'))['total'] or 0
+    avg_monthly_sales = yearly_sales / 12 if yearly_sales else 0
+    
+    suggested_reorder_quantity = product.reorder_level * 2 if product.reorder_level else 0
+    
+    expiring_batches_count = product_batches.filter(
+        expiry_date__lte=today + timedelta(days=30),
+        expiry_date__gte=today
+    ).count()
     
     context = {
         'product': product,
-        'combined_activity': page_obj,
+        'product_batches': product_batches,  
+        'combined_activity': combined_activity,
         'orders': orders,
         'adjustments': adjustments,
+        'total_sold_last_30_days': total_sold_last_30_days,
+        'avg_monthly_sales': avg_monthly_sales,
+        'suggested_reorder_quantity': suggested_reorder_quantity,
+        'expiring_batches_count': expiring_batches_count,
         'sales_labels': sales_labels,
         'sales_data': sales_data,
         'batch_labels': batch_labels,
-        'batch_quantities' : batch_quantities,
+        'batch_quantities': batch_quantities,
+        'active_tab': request.GET.get('tab', 'activity'),
     }
     
     return render(request, 'InvApp/product_history.html', context)
+
 
 
 def customer_list(request):
@@ -557,6 +657,9 @@ def report_page(request):
             stock_date=selected_date
         ).aggregate(total=Sum('new_stock'))['total'] or 0
 
+        stock_available = Product.objects.aggregate(
+            total=Sum('quantity_in_stock'))['total'] or 0
+
         positive_adjustments = StockAdjustment.objects.filter(
             product=product,
             created_at__date=selected_date,
@@ -605,7 +708,8 @@ def report_page(request):
 
         opening_stock = (prev_new_stock or 0) + (prev_positive_adjustments or 0) - (prev_orders or 0) - (prev_negative_adjustments or 0)
 
-        closing_stock = stock_in + stock_out
+
+        closing_stock = stock_available,
 
         total_stock_in += stock_in_total
         total_stock_out += stock_out_total
@@ -613,6 +717,8 @@ def report_page(request):
 
         stock_transactions.append({
             'product_name': product.name,
+            'negative_adjustments':negative_adjustments,
+            'positive_adjustments':positive_adjustments,
             'opening_stock': opening_stock,
             'stock_in': stock_in_total,
             'stock_out': stock_out_total,
@@ -622,7 +728,7 @@ def report_page(request):
         })
 
     total_opening_stock = sum(t['opening_stock'] for t in stock_transactions)
-    total_closing_stock = sum(t['closing_stock'] for t in stock_transactions)
+    
 
     orders = Order.objects.filter(order_date=selected_date)
     total_customers = orders.values('customer').distinct().count()
@@ -642,7 +748,7 @@ def report_page(request):
         total_stock_in == 0,
         total_stock_out == 0,
         total_adjustments == 0,
-        total_closing_stock == 0,
+        closing_stock == 0,
         total_cash_made == 0,
         total_quantity_sold == 0
     ])
@@ -658,7 +764,7 @@ def report_page(request):
         'total_stock_in': total_stock_in,
         'total_stock_out': total_stock_out,
         'total_adjustments': total_adjustments,
-        'total_closing_stock': total_closing_stock,
+        # 'total_closing_stock': total_closing_stock,
         'total_customers': total_customers,
         'total_orders': total_orders,
         'stock_adjustments': stock_adjustments,
@@ -724,7 +830,6 @@ def stock_adjustments(request):
         reason = request.POST.get('reason')
         batch_id = request.POST.get('batch_sku')
 
-        # Validate product
         try:
             product = Product.objects.get(product_id=product_id)
         except Product.DoesNotExist:
@@ -740,45 +845,42 @@ def stock_adjustments(request):
             messages.error(request, "Invalid adjustment type.")
             return redirect('stock_adjustments')
 
+        try:
+            product = Product.objects.get(product_id=product_id)
+        except Product.DoesNotExist:
+            messages.error(request, "Invalid product ID.")
+            return redirect('stock_adjustments')
+
         batch = None
         if batch_id:
             try:
-                batch = ProductBatch.objects.get(id=batch_id)
+                batch = ProductBatch.objects.get(id=batch_id, product=product)
                 if adjustment_type == 'add':
-                    batch.current_quantity += quantity
+                    batch.current_quantity = F('current_quantity') + quantity
                     batch.save()
+                    product.quantity_in_stock = F('quantity_in_stock') + quantity
+                    product.save()
                 elif adjustment_type == 'subtract':
                     if batch.current_quantity >= quantity:
-                        batch.current_quantity -= quantity
+                        batch.current_quantity = F('current_quantity') - quantity
                         batch.save()
+                        product.quantity_in_stock = F('quantity_in_stock') - quantity
+                        product.save()
                     else:
                         messages.error(request, "Insufficient stock in selected batch to subtract.")
                         return redirect('stock_adjustments')
-            except (ProductBatch.DoesNotExist, ValueError):
+            except ProductBatch.DoesNotExist:
                 messages.error(request, "Invalid Batch ID.")
                 return redirect('stock_adjustments')
-        else:
-            
-            if adjustment_type == 'add':
-                product.quantity_in_stock += quantity
-                product.save()
-            elif adjustment_type == 'subtract':
-                if product.quantity_in_stock >= quantity:
-                    product.quantity_in_stock -= quantity
-                    product.save()
-                else:
-                    messages.error(request, "Insufficient product stock to subtract.")
-                    return redirect('stock_adjustments')
 
-        
         StockAdjustment.objects.create(
             product=product,
             adjustment_type=adjustment_type,
             quantity=quantity,
             reason=reason,
-            batch=batch  
+            batch=batch,
+            created_at=timezone.now()
         )
-
         messages.success(request, "Stock adjusted successfully!")
         return redirect('stock_adjustments')
 
@@ -1288,7 +1390,7 @@ def report_analysis(request):
         monthly_profit_data.append(float(month_data['gross_profit']))
         current_month = (current_month + timedelta(days=32)).replace(day=1)
 
-    # Sales Trend Comparison
+    # Sales Trend
     current_period_sales = total_revenue
     previous_period_sales = previous_revenue
     sales_change = revenue_growth
@@ -1299,7 +1401,7 @@ def report_analysis(request):
     previous_avg_order = (previous_revenue / previous_period_orders.count()) if previous_period_orders.count() else 0.0
     aov_change = ((current_avg_order - previous_avg_order) / previous_avg_order * 100) if previous_avg_order else 0.0
 
-    # Daily Transaction Report
+    # Daily  Report
     daily_sales = orders.annotate(
         buying_price=buying_price_subquery
     ).values(
@@ -1327,7 +1429,6 @@ def report_analysis(request):
     total_cost = total_cogs
     total_profit = gross_profit
 
-    # Profitability 
     profitability_matrix = orders.annotate(
         buying_price=buying_price_subquery
     ).values(
@@ -1544,6 +1645,7 @@ def order_page(request):
     return render(request, 'InvApp/order_page.html', context)
 
 
+
 class BulkUpdateOrdersView(View):
     def post(self, request):
         order_ids = request.POST.getlist('order_ids')
@@ -1551,19 +1653,26 @@ class BulkUpdateOrdersView(View):
         
         if not order_ids:
             messages.error(request, 'No orders selected.')
-            return redirect('orders_page')
+            return redirect('order_page')
         
         if action == 'update_status':
             new_status = request.POST.get('new_status')
             if not new_status:
                 messages.error(request, 'No status selected.')
-                return redirect('orders_page')
+                return redirect('order_page')
             
             updated_count = Order.objects.filter(id__in=order_ids).update(status=new_status)
             messages.success(request, f'Updated status for {updated_count} order(s) to {dict(Order.STATUS_CHOICES).get(new_status, new_status)}.')
         
         elif action == 'delete':
-            deleted_count, _ = Order.objects.filter(id__in=order_ids).delete()
+            orders_to_delete = Order.objects.filter(id__in=order_ids).select_related('product')
+            
+            for order in orders_to_delete:
+                product = order.product
+                product.quantity_in_stock = F('quantity_in_stock') + order.quantity
+                product.save()
+            
+            deleted_count, _ = orders_to_delete.delete()
             messages.success(request, f'Successfully deleted {deleted_count} order(s).')
         
         else:
@@ -1672,7 +1781,6 @@ def export_dashboard_csv(request, table_type):
             ])
         messages.success(request, "Orders exported successfully.")
     elif table_type == 'low_stock':
-        # Existing low stock export logic 
         response['Content-Disposition'] = f'attachment; filename="low_stock_items_{start_date}_to_{end_date}.csv"'
         low_stock_items = Product.objects.annotate(
             critical_level=F('reorder_level') * 0.2
@@ -1705,7 +1813,7 @@ def export_dashboard_csv(request, table_type):
 
 def place_order(request):
     if request.method == 'POST':
-        customer_id = request.POST.get('orderCustomer') 
+        customer_id = request.POST.get('orderCustomer')
         products = request.POST.getlist('products[]')
         order_quantities = request.POST.getlist('orderQuantity[]')
         units = request.POST.getlist('units[]')
@@ -1719,53 +1827,83 @@ def place_order(request):
         try:
             customer = Customer.objects.get(id=customer_id)
         except Customer.DoesNotExist:
+            messages.error(request, "Selected customer does not exist.")
             return redirect('order_page')
 
-        payment_method = request.POST.get('paymentMethod', 'cash')  
+        payment_method = request.POST.get('paymentMethod', 'cash')
+        errors = []
 
         for i in range(len(products)):
             try:
                 product_id = products[i]
                 unit_id = units[i]
-                unit_price = float(price_per_units[i] or 0.0)  
-                total_price = float(total_prices[i] or 0.0)   
-                quantity = int(order_quantities[i] or 0)      
-                discount = float(discounts[i] or 0.0)          
                 batch_id = batch_ids[i]
 
-                product = Product.objects.get(product_id=product_id)
-                batch = ProductBatch.objects.get(id=batch_id) 
-                if not batch:
+                try:
+                    unit_price = float(price_per_units[i] or 0.0)
+                    total_price = float(total_prices[i] or 0.0)
+                    quantity = int(order_quantities[i] or 0)
+                    discount = float(discounts[i] or 0.0)
+                except (ValueError, TypeError):
+                    errors.append(f"Invalid input for product {product_id}.")
+                    continue
+
+                try:
+                    product = Product.objects.get(product_id=product_id)
+                except Product.DoesNotExist:
+                    errors.append(f"Product with ID {product_id} does not exist.")
+                    continue
+
+                try:
+                    batch = ProductBatch.objects.get(id=batch_id)
+                except ProductBatch.DoesNotExist:
+                    errors.append(f"Batch with ID {batch_id} does not exist.")
                     batch = None
 
-              
+                if quantity <= 0:
+                    errors.append(f"Invalid quantity for product {product.name}.")
+                    continue
+
+                if product.quantity_in_stock < quantity:
+                    errors.append(f"Insufficient stock for product {product.name}. Available: {product.quantity_in_stock}, Requested: {quantity}")
+                    continue
+
+                if batch and batch.current_quantity < quantity:
+                    errors.append(f"Insufficient quantity in batch {batch.batch_sku}. Available: {batch.current_quantity}, Requested: {quantity}")
+                    continue
+
                 # Create Order
                 Order.objects.create(
                     customer=customer,
                     product=product,
-                    batch_sku = batch,
+                    batch_sku=batch,
                     quantity=quantity,
                     price_per_unit=unit_price,
                     total_price=total_price,
                     units=unit_id,
-                    payment_method=payment_method, 
-                    discount=discount, 
+                    payment_method=payment_method,
+                    discount=discount,
                     order_date=order_date,
-                    final_total=final_total, 
+                    final_total=final_total,
                 )
 
                 # Update stock
-                product.quantity_in_stock - quantity
+                product.quantity_in_stock -= quantity
                 product.save()
 
-                batch.initial_quantity - quantity
-                batch.save()
+                if batch:
+                    batch.current_quantity -= quantity
+                    batch.save()
 
-            except Product.DoesNotExist:
-                print(f"Product with ID {product_id} does not exist.")
+            except Exception as e:
+                errors.append(f"Error processing product {product_id}: {str(e)}")
                 continue
-            except ProductBatch.DoesNotExist:
-                print(f"Batch with ID {batch_id} does not exist.")
-                continue
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return redirect('order_page')
 
+        messages.success(request, "Order placed successfully!")
         return redirect('order_page')
+
+    return redirect('order_page')

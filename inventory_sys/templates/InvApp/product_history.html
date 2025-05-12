@@ -96,7 +96,7 @@
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link tab-button rounded-top px-4 py-2" id="batches-tab" data-bs-toggle="tab" data-bs-target="#batches" type="button" role="tab">
-            <i class="bi bi-boxes me-2"></i> Batch History
+            <i class="bi bi-boxes me-2"></i>  Batch History
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -179,79 +179,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Batch History Tab -->
-        <div class="tab-pane fade" id="batches" role="tabpanel">
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header  text-dark">
-                    <h5 class="mb-0">Batch History</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-bordered">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>No</th>
-                                    <th>Product</th>
-                                    <th>Batch SKU</th>
-                                    <th>Qty</th>
-                                    <th>Current Qty</th>
-                                    <th>Buying Price</th>
-                                    <th>Expiry Date</th>
-                                    <th>Days Left</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for batch in product_batches %}
-                                <tr class="{% if batch.expiry_status == 'expired' %}table-danger{% elif batch.expiry_status == 'expiring-soon' %}table-warning{% endif %}">
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>{{ batch.product.name }}</td>
-                                    <td>{{ batch.batch_sku|default:"N/A" }}</td>
-                                    <td>{{ batch.initial_quantity }}</td>
-                                    <td>{{ batch.current_quantity }}</td>
-                                    <td>UGX {{ batch.buying_price|floatformat:2 }}</td>
-                                    <td>{{ batch.expiry_date|date:"Y-m-d" }}</td>
-                                    <td>
-                                        {% if batch.days_until_expiry is not None %}
-                                            {{ batch.days_until_expiry }} days
-                                        {% else %}
-                                            N/A
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if batch.expiry_status == 'expired' %}
-                                            <span class="badge bg-danger">Expired</span>
-                                        {% elif batch.expiry_status == 'expiring-soon' %}
-                                            <span class="badge bg-warning">Expiring Soon</span>
-                                        {% elif batch.expiry_status == 'good' %}
-                                            <span class="badge bg-success">Good</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">No Expiry</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-info rounded-3" data-bs-toggle="modal" data-bs-target="#batchDetailModal{{ batch.id }}">
-                                            <i class="bi bi-eye"></i> View
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="10" class="text-center text-muted py-4">
-                                        <i class="bi bi-boxes fs-1 text-success"></i>
-                                        <h5 class="mt-2">No batches found for this product.</h5>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Orders Tab -->
         <div class="tab-pane fade" id="orders" role="tabpanel">
             <div class="card border-0 shadow-sm rounded-3">
@@ -288,7 +215,7 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ order.quantity }} {{ product.units }}</td>
-                                    <td>UGX {{ order.unit_price|floatformat:2 }}</td>
+                                    <td>UGX {{ order.price_per_unit|floatformat:2 }}</td>
                                     <td>UGX {{ order.total_price|floatformat:2 }}</td>
                                     <td>{{ order.customer.name }}</td>
                                 </tr>
@@ -330,8 +257,8 @@
             </div>
         </div>
 
-        <!-- Adjustments Tab -->
-        <div class="tab-pane fade" id="adjustments" role="tabpanel">
+         <!-- Adjustments Tab -->
+         <div class="tab-pane fade {% if active_tab == 'adjustments' %}show active{% endif %}" id="adjustments" role="tabpanel">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header text-dark">
                     <h5 class="mb-0">Adjustments</h5>
@@ -352,22 +279,18 @@
                             <tbody>
                                 {% for adj in adjustments %}
                                 <tr>
-                                    <td>{{ adj.created_at }}</td>
-                                    <td>
-                                        <span class="badge bg-{% if adj.quantity > 0 %}success{% else %}danger{% endif %}">
-                                            {% if adj.quantity > 0 %}Addition{% else %}Reduction{% endif %}
-                                        </span>
-                                    </td>
-                                    <td>{{ adj.batch.batch_sku|default:"-" }}</td>
-                                    <td class="{% if adj.quantity > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    <td>{{ adj.created_at|date:"Y-m-d H:i" }}</td>
+                                    <td>{{ adj.get_adjustment_type_display }}</td>
+                                    <td>{{ adj.batch.batch_sku|default:"N/A" }}</td>
+                                    <td class="{% if adj.adjustment_type == 'add' %}text-success{% else %}text-danger{% endif %}">
                                         {{ adj.quantity }} {{ product.units }}
                                     </td>
-                                    <td>{{ adj.reason }}</td>
-                                    <td>{{ request.user}}</td>
+                                    <td>{{ adj.reason|default:"N/A" }}</td>
+                                    <td>{{ adj.user.username|default:"System" }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
+                                    <td colspan="6" class="text-center text-muted py-4">
                                         <i class="bi bi-sliders fs-1 text-success"></i>
                                         <h5 class="mt-2">No adjustments found for this product.</h5>
                                     </td>
@@ -380,10 +303,10 @@
                         <ul class="pagination justify-content-center">
                             {% if adjustments.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?page=1">« First</a>
+                                <a class="page-link" href="?tab=adjustments&page=1">« First</a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ adjustments.previous_page_number }}">Previous</a>
+                                <a class="page-link" href="?tab=adjustments&page={{ adjustments.previous_page_number }}">Previous</a>
                             </li>
                             {% endif %}
                             <li class="page-item disabled">
@@ -391,10 +314,10 @@
                             </li>
                             {% if adjustments.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ adjustments.next_page_number }}">Next</a>
+                                <a class="page-link" href="?tab=adjustments&page={{ adjustments.next_page_number }}">Next</a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ adjustments.paginator.num_pages }}">Last »</a>
+                                <a class="page-link" href="?tab=adjustments&page={{ adjustments.paginator.num_pages }}">Last »</a>
                             </li>
                             {% endif %}
                         </ul>
@@ -404,11 +327,11 @@
         </div>
 
         <!-- Analytics Tab -->
-        <div class="tab-pane fade" id="analytics" role="tabpanel">
+        <div class="tab-pane fade {% if active_tab == 'analytics' %}show active{% endif %}" id="analytics" role="tabpanel">
             <div class="row">
                 <div class="col-md-6">
                     <div class="card border-0 shadow-sm rounded-3 mb-4">
-                        <div class="card-header  text-dark">
+                        <div class="card-header text-dark">
                             <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i> Sales Trends</h5>
                         </div>
                         <div class="card-body">
@@ -418,7 +341,7 @@
                 </div>
                 <div class="col-md-6">
                     <div class="card border-0 shadow-sm rounded-3 mb-4">
-                        <div class="card-header  text-dark">
+                        <div class="card-header text-dark">
                             <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i> Stock Composition</h5>
                         </div>
                         <div class="card-body">
@@ -452,9 +375,9 @@
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <span class="fw-bold">Expiring Soon:</span>
-                                    <span class="badge bg-{% if product.expiring_batches.exists %}warning{% else %}success{% endif %} rounded-pill">
-                                        {% if product.expiring_batches.exists %}
-                                            {{ product.expiring_batches.count }} batches
+                                    <span class="badge bg-{% if product.expiring_batches_count %}warning{% else %}success{% endif %} rounded-pill">
+                                        {% if product.expiring_batches_count %}
+                                            {{ product.expiring_batches_count }} batches
                                         {% else %}
                                             None
                                         {% endif %}
@@ -464,61 +387,91 @@
                         </div>
                     </div>
                 </div>
-                <!-- <div class="col-md-6">
-                    <div class="card border-0 shadow-sm rounded-3">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0"><i class="bi bi-speedometer2 me-2"></i> Performance Metrics</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row text-center">
-                                <div class="col-md-4 mb-3">
-                                    <div class="card border-0 shadow-sm rounded-3" style="background: #f8f9fa;">
-                                        <div class="card-body">
-                                            <h6 class="text-muted">Turnover Rate</h6>
-                                            <h3 class="text-primary">{{ product.turnover_rate|floatformat:2 }}</h3>
-                                            <small class="text-muted">times/month</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="card border-0 shadow-sm rounded-3" style="background: #f8f9fa;">
-                                        <div class="card-body">
-                                            <h6 class="text-muted">Stock Cover</h6>
-                                            <h3 class="text-{% if product.stock_cover_days < 14 %}danger{% elif product.stock_cover_days < 30 %}warning{% else %}success{% endif %}">
-                                                {{ product.stock_cover_days }}
-                                            </h3>
-                                            <small class="text-muted">days</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="card border-0 shadow-sm rounded-3" style="background: #f8f9fa;">
-                                        <div class="card-body">
-                                            <h6 class="text-muted">GMROI</h6>
-                                            <h3 class="text-{% if product.gmroi < 1 %}danger{% elif product.gmroi < 3 %}warning{% else %}success{% endif %}">
-                                                {{ product.gmroi|floatformat:2 }}
-                                            </h3>
-                                            <small class="text-muted">ratio</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Batch History Tab -->
+<div class="tab-pane fade {% if active_tab == 'batches' %}show active{% endif %}" id="batches" role="tabpanel">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header text-dark">
+            <h5 class="mb-0">Associated Batches</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>No</th>
+                            <th>Product</th>
+                            <th>Batch SKU</th>
+                            <th>Qty</th>
+                            <th>Current Qty</th>
+                            <th>Buying Price</th>
+                            <th>Expiry Date</th>
+                            <th>Days Left</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for batch in product_batches %}
+                        <tr class="{% if batch.expiry_status == 'expired' %}table-danger{% elif batch.expiry_status == 'expiring-soon' %}table-warning{% endif %}">
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ batch.product.name|default:"N/A" }}</td>
+                            <td>{{ batch.batch_sku|default:"N/A" }}</td>
+                            <td>{{ batch.initial_quantity }}</td>
+                            <td>{{ batch.current_quantity }}</td>
+                            <td>UGX {{ batch.buying_price|floatformat:2 }}</td>
+                            <td>{{ batch.expiry_date|date:"Y-m-d"|default:"N/A" }}</td>
+                            <td>
+                                {% if batch.days_until_expiry is not None %}
+                                    {{ batch.days_until_expiry }} days
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if batch.expiry_status == 'expired' %}
+                                    <span class="badge bg-danger">Expired</span>
+                                {% elif batch.expiry_status == 'expiring-soon' %}
+                                    <span class="badge bg-warning">Expiring Soon</span>
+                                {% elif batch.expiry_status == 'good' %}
+                                    <span class="badge bg-success">Good</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No Expiry</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info rounded-3" data-bs-toggle="modal" data-bs-target="#batchDetailModal{{ batch.id }}">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center text-muted py-4">
+                                <i class="bi bi-boxes fs-1 text-success"></i>
+                                <h5 class="mt-2">No batches found for this product.</h5>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Batch Detail Modals -->
-{% for batch in product.batches.all %}
+{% for batch in product_batches %}
 <div class="modal fade" id="batchDetailModal{{ batch.id }}" tabindex="-1" aria-labelledby="batchDetailModalLabel{{ batch.id }}" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content rounded-3">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="batchDetailModalLabel{{ batch.id }}">
-                    Batch Details: {{ batch.batch_sku }}
+                    Batch Details: {{ batch.batch_sku|default:"N/A" }}
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -528,15 +481,15 @@
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item d-flex justify-content-between">
                                 <span class="fw-bold">Product:</span>
-                                <span>{{ product.name }}</span>
+                                <span>{{ batch.product.name|default:"N/A" }}</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between">
                                 <span class="fw-bold">Initial Quantity:</span>
-                                <span>{{ batch.initial_quantity }} {{ product.units }}</span>
+                                <span>{{ batch.initial_quantity }} {{ batch.product.units|default:"units" }}</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between">
                                 <span class="fw-bold">Current Quantity:</span>
-                                <span>{{ batch.current_quantity }} {{ product.units }}</span>
+                                <span>{{ batch.current_quantity }} {{ batch.product.units|default:"units" }}</span>
                             </li>
                         </ul>
                     </div>
@@ -548,50 +501,18 @@
                             </li>
                             <li class="list-group-item d-flex justify-content-between">
                                 <span class="fw-bold">Expiry Date:</span>
-                                <span>{{ batch.expiry_date|date:"Y-m-d" }}</span>
+                                <span>{{ batch.expiry_date|date:"Y-m-d"|default:"N/A" }}</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between">
                                 <span class="fw-bold">Status:</span>
                                 <span class="badge bg-{% if batch.expiry_status == 'expired' %}danger{% elif batch.expiry_status == 'expiring-soon' %}warning{% else %}success{% endif %}">
-                                    {{ batch.get_expiry_status_display }}
+                                    {{ batch.expiry_status|title }}
                                 </span>
                             </li>
                         </ul>
                     </div>
                 </div>
                 <hr>
-                <h6 class="mt-3">Batch Activity</h6>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Date</th>
-                                <th>Type</th>
-                                <th>Quantity</th>
-                                <th>Reference</th>
-                                <th>User</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for activity in batch.batch_activities.all %}
-                            <tr>
-                                <td>{{ activity.date|date:"Y-m-d" }}</td>
-                                <td>{{ activity.get_activity_type_display }}</td>
-                                <td>{{ activity.quantity }} {{ product.units }}</td>
-                                <td>{{ activity.reference|default:"-" }}</td>
-                                <td>{{ activity.user.username }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
-                                    <i class="bi bi-activity fs-1 text-success"></i>
-                                    <h5 class="mt-2">No activity recorded for this batch.</h5>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Close</button>
