@@ -9,9 +9,245 @@
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> 
     <link rel="stylesheet" type="text/css" href="{% static 'style/login.css' %}">
 </head>
+<style>
+    :root {
+        --primary: #0dcaf0;
+        --primary-dark: #0aa8cc;
+        --accent: #ff6b6b;
+        --text: #2d3436;
+        --background: #f4f7fb;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+        margin: 0;
+        height: 100vh;
+        overflow: hidden;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background: var(--background);
+    }
+
+    .split-container {
+        display: flex;
+        height: 100vh;
+        position: relative;
+    }
+
+    .left-side {
+        flex: 1;
+        background: linear-gradient(45deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.4)),
+                    url("{% static 'images/stock.webp' %}") center/cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        position: relative;
+        transition: flex 0.5s ease;
+    }
+
+    .left-content {
+        max-width: 560px;
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+    }
+
+    .left-content h1 {
+        font-size: 2.75rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+        background: linear-gradient(to right, var(--primary), #7ed6df);
+        -webkit-background-clip: text; 
+        background-clip: text; 
+        -webkit-text-fill-color: transparent;
+    }
+
+    .right-side {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: var(--background);
+        position: relative;
+    }
+
+    .login-container {
+        width: 100%;
+        max-width: 440px;
+        padding: 3rem 2.5rem;
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 1.5rem;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+        backdrop-filter: blur(8px);
+        transform: translateY(0);
+        transition: var(--transition);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .login-container:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+    }
+
+    .login-header h3 {
+        color: var(--text);
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.75rem;
+        color: var(--text);
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid #e3f2fd;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        transition: var(--transition);
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(13, 202, 240, 0.15);
+    }
+
+    .btn-login {
+        width: 100%;
+        padding: 1rem;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-login:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+
+    .btn-login:active {
+        transform: translateY(0);
+    }
+
+    .additional-links {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+    }
+
+    .additional-links a {
+        color: var(--text);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .additional-links a:hover {
+        color: var(--primary);
+    }
+
+    .error {
+        color: #ff4757;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-6px); }
+        75% { transform: translateX(6px); }
+    }
+
+    @media (max-width: 768px) {
+        .split-container {
+            flex-direction: column;
+        }
+
+        .left-side, .right-side {
+            flex: none;
+            height: 40vh;
+        }
+
+        .login-container {
+            margin: -4rem auto 2rem;
+            padding: 2rem;
+            width: 90%;
+        }
+
+        .left-content h1 {
+            font-size: 2rem;
+        }
+    }
+
+    /* Password Toggle */
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #999;
+        transition: color 0.2s ease;
+    }
+
+    .password-toggle:hover {
+        color: var(--primary);
+    }
+
+    /* Loading State */
+    .btn-loading .btn-text {
+        visibility: hidden;
+        opacity: 0;
+    }
+
+    .btn-loading::after {
+        content: "";
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto;
+        border: 3px solid transparent;
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
 <body>
     <div class="split-container">
-        <!-- Left Side: Promotional Content -->
         <div class="left-side">
             <div class="left-content">
                 <img src="{% static 'images/logo-sm.png' %}" alt="Logo">
@@ -19,8 +255,6 @@
                 <p>Manage your investments and track your portfolio with ease. Join our platform today!</p>
             </div>
         </div>
-
-        <!-- Right Side: Login Form -->
         <div class="right-side">
             <div class="login-container">
                 <div class="login-header">

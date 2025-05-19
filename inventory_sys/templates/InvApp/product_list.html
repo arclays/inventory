@@ -233,10 +233,16 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <input type="text" class="form-control" id="productUnits" name="units" placeholder="Units" required>
+                                     <select id="productUnits"  name="units"  class="form-select" placeholder="Units"  required>
+                                    {% for unit in units %}
+                                        <option value="{{ unit }}">{{ unit|title }}</option>
+                                    {% endfor %}
+                                </select>
                                     <label for="productUnits">Units</label>
                                 </div>
+                                
                             </div>
+
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="number" min="0" class="form-control" id="reorderQuantity" name="reorder_quantity" placeholder="Reorder Quantity">

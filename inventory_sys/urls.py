@@ -1,8 +1,11 @@
 from django.urls import path
 from . import views
+from .views import HomeDashboardView
 from .views import BulkUpdateOrdersView
+
 urlpatterns = [
-    path('', views.home_view, name='home'),
+    # path('', views.home_view, name='home'),
+    path('', HomeDashboardView.as_view(), name='home'),  
     path('Invapp/logout/', views.logout_view, name='logout'),  
     path('Invapp/confirm_logout/', views.confirm_logout, name='confirm_logout'),  
     path('register/', views.register_view, name='register'),
