@@ -183,3 +183,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('endDate').addEventListener('change', function() {
         document.getElementById('startDate').max = this.value;
     });
+    
+fetch(`/get-selling-price/${productId}/`)
+  .then(response => response.json())
+  .then(data => {
+    console.log(data.selling_price);
+  })
+  .catch(error => {
+    console.error("Failed to fetch selling price.", error);
+  });

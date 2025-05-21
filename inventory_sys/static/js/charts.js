@@ -1,6 +1,7 @@
 
 document.addEventListener("DOMContentLoaded", function () {
     // SAFELY initialize salesChart if canvas exists
+    document.addEventListener("DOMContentLoaded", function () {
     const salesCanvas = document.getElementById('salesChart');
     let salesChart = null;
 
@@ -11,55 +12,62 @@ document.addEventListener("DOMContentLoaded", function () {
             data: {
                 labels: [],
                 datasets: [{
-                    label: 'Total Orders',
+                    label: 'Sales (UGX)',
                     data: [],
-                    borderColor: '#007bff',
-                    borderWidth: 2,
-                    fill: false,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                    fill: true,
                     tension: 0.4
                 }]
             },
             options: {
                 responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Monthly Sales Quantity',
-                        font: { size: 18 }
-                    }
-                },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Total Quantity Ordered'
-                        }
-                    },
                     x: {
                         title: {
                             display: true,
-                            text: 'Months'
+                            text: 'Period'
                         }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Total Sales (UGX)'
+                        },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
                     }
                 }
             }
         });
 
-        // Fetch and update sales chart data
-        function updateSalesChart() {
-            fetch('/get-sales-data/')
+        function updateChart() {
+            const period = document.getElementById('periodFilter').value;
+            fetch('{% url "sales_trends_data" %}?period=' + period)
                 .then(response => response.json())
                 .then(data => {
                     salesChart.data.labels = data.labels;
                     salesChart.data.datasets[0].data = data.data;
+                    salesChart.options.scales.x.title.text = period.charAt(0).toUpperCase() + period.slice(1);
                     salesChart.update();
                 })
-                .catch(error => console.error('Error fetching sales data:', error));
+                .catch(error => console.error('Error fetching chart data:', error));
         }
 
-        updateSalesChart(); // Initial call
+        const periodFilter = document.getElementById('periodFilter');
+        if (periodFilter) {
+            periodFilter.addEventListener('change', updateChart);
+        }
+
+        // Initial chart load with default period (monthly)
+        updateChart();
     }
+});
 
     // SAFELY initialize stockChart if canvas exists
     const stockCanvas = document.getElementById('stockChart');

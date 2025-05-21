@@ -47,17 +47,11 @@ class Supplier(models.Model):
         ordering = ['name']
 
 class Product(models.Model):
-    UNITS = [
-        ('pcs', 'Pieces'),
-        ('kg', 'Kilograms'),
-        ('l', 'Liters'),
-        ('m', 'Meters'),
-    ]
     product_id = models.AutoField(primary_key=True) 
     name = models.CharField(max_length=100, unique=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
-    units = models.CharField(max_length=10, choices=UNITS, default='pcs')
+    units = models.CharField(max_length=10,  default='pcs')
     quantity_in_stock = models.PositiveIntegerField(default=0)
     reorder_quantity = models.PositiveIntegerField(default=0)
     reorder_level = models.PositiveIntegerField(default=0)
@@ -91,7 +85,7 @@ class ProductBatch(models.Model):
 class Stock(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     initial_stock = models.IntegerField()
-    new_stock = models.IntegerField()
+    new_stock = models.PositiveIntegerField(null=True, blank=True)
     total_stock = models.IntegerField()
     stock_date = models.DateField(default=timezone.now)
 
@@ -132,7 +126,8 @@ class Order(models.Model):
     batch_sku = models.ForeignKey(ProductBatch, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     units = models.CharField(max_length=10, default='pcs')
     price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
-    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00) 
+    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2) 
     final_total = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default='cash')
     order_date = models.DateField(default=timezone.now)

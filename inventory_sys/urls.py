@@ -33,7 +33,7 @@ urlpatterns = [
     path('orders/export/', views.export_orders_csv, name='export_orders_csv'),
     path('report_analysis/', views.report_analysis, name='report_analysis'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
-    path('export_dashboard_csv/', views.export_dashboard_csv, name='export_dashboard_csv'),
+    # path('export_dashboard_csv/', views.export_dashboard_csv, name='export_dashboard_csv'),
     
 ]
  

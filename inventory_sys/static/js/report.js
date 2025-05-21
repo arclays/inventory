@@ -136,4 +136,135 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Inventory Trend Chart
+  new Chart(document.getElementById('inventoryTrendChart'), {
+    type: 'line',
+    data: {
+      labels: {{ inventory_trend_labels|safe }},
+      datasets: [{
+        label: 'Inventory Value (UGX)',
+        data: {{ inventory_trend_values|safe }},
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13, 110, 253, 0.2)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' },
+        title: { display: true, text: 'Inventory Value Over Time' }
+      },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: 'Value (UGX)' } },
+        x: { title: { display: true, text: 'Month' } }
+      }
+    }
+  });
+
+  // Category Chart
+  new Chart(document.getElementById('categoryChart'), {
+    type: 'pie',
+    data: {
+      labels: {{ category_names|safe }},
+      datasets: [{
+        label: 'Category Value',
+        data: {{ category_values|safe }},
+        backgroundColor: [
+          '#0d6efd', '#198754', '#dc3545', '#ffc107', '#6f42c1',
+          '#fd7e14', '#20c997', '#0dcaf0', '#adb5bd', '#6610f2'
+        ],
+        borderColor: '#ffffff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'right' },
+        title: { display: true, text: 'Category Inventory Distribution' }
+      }
+    }
+  });
+
+  // Top Products Chart
+  new Chart(document.getElementById('topProductsChart'), {
+    type: 'pie',
+    data: {
+      labels: {{ top_product_names|safe }},
+      datasets: [{
+        label: 'Revenue (UGX)',
+        data: {{ top_product_values|safe }},
+        backgroundColor: [
+          '#0d6efd', '#198754', '#dc3545', '#ffc107', '#6f42c1',
+          '#fd7e14', '#20c997', '#0dcaf0', '#adb5bd', '#6610f2'
+        ],
+        borderColor: '#ffffff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'right' },
+        title: { display: true, text: 'Top Products Revenue' }
+      }
+    }
+  });
+
+  // Monthly Sales Chart
+  new Chart(document.getElementById('monthlySalesChart'), {
+    type: 'line',
+    data: {
+      labels: {{ monthly_labels|safe }},
+      datasets: [
+        {
+          label: 'Sales (UGX)',
+          data: {{ monthly_sales|safe }},
+          borderColor: '#198754',
+          backgroundColor: 'rgba(25, 135, 84, 0.2)',
+          fill: true,
+          tension: 0.4
+        },
+        {
+          label: 'Profit (UGX)',
+          data: {{ monthly_profit_data|safe }},
+          borderColor: '#0dcaf0',
+          backgroundColor: 'rgba(13, 202, 240, 0.2)',
+          fill: true,
+          tension: 0.4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' },
+        title: { display: true, text: 'Monthly Sales and Profit Trends' }
+      },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: 'Value (UGX)' } },
+        x: { title: { display: true, text: 'Month' } }
+      }
+    }
+  });
+</script>
+
+<!-- DataTables Script -->
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $('#inventoryTable, #lowStockTable, #categoryTable, #topSellingTable, #dailySalesTable, #categoryProfitTable, #profitabilityTable, #expiryTable').DataTable({
+      responsive: true,
+      pageLength: 10,
+      order: [[0, 'asc']],
+      language: { search: "Filter:", searchPlaceholder: "Search table..." }
+    });
+  });
+</script>
 

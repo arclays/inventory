@@ -784,3 +784,553 @@ class BulkUpdateOrdersView(View):
         
         return redirect('order_page')
 
+
+
+logger = logging.getLogger(__name__)
+
+def get_latest_buying_price_subquery():
+    latest_batch = ProductBatch.objects.filter(product=OuterRef('product')).order_by('-stock_date')[:1]
+    return Subquery(latest_batch.values('buying_price')[:1], output_field=FloatField())
+
+def calculate_batch_values():
+    return ProductBatch.objects.values(
+        'product__name', 'product__product_id', 'product__category__name'
+    ).annotate(
+        buying_price=Sum(F('buying_price')),
+        quantity=Sum('initial_quantity'),
+        total_value=Sum(
+            ExpressionWrapper(
+                F('initial_quantity') * F('buying_price'),
+                output_field=FloatField()
+            )
+        ),
+    ).order_by('-total_value')
+
+def calculate_total_inventory_value(batch_values):
+    return sum(item['total_value'] for item in batch_values if item['total_value']) or 0.0
+
+def process_inventory_data(batch_values, total_inventory_value):
+    return [
+        {
+            'name': item['product__name'],
+            'sku': item['product__product_id'],
+            'quantity_in_stock': item['quantity'],
+            'unit_cost': item['buying_price'],
+            'total_value': item['total_value'],
+            'percentage': round((item['total_value'] / total_inventory_value) * 100, 2) if total_inventory_value else 0,
+            'category__name': item['product__category__name']
+        }
+        for item in batch_values
+    ]
+
+def get_low_stock_items():
+    critical_threshold = 0.2
+    return Product.objects.annotate(
+        critical_level=F('reorder_level') * critical_threshold
+    ).filter(quantity_in_stock__lt=F('reorder_level')).values(
+        'product_id', 'name', 'quantity_in_stock',
+        'reorder_level', 'reorder_quantity', 'critical_level'
+    )
+
+def calculate_critical_stock_count(low_stock_items):
+    return low_stock_items.filter(
+        quantity_in_stock__lt=F('critical_level')
+    ).count()
+
+def calculate_total_products():
+    return Product.objects.count()
+
+def calculate_average_reorder_quantity():
+    return Product.objects.aggregate(
+        avg_reorder=ExpressionWrapper(
+            Sum('reorder_quantity'),
+            output_field=FloatField()
+        )
+    )['avg_reorder'] or 0.0
+
+def calculate_category_data(total_inventory_value):
+    return Category.objects.annotate(
+        product_count=Count('product'),
+        batch_count=Count('product__productbatch'),
+        total_quantity=Sum('product__productbatch__initial_quantity'),
+        total_value=Sum(
+            ExpressionWrapper(
+                F('product__productbatch__initial_quantity') * F('product__productbatch__buying_price'),
+                output_field=FloatField()
+            )
+        ),
+        percentage=ExpressionWrapper(
+            Sum(
+                ExpressionWrapper(
+                    F('product__productbatch__initial_quantity') * F('product__productbatch__buying_price'),
+                    output_field=FloatField()
+                )
+            ) * 100.0 / (total_inventory_value if total_inventory_value else 1),
+            output_field=FloatField()
+        )
+    ).values(
+        'id', 'name', 'product_count', 'batch_count',
+        'total_quantity', 'total_value', 'percentage'
+    ).order_by('-total_value')
+
+def process_category_data(category_data):
+    return [
+        {
+            'id': item['id'],
+            'name': item['name'],
+            'product_count': item['product_count'],
+            'batch_count': item['batch_count'],
+            'total_quantity': item['total_quantity'] or 0,
+            'total_value': item['total_value'] or 0.0,
+            'percentage': item['percentage'] or 0.0
+        }
+        for item in category_data
+    ]
+
+def calculate_inventory_trend(today, twelve_months_ago):
+    inventory_trend = ProductBatch.objects.filter(
+        stock_date__gte=twelve_months_ago
+    ).annotate(
+        month=TruncMonth('stock_date')
+    ).values('month').annotate(
+        total_value=Sum(
+            ExpressionWrapper(
+                F('initial_quantity') * F('buying_price'),
+                output_field=FloatField()
+            )
+        )
+    ).order_by('month')
+
+    labels, values = [], []
+    current_month = twelve_months_ago.replace(day=1)
+    while current_month <= today:
+        month_data = next(
+            (item for item in inventory_trend if item['month'] and item['month'].month == current_month.month and item['month'].year == current_month.year),
+            {'total_value': 0.0}
+        )
+        labels.append(current_month.strftime('%b %Y'))
+        values.append(float(month_data['total_value'] or 0.0))
+        current_month = (current_month + timezone.timedelta(days=32)).replace(day=1)
+    return labels, values
+
+def get_recent_orders(thirty_days_ago):
+    return Order.objects.filter(
+        order_date__gte=thirty_days_ago,
+        payment_method__in=["cash", "credit_card", "mobile_money", "bank_transfer"]
+    )
+
+def calculate_total_revenue(orders):
+    return orders.aggregate(
+        total=Sum('total_price', output_field=FloatField())
+    )['total'] or 0.0
+
+def get_previous_period_orders(thirty_days_ago):
+    previous_period_start = thirty_days_ago - timezone.timedelta(days=30)
+    return Order.objects.filter(
+        order_date__gte=previous_period_start,
+        order_date__lt=thirty_days_ago,
+        payment_method__in=["cash", "credit_card", "mobile_money", "bank_transfer"]
+    )
+
+def calculate_previous_revenue(previous_period_orders):
+    return previous_period_orders.aggregate(
+        total=Sum('total_price', output_field=FloatField())
+    )['total'] or 0.0
+
+def calculate_revenue_growth(total_revenue, previous_revenue):
+    return ((total_revenue - previous_revenue) / previous_revenue * 100) if previous_revenue else 0.0
+
+def calculate_cogs_and_gross_profit( total_revenue, orders, buying_price_subquery):
+    total_cogs = orders.annotate(
+        buying_price=buying_price_subquery
+    ).aggregate(
+        total_cost=Sum(
+            ExpressionWrapper(
+                F('quantity') * F('buying_price'),
+                output_field=FloatField()
+            )
+        )
+    )['total_cost'] or 0.0
+    gross_profit = total_revenue - total_cogs
+    gross_margin = (gross_profit / total_revenue * 100) if total_revenue else 0.0
+    return total_cogs, gross_profit, gross_margin
+
+def calculate_total_orders(orders):
+    return orders.count()
+
+def calculate_avg_order_value(total_revenue, total_orders):
+    return (total_revenue / total_orders) if total_orders else 0.0
+
+def get_top_selling_products(orders, buying_price_subquery):
+    try:
+        top_selling = orders.annotate(
+            buying_price=buying_price_subquery
+        ).values(
+            'product__name', 'product__category__name'
+        ).annotate(
+            qty=Sum('quantity'),
+            revenue=Sum('total_price', output_field=FloatField()),
+            cost=Sum(
+                ExpressionWrapper(
+                    F('quantity') * F('buying_price'),
+                    output_field=FloatField()
+                )
+            )
+        ).annotate(
+            profit=ExpressionWrapper(
+                F('revenue') - F('cost'),
+                output_field=FloatField()
+            ),
+            margin=ExpressionWrapper(
+                (F('revenue') - F('cost')) / F('revenue') * 100,
+                output_field=FloatField()
+            )
+        ).order_by('-revenue')[:10]
+
+        logger.debug("Top Selling Raw: %s", list(top_selling))
+
+        processed_top_selling = [
+            {
+                'product__name': item['product__name'],
+                'product__category__name': item['product__category__name'],
+                'qty': item['qty'] or 0,
+                'revenue': item['revenue'] or 0.0,
+                'cost': item['cost'] or 0.0,
+                'profit': item['profit'] or 0.0,
+                'margin': item['margin'] or 0.0 if item['revenue'] else 0.0
+            }
+            for item in top_selling
+        ]
+
+        logger.debug("Top Selling Processed: %s", processed_top_selling)
+        return processed_top_selling
+    except Exception as e:
+        logger.error("Error in top_selling query: %s", str(e))
+        return []
+
+def calculate_top_selling_metrics(processed_top_selling, total_revenue):
+    top5_revenue = sum(item['revenue'] for item in processed_top_selling[:5] if item['revenue'] is not None) or 0.0
+    top5_percentage = (top5_revenue / total_revenue * 100) if total_revenue else 0.0
+    other_percentage = 100.0 - top5_percentage if total_revenue else 0.0
+    top_product_names = [item['product__name'] for item in processed_top_selling]
+    top_product_values = [item['revenue'] for item in processed_top_selling]
+    return top5_revenue, top5_percentage, other_percentage, top_product_names, top_product_values
+
+def calculate_monthly_sales(today, twelve_months_ago, orders, buying_price_subquery):
+    monthly_sales = orders.annotate(
+        month=TruncMonth('order_date'),
+        buying_price=buying_price_subquery
+    ).values('month').annotate(
+        total_sales=Sum('total_price', output_field=FloatField()),
+        order_count=Count('id'),
+        cogs=Sum(
+            ExpressionWrapper(
+                F('quantity') * F('buying_price'),
+                output_field=FloatField()
+            )
+        )
+    ).annotate(
+        net_sales=F('total_sales'),
+        gross_profit=ExpressionWrapper(
+            F('total_sales') - F('cogs'),
+            output_field=FloatField()
+        ),
+        margin=ExpressionWrapper(
+            (F('total_sales') - F('cogs')) / F('total_sales') * 100,
+            output_field=FloatField()
+        )
+    ).order_by('month')
+
+    processed_monthly_sales = [
+        {
+            'month': item['month'],
+            'total_sales': item['total_sales'] or 0.0,
+            'order_count': item['order_count'],
+            'cogs': item['cogs'] or 0.0,
+            'net_sales': item['net_sales'] or 0.0,
+            'gross_profit': item['gross_profit'] or 0.0,
+            'margin': item['margin'] or 0.0 if item['total_sales'] else 0.0
+        }
+        for item in monthly_sales
+    ]
+
+    labels, sales_data, profit_data = [], [], []
+    current_month = twelve_months_ago.replace(day=1)
+    while current_month <= today:
+        month_data = next(
+            (item for item in processed_monthly_sales if item['month'] and item['month'].month == current_month.month and item['month'].year == current_month.year),
+            {
+                'total_sales': 0.0,
+                'gross_profit': 0.0,
+                'order_count': 0,
+                'net_sales': 0.0,
+                'cogs': 0.0,
+                'margin': 0.0
+            }
+        )
+        labels.append(current_month.strftime('%b %Y'))
+        sales_data.append(float(month_data['total_sales']))
+        profit_data.append(float(month_data['gross_profit']))
+        current_month = (current_month + timezone.timedelta(days=32)).replace(day=1)
+    return labels, sales_data, profit_data
+
+def calculate_sales_trend(total_revenue, previous_revenue, total_cogs, total_orders, previous_period_orders):
+    current_period_sales = total_revenue
+    previous_period_sales = previous_revenue
+    sales_change = calculate_revenue_growth(total_revenue, previous_revenue)
+    current_period_units = total_orders
+    previous_period_units = previous_period_orders.aggregate(total=Sum('quantity'))['total'] or 0
+    units_change = ((current_period_units - previous_period_units) / previous_period_units * 100) if previous_period_units else 0.0
+    current_avg_order = calculate_avg_order_value(total_revenue, total_orders)
+    previous_avg_order = (previous_revenue / previous_period_orders.count()) if previous_period_orders.count() else 0.0
+    aov_change = ((current_avg_order - previous_avg_order) / previous_avg_order * 100) if previous_avg_order else 0.0
+    return current_period_sales, previous_period_sales, sales_change, current_period_units, previous_period_units, units_change, current_avg_order, previous_avg_order, aov_change
+
+def calculate_daily_sales(orders, buying_price_subquery):
+    return orders.annotate(
+        buying_price=buying_price_subquery
+    ).values(
+        'order_date', 'id', 'product__name', 'quantity', 'total_price'
+    ).annotate(
+        date=F('order_date'),
+        order_id=F('id'),
+        product=F('product__name'),
+        unit_price=ExpressionWrapper(
+            F('total_price') / F('quantity'),
+            output_field=FloatField()
+        ),
+        cost=ExpressionWrapper(
+            F('quantity') * F('buying_price'),
+            output_field=FloatField()
+        ),
+        revenue=F('total_price'),
+        profit=ExpressionWrapper(
+            F('total_price') - F('cost'),
+            output_field=FloatField()
+        )
+    ).order_by('-order_date')
+
+def calculate_total_units(orders):
+    return orders.aggregate(total=Sum('quantity'))['total'] or 0
+
+def calculate_profitability_matrix(orders, buying_price_subquery):
+    return orders.annotate(
+        buying_price=buying_price_subquery
+    ).values(
+        'product__name'
+    ).annotate(
+        revenue=Sum('total_price', output_field=FloatField()),
+        cogs=Sum(
+            ExpressionWrapper(
+                F('quantity') * F('buying_price'),
+                output_field=FloatField()
+            )
+        ),
+        volume=Sum('quantity')
+    ).annotate(
+        profit=ExpressionWrapper(
+            F('revenue') - F('cogs'),
+            output_field=FloatField()
+        ),
+        margin=ExpressionWrapper(
+            (F('revenue') - F('cogs')) / F('revenue') * 100,
+            output_field=FloatField()
+        ),
+        contribution=ExpressionWrapper(
+            (F('revenue') - F('cogs')) * 100 /
+            Case(
+                When(cogs=0, then=Value(1)),
+                default=F('cogs'),
+                output_field=FloatField()
+            ),
+            output_field=FloatField()
+        )
+    ).order_by('-profit')
+
+def calculate_category_profit(orders, buying_price_subquery):
+    category_profit = orders.annotate(
+        buying_price=buying_price_subquery
+    ).values(
+        'product__category__name'
+    ).annotate(
+        revenue=Sum('total_price', output_field=FloatField()),
+        cogs=Sum(
+            ExpressionWrapper(
+                F('quantity') * F('buying_price'),
+                output_field=FloatField()
+            )
+        )
+    ).annotate(
+        profit=ExpressionWrapper(
+            F('revenue') - F('cogs'),
+            output_field=FloatField()
+        ),
+        margin=ExpressionWrapper(
+            (F('revenue') - F('cogs')) / F('revenue') * 100,
+            output_field=FloatField()
+        )
+    ).order_by('-profit')
+
+    return [
+        {
+            'product__category__name': item['product__category__name'],
+            'revenue': item['revenue'] or 0.0,
+            'cogs': item['cogs'] or 0.0,
+            'profit': item['profit'] or 0.0,
+            'margin': item['margin'] or 0.0 if item['revenue'] else 0.0
+        }
+        for item in category_profit
+    ]
+
+def get_near_expiry_products(today):
+    return ProductBatch.objects.filter(
+        expiry_date__range=[today, today + timezone.timedelta(days=365)]
+    ).select_related('product').values(
+        'product__name', 'expiry_date', 'initial_quantity'
+    ).order_by('expiry_date')
+
+
+def report_analysis(request):
+    today = timezone.now().date()
+    thirty_days_ago = today - timezone.timedelta(days=30)
+    twelve_months_ago = today - timezone.timedelta(days=365)
+
+    buying_price_subquery = get_latest_buying_price_subquery()
+    batch_values = calculate_batch_values()
+    total_inventory_value = calculate_total_inventory_value(batch_values)
+    inventory_data = process_inventory_data(batch_values, total_inventory_value)
+
+    low_stock_items = get_low_stock_items()
+    critical_stock_count = calculate_critical_stock_count(low_stock_items)
+    total_products = calculate_total_products()
+    low_stock_count = low_stock_items.count()
+    average_reorder_quantity = calculate_average_reorder_quantity()
+    category_data = process_category_data(calculate_category_data(total_inventory_value))
+
+    inventory_trend_labels, inventory_trend_values = calculate_inventory_trend(today, twelve_months_ago)
+
+    orders = get_recent_orders(thirty_days_ago)
+    total_revenue = calculate_total_revenue(orders)
+    previous_period_orders = get_previous_period_orders(thirty_days_ago)
+    previous_revenue = calculate_previous_revenue(previous_period_orders)
+    revenue_growth = calculate_revenue_growth(total_revenue, previous_revenue)
+
+    total_cogs, gross_profit, gross_margin = calculate_cogs_and_gross_profit(orders, buying_price_subquery)
+    total_orders = calculate_total_orders(orders)
+    avg_order_value = calculate_avg_order_value(total_revenue, total_orders)
+
+    top_selling_processed = get_top_selling_products(orders, buying_price_subquery)
+    top5_revenue, top5_percentage, other_percentage, top_product_names, top_product_values = calculate_top_selling_metrics(top_selling_processed, total_revenue)
+
+    monthly_labels, monthly_sales_data, monthly_profit_data = calculate_monthly_sales(today, twelve_months_ago, orders, buying_price_subquery)
+
+    current_period_sales, previous_period_sales, sales_change, current_period_units, previous_period_units, units_change, current_avg_order, previous_avg_order, aov_change = calculate_sales_trend(total_revenue, previous_revenue, total_cogs, total_orders, previous_period_orders)
+
+    daily_sales = calculate_daily_sales(orders, buying_price_subquery)
+    total_units = calculate_total_units(orders)
+    total_cost = total_cogs
+    total_profit = gross_profit
+
+    profitability_matrix = calculate_profitability_matrix(orders, buying_price_subquery)
+    category_profit = calculate_category_profit(orders, buying_price_subquery)
+    near_expiry = get_near_expiry_products(today)
+
+    context = {
+        'total_revenue': total_revenue,
+        'revenue_growth': round(revenue_growth, 2),
+        'gross_profit': gross_profit,
+        'gross_margin': round(gross_margin, 2),
+        'avg_order_value': avg_order_value,
+        'total_orders': total_orders,
+        'return_rate': 0.0, 
+        'total_returns': 0.0,
+        'default_start_date': thirty_days_ago,
+        'default_end_date': today,
+        'total_inventory_value': total_inventory_value,
+        'total_sales': total_revenue,
+        'low_stock_count': low_stock_count,
+        'critical_stock_count': critical_stock_count,
+        'expiring_soon_count': near_expiry.count(),
+        'inventory': inventory_data,
+        'inventory_trend_labels': json.dumps(inventory_trend_labels),
+        'inventory_trend_values': inventory_trend_values,
+        'low_stock_items': low_stock_items,
+        'total_products': total_products,
+        'average_reorder_quantity': round(average_reorder_quantity),
+        'category': category_data,
+        'category_names': json.dumps([cat['name'] for cat in category_data]),
+        'category_values': [cat['total_value'] for cat in category_data],
+        'top_selling': top_selling_processed,
+        'top_product_names': json.dumps(top_product_names),
+        'top_product_values': top_product_values,
+        'top5_percentage': round(top5_percentage, 2),
+        'other_percentage': round(other_percentage, 2),
+        'monthly_sales': monthly_sales_data,
+        'monthly_labels': json.dumps(monthly_labels),
+        'monthly_profit_data': monthly_profit_data,
+        'current_period_sales': current_period_sales,
+        'previous_period_sales': previous_period_sales,
+        'sales_change': round(sales_change, 2),
+        'current_period_units': current_period_units,
+        'previous_period_units': previous_period_units,
+        'units_change': round(units_change, 2),
+        'current_avg_order': current_avg_order,
+        'previous_avg_order': previous_avg_order,
+        'aov_change': round(aov_change, 2),
+        'daily_sales': daily_sales,
+        'total_units': total_units,
+        'total_cost': total_cost,
+        'total_profit': total_profit,
+        'profitability_matrix': profitability_matrix,
+        'category_profit': category_profit,
+        'near_expiry': near_expiry,
+        'current_date': today.strftime("%Y-%m-%d"),
+        'report_range': f"{thirty_days_ago.strftime('%b %d')} - {today.strftime('%b %d')}"
+    }
+
+    return render(request, 'InvApp/report_analysis.html', context)
+    
+# def product_list(request):
+#     categories, product_batches = get_categories_and_product_batches()
+#     category_id = request.GET.get('category', '')
+#     page_number = request.GET.get('page')
+#     # Filter products
+#     products = Product.objects.all().order_by('-product_id')
+#     if category_id:
+#         products = products.filter(category_id=category_id)
+
+#     # Paginate
+#     paginator = Paginator(products, 10)
+#     page_obj = paginator.get_page(page_number)
+
+#     # Initialize form (bound on POST, unbound otherwise)
+#     form = ProductForm(request.POST or None)
+
+#     # Handle form submission
+#     if request.method == 'POST':
+#         if form.is_valid():
+#             form.save()
+#             product_name = form.cleaned_data['name']
+#             messages.success(request, f"Product '{product_name}' created successfully!")
+            
+#             # Preserve query parameters in redirect
+#             redirect_url = reverse('product_list')
+#             if category_id:
+#                 redirect_url += f'?category={category_id}'
+#                 if page_number:
+#                     redirect_url += f'&page={page_number}'
+#             return redirect(redirect_url)
+        
+#     # Handle AJAX request (e.g., pagination)
+#     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+#         return handle_ajax_request(page_obj, paginator)
+
+#     context = {
+#         'page_obj': page_obj,
+#         'categories': categories,
+#         'category_id': category_id,
+#         'product_batches': product_batches,
+#         'form': form
+#     }
+#     return render(request, 'InvApp/product_list.html', context)
+

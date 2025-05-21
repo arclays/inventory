@@ -135,9 +135,9 @@
                         <option value="delete">Delete</option>
                     </select>
                     <select name="new_status" class="form-select rounded-3 d-inline-block w-auto me-2" id="newStatus" style="display: none;">
-                        {% for status in status_choices %}
-                            <option value="{{ status|lower }}">{{ status|title }}</option>
-                        {% endfor %}
+                       {% for value, display in status_choices %}
+                        <option value="{{ value }}">{{ display }}</option>
+                       {% endfor %}
                     </select>
                     <button type="submit" class="btn btn-success rounded-3" id="applyBulkAction" disabled>
                         <i class="bi bi-check-circle-fill me-2"></i> Apply
@@ -292,8 +292,8 @@
                             <div class="col-md-4">
                                 <label for="paymentMethod" class="form-label fw-bold">Payment Method</label>
                                 <select id="paymentMethod" name="paymentMethod" class="form-select rounded-3" required>
-                                    {% for method in payment_methods %}
-                                        <option value="{{ method }}">{{ method|title }}</option>
+                                    {% for value, label in payment_methods %}
+                                    <option value="{{ value }}">{{ label }}</option>
                                     {% endfor %}
                                 </select>
                             </div>

@@ -18,25 +18,27 @@ class CustomerForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'required': True}),
         }       
 
-class ProductForm(forms.ModelForm):
-    class Meta:
-        model = Product
-        fields = ['name', 'quantity_in_stock', 'units', 'category', 'selling_price', 'reorder_quantity', 'reorder_level']
-        widgets = {
-            'category': forms.Select(attrs={'required': True}),
-            'name': forms.TextInput(attrs={'required': True}),
-            'quantity_in_stock': forms.NumberInput(attrs={'min': 0, 'required': True}),
-            'units': forms.TextInput(attrs={'required': True}),
-            'selling_price': forms.NumberInput(attrs={'min': 0, 'step': '0.01', 'required': True}),
-            'reorder_quantity': forms.NumberInput(attrs={'min': 0, 'required': True}),
-            'reorder_level': forms.NumberInput(attrs={'min': 0, 'required': True}),
-        }
 
-    def clean_name(self):
-        name = self.cleaned_data.get('name')
-        if Product.objects.filter(name__iexact=name).exists():
-            raise forms.ValidationError(f"Product '{name}' already exists!")
-        return name
+# class ProductForm(forms.ModelForm):
+#     class Meta:
+#         model = Product
+#         fields = ['name', 'quantity_in_stock', 'units', 'category', 
+#                  'selling_price', 'reorder_quantity', 'reorder_level']
+#         widgets = {
+#             'category': forms.Select(),
+#             'name': forms.TextInput(),
+#             'quantity_in_stock': forms.NumberInput(attrs={'min': 0}),
+#             'units': forms.Select(),
+#             'selling_price': forms.NumberInput(attrs={'min': 0, 'step': '0.01'}),
+#             'reorder_quantity': forms.NumberInput(attrs={'min': 0}),
+#             'reorder_level': forms.NumberInput(attrs={'min': 0}),
+#         }
+
+#     def clean_name(self):
+#         name = self.cleaned_data.get('name')
+#         if Product.objects.filter(name__iexact=name).exists():
+#             raise forms.ValidationError(f"Product '{name}' already exists!")
+#         return name
 
 class UserProfileForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, required=False, label="New Password")
@@ -99,8 +101,6 @@ class DateRangeForm(forms.Form):
             cleaned_data['end_date'] = timezone.now().date()
 
         return cleaned_data    
-
-
 
 
 class AddStockForm(forms.Form):
@@ -185,95 +185,3 @@ class OrderFilterForm(forms.Form):
         return end_date
 
 
-
-class PlaceOrderForm(forms.Form):
-    order_customer = forms.ModelChoiceField(queryset=Customer.objects.all(), required=True)
-    products = forms.ModelMultipleChoiceField(queryset=Product.objects.all(), required=True)
-    order_quantities = forms.Field(required=True)
-    units = forms.Field(required=True)
-    price_per_units = forms.Field(required=True)
-    total_prices = forms.Field(required=True)
-    batch_skus = forms.Field(required=True)
-    product_discounts = forms.Field(required=True)
-    order_date = forms.DateField(required=False, input_formats=['%Y-%m-%d'], initial=date.today())
-    final_total = forms.DecimalField(max_digits=10, decimal_places=2, required=True)
-    payment_method = forms.ChoiceField(choices=[
-        ('cash', 'Cash'),
-        ('credit_card', 'Credit Card'),
-        ('mobile_money', 'Mobile Money'),
-        ('bank_transfer', 'Bank Transfer')
-    ], required=True, initial='cash')
-
-    def clean_order_quantities(self):
-        quantities = self.cleaned_data.get('order_quantities')
-        try:
-            quantities = [int(q) for q in quantities.split(',')]
-        except (ValueError, TypeError):
-            raise ValidationError("Invalid quantities.")
-        return quantities
-
-    def clean_units(self):
-        units = self.cleaned_data.get('units')
-        try:
-            units = [u.strip() for u in units.split(',')]
-        except (ValueError, TypeError):
-            raise ValidationError("Invalid units.")
-        return units
-
-    def clean_price_per_units(self):
-        prices = self.cleaned_data.get('price_per_units')
-        try:
-            prices = [float(p) for p in prices.split(',')]
-        except (ValueError, TypeError):
-            raise ValidationError("Invalid prices.")
-        return prices
-
-    def clean_total_prices(self):
-        totals = self.cleaned_data.get('total_prices')
-        try:
-            totals = [float(t) for t in totals.split(',')]
-        except (ValueError, TypeError):
-            raise ValidationError("Invalid total prices.")
-        return totals
-
-    def clean_batch_skus(self):
-        batch_skus = self.cleaned_data.get('batch_skus')
-        try:
-            batch_skus = [b.strip() for b in batch_skus.split(',')]
-        except (ValueError, TypeError):
-            raise ValidationError("Invalid batch SKUs.")
-        return batch_skus
-
-    def clean_product_discounts(self):
-        discounts = self.cleaned_data.get('product_discounts')
-        try:
-            discounts = [float(d) for d in discounts.split(',')]
-        except (ValueError, TypeError):
-            raise ValidationError("Invalid discounts.")
-        return discounts
-
-    def clean_final_total(self):
-        final_total = self.cleaned_data.get('final_total')
-        if final_total <= 0:
-            raise ValidationError("Final total must be greater than zero.")
-        return final_total        
-    
-
-
-class BulkUpdateOrdersForm(forms.Form):
-    order_ids = forms.ModelMultipleChoiceField(queryset=Order.objects.all(), required=True)
-    action = forms.ChoiceField(choices=[
-        ('update_status', 'Update Status'),
-        ('delete', 'Delete')
-    ], required=True)
-    new_status = forms.ChoiceField(choices=Order.STATUS_CHOICES, required=False)
-
-    def clean(self):
-        cleaned_data = super().clean()
-        action = cleaned_data.get('action')
-        new_status = cleaned_data.get('new_status')
-
-        if action == 'update_status' and not new_status:
-            self.add_error('new_status', 'New status is required when updating status.')
-
-        return cleaned_data    

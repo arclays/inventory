@@ -1,15 +1,17 @@
 {% extends "InvApp/layout.html" %}
+{% load static %}
 
 {% block title %}Reports & Analytics Dashboard{% endblock %}
 
 {% block content %}
-{% load static %}
 <div class="container-fluid pt-3">
+  <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style="background: linear-gradient(135deg, #ffffff 0%, #8d8c8c 100%); color: #030303;">
     <h2 class="m-0"><i class="bi bi-bar-chart-fill me-2"></i> Reports & Analytics</h2>
     <img src="{% static 'images/logo-sm.png' %}" alt="Logo" style="height: 40px; opacity: 0.9;">
   </div>
 
+  <!-- Summary Cards -->
   <div class="row mb-4">
     <div class="col-md-4 mb-3">
       <div class="card border-0 rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
@@ -22,15 +24,12 @@
           <div>
             <h6 class="text-muted mb-1">Total Inventory Value</h6>
             <h3 class="mb-0 text-primary">UGX {{ total_inventory_value|floatformat:2 }}</h3>
-            <p class="text-muted mb-0 mt-2 small">
-              <span class="text-success me-1"><i class="bi bi-arrow-up"></i> 5.2%</span> vs last period
-            </p>
           </div>
         </div>
       </div>
     </div>
     <div class="col-md-4 mb-3">
-      <div class="card border-0  rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+      <div class="card border-0 rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
         <div class="card-body d-flex align-items-center">
           <div class="me-3">
             <div class="rounded-circle bg-success bg-opacity-10 p-3">
@@ -38,17 +37,19 @@
             </div>
           </div>
           <div>
-            <h6 class="text-muted mb-1">Total Sales</h6>
-            <h3 class="mb-0 text-success">UGX {{ total_sales|floatformat:2 }}</h3>
+            <h6 class="text-muted mb-1">Total Revenue</h6>
+            <h3 class="mb-0 text-success">UGX {{ total_revenue|floatformat:2 }}</h3>
             <p class="text-muted mb-0 mt-2 small">
-              <span class="text-success me-1"><i class="bi bi-arrow-up"></i> 11%</span> vs last period
+              <span class="{% if revenue_growth >= 0 %}text-success{% else %}text-danger{% endif %} me-1">
+                <i class="bi bi-arrow-{% if revenue_growth >= 0 %}up{% else %}down{% endif %}"></i> {{ revenue_growth|floatformat:2 }}%
+              </span> vs last period
             </p>
           </div>
         </div>
       </div>
     </div>
     <div class="col-md-4 mb-3">
-      <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+      <div class="card border-0 rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
         <div class="card-body d-flex align-items-center">
           <div class="me-3">
             <div class="rounded-circle bg-danger bg-opacity-10 p-3">
@@ -70,18 +71,18 @@
     <div class="collapse" id="dateRangeFilters">
       <div class="card col-md-6 mx-auto border-0 shadow-sm rounded-3" style="background: #ffffff;">
         <div class="card-body p-4">
-          <form class="row g-3 align-items-center">
+          <form class="row g-3 align-items-center" method="GET" action="{% url 'report_analysis' %}">
             <div class="col-md-3">
               <label for="startDate" class="form-label fw-bold">From</label>
-              <input type="date" class="form-control rounded-3" id="startDate" value="{{ default_start_date }}">
+              <input type="date" class="form-control rounded-3" id="startDate" name="start_date" value="{{ default_start_date }}">
             </div>
             <div class="col-md-3">
               <label for="endDate" class="form-label fw-bold">To</label>
-              <input type="date" class="form-control rounded-3" id="endDate" value="{{ default_end_date }}">
+              <input type="date" class="form-control rounded-3" id="endDate" name="end_date" value="{{ default_end_date }}">
             </div>
             <div class="col-md-3">
               <label for="reportPeriod" class="form-label fw-bold">Period</label>
-              <select class="form-select rounded-3" id="reportPeriod">
+              <select class="form-select rounded-3" id="reportPeriod" name="period">
                 <option value="daily">Daily</option>
                 <option value="weekly" selected>Weekly</option>
                 <option value="monthly">Monthly</option>
@@ -97,38 +98,39 @@
       </div>
     </div>
   </div>
-<!-- Main Tabs -->
-<ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist" style="border-bottom: 2px solid #0dcaf0;">
-  <li class="nav-item" role="presentation">
-      <button class="nav-link tab-button active rounded-top px-5 py-3" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab">
-          <i class="bi bi-box-seam me-2 fs-6"></i> <span class="fs-6">Inventory</span>
-      </button>
-  </li>
-  <li class="nav-item" role="presentation">
-      <button class="nav-link tab-button rounded-top px-5 py-3" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab">
-          <i class="bi bi-graph-up me-2 fs-6"></i> <span class="fs-6">Sales</span>
-      </button>
-  </li>
-  <li class="nav-item" role="presentation">
-      <button class="nav-link tab-button rounded-top px-5 py-3" id="expiry-tab" data-bs-toggle="tab" data-bs-target="#expiry" type="button" role="tab">
-          <i class="bi bi-clock me-2 fs-6"></i> <span class="fs-6">Product Expiry</span>
-      </button>
-  </li>
-</ul>
 
+  <!-- Main Tabs -->
+  <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist" style="border-bottom: 2px solid #0dcaf0;">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link tab-button active rounded-top px-5 py-3" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab">
+        <i class="bi bi-box-seam me-2 fs-6"></i> <span class="fs-6">Inventory</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link tab-button rounded-top px-5 py-3" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab">
+        <i class="bi bi-graph-up me-2 fs-6"></i> <span class="fs-6">Sales</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link tab-button rounded-top px-5 py-3" id="expiry-tab" data-bs-toggle="tab" data-bs-target="#expiry" type="button" role="tab">
+        <i class="bi bi-clock me-2 fs-6"></i> <span class="fs-6">Product Expiry</span>
+      </button>
+    </li>
+  </ul>
 
   <!-- Main Tab Content -->
   <div class="tab-content mt-3" id="mainTabsContent">
-    <div class="tab-pane fade show active" id="inventory" role="tabpanel" >
+    <!-- Inventory Tab -->
+    <div class="tab-pane fade show active" id="inventory" role="tabpanel">
       <!-- Inventory Sub-Tabs -->
       <ul class="nav nav-pills mb-3" id="inventorySubTabs" role="tablist" style="border-bottom: 2px solid #0dcaf0;">
         <li class="nav-item" role="presentation">
-          <button class="nav-link tab-button active px-3 py-2 me-2 " id="totalInventory-tab" data-bs-toggle="pill" data-bs-target="#totalInventory" type="button" role="tab" >
+          <button class="nav-link tab-button active px-3 py-2 me-2" id="totalInventory-tab" data-bs-toggle="pill" data-bs-target="#totalInventory" type="button" role="tab">
             Inventory Valuation
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link tab-button px-3 py-2 me-2 " id="lowStock-tab" data-bs-toggle="pill" data-bs-target="#lowStock" type="button" role="tab" >
+          <button class="nav-link tab-button px-3 py-2 me-2" id="lowStock-tab" data-bs-toggle="pill" data-bs-target="#lowStock" type="button" role="tab">
             Stock Alerts
           </button>
         </li>
@@ -137,18 +139,23 @@
             Category Analysis
           </button>
         </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link tab-button px-3 py-2" id="inventoryTrend-tab" data-bs-toggle="pill" data-bs-target="#inventoryTrend" type="button" role="tab">
+            Inventory Trend
+          </button>
+        </li>
       </ul>
 
       <div class="tab-content mt-3" id="inventorySubContent">
         <!-- Inventory Valuation -->
         <div class="tab-pane fade show active" id="totalInventory" role="tabpanel">
           <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-header  text-primary d-flex justify-content-between align-items-center">
+            <div class="card-header text-primary d-flex justify-content-between align-items-center">
               <h5 class="mb-0">Inventory Valuation Report</h5>
             </div>
             <div class="card-body">
               <div class="table-responsive">
-                  <table id="example" class="table table-striped" style="width:100%">
+                <table id="inventoryTable" class="table table-striped" style="width:100%">
                   <thead class="table-light">
                     <tr>
                       <th>Product</th>
@@ -165,7 +172,7 @@
                       <td>{{ item.name }}</td>
                       <td>{{ item.category__name }}</td>
                       <td class="text-end">{{ item.quantity_in_stock }}</td>
-                      <td class="text-end">{{ item.unit_cost }}</td>
+                      <td class="text-end">UGX {{ item.unit_cost|floatformat:2 }}</td>
                       <td class="text-end">UGX {{ item.total_value|floatformat:2 }}</td>
                       <td class="text-end">{{ item.percentage|floatformat:1 }}%</td>
                     </tr>
@@ -183,10 +190,11 @@
             </div>
           </div>
         </div>
+
         <!-- Stock Alerts -->
         <div class="tab-pane fade" id="lowStock" role="tabpanel">
           <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-header text-white">
+            <div class="card-header text-primary">
               <h5 class="mb-0">Stock Alerts</h5>
             </div>
             <div class="card-body">
@@ -219,19 +227,20 @@
                   <div class="card border-0 shadow-sm rounded-3">
                     <div class="card-body text-center py-3">
                       <h6 class="mb-1">Average Reorder Qty</h6>
-                      <h3 class="text-info mb-0">{{ average_reorder_quantity }}</h3>
+                      <h3 class="text-info mb-0">{{ average_reorder_quantity|floatformat:2 }}</h3>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="table-responsive">
-                <table class="table table-hover">
+                <table id="lowStockTable" class="table table-hover">
                   <thead class="table-light">
                     <tr>
                       <th>Product</th>
                       <th class="text-end">Current Stock</th>
                       <th class="text-end">Reorder Level</th>
                       <th class="text-end">Reorder Qty</th>
+                      <th class="text-end">Critical Level</th>
                       <th>Status</th>
                       <th>Action</th>
                     </tr>
@@ -239,36 +248,27 @@
                   <tbody>
                     {% for item in low_stock_items %}
                     <tr>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="avatar-sm me-3">
-                            <span class="avatar-title bg-light rounded">{{ item.name|slice:":-4" }}</span>
-                          </div>
-                          <div>
-                            <h6 class="mb-0">{{ item.product.name }}</h6>
-                            <small class="text-muted">{{ item.batch.batch_sku|default:"-" }}</small>
-                          </div>
-                        </div>
-                      </td>
+                      <td>{{ item.name }}</td>
                       <td class="text-end">{{ item.quantity_in_stock }}</td>
                       <td class="text-end">{{ item.reorder_level }}</td>
                       <td class="text-end">{{ item.reorder_quantity }}</td>
+                      <td class="text-end">{{ item.critical_level|floatformat:2 }}</td>
                       <td>
-                        {% if item.quantity_in_stock <= item.reorder_level %}
-                          <span class="badge bg-danger">Low</span>
+                        {% if item.quantity_in_stock <= item.critical_level %}
+                          <span class="badge bg-danger">Critical</span>
                         {% else %}
-                          <span class="badge bg-warning">Critical</span>
+                          <span class="badge bg-warning">Low</span>
                         {% endif %}
                       </td>
                       <td>
-                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reorderModal{{ item.id }}">
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reorderModal{{ item.product_id }}">
                           <i class="bi bi-cart-plus"></i> Reorder
                         </button>
                       </td>
                     </tr>
                     {% empty %}
                     <tr>
-                      <td colspan="6" class="text-center text-muted py-4">
+                      <td colspan="7" class="text-center text-muted py-4">
                         <i class="bi bi-check-circle fs-1 text-success"></i>
                         <h5 class="mt-2">No stock alerts</h5>
                         <p>All products are at healthy stock levels</p>
@@ -285,36 +285,55 @@
         <!-- Category Analysis -->
         <div class="tab-pane fade" id="categoryOverview" role="tabpanel">
           <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-header text-white">
+            <div class="card-header text-primary">
               <h5 class="mb-0">Category Analysis</h5>
             </div>
             <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-hover" id="example">
-                  <thead class="table-light">
-                    <tr>
-                      <th>Category</th>
-                      <th class="text-end">Products</th>
-                      <th class="text-end">Batch Count</th>
-                      <th class="text-end">Total Quantity</th>
-                      <th class="text-end">Stock Value</th>
-                      <th class="text-end">% of Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for category in category %}
-                    <tr>
-                      <td>{{ category.name }}</td>
-                      <td class="text-end">{{ category.product_count }}</td>
-                      <td class="text-end">{{ category.batch_count }}</td>
-                      <td class="text-end">{{ category.total_quantity }}</td>
-                      <td class="text-end">UGX {{ category.total_value|floatformat:1 }}</td>
-                      <td class="text-end">{{ category.percentage|floatformat:1 }}%</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
+              <div class="row mb-4">
+                <div class="col-md-6">
+                  <canvas id="categoryChart" height="250" style="background: #f8f9fa; border-radius: 10px;"></canvas>
+                </div>
+                <div class="col-md-6">
+                  <div class="table-responsive">
+                    <table id="categoryTable" class="table table-hover">
+                      <thead class="table-light">
+                        <tr>
+                          <th>Category</th>
+                          <th class="text-end">Products</th>
+                          <th class="text-end">Batch Count</th>
+                          <th class="text-end">Total Quantity</th>
+                          <th class="text-end">Stock Value</th>
+                          <th class="text-end">% of Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for category in category %}
+                        <tr>
+                          <td>{{ category.name }}</td>
+                          <td class="text-end">{{ category.product_count }}</td>
+                          <td class="text-end">{{ category.batch_count }}</td>
+                          <td class="text-end">{{ category.total_quantity }}</td>
+                          <td class="text-end">UGX {{ category.total_value|floatformat:2 }}</td>
+                          <td class="text-end">{{ category.percentage|floatformat:1 }}%</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inventory Trend -->
+        <div class="tab-pane fade" id="inventoryTrend" role="tabpanel">
+          <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-header text-primary">
+              <h5 class="mb-0">Inventory Value Trend</h5>
+            </div>
+            <div class="card-body">
+              <canvas id="inventoryTrendChart" height="250" style="background: #f8f9fa; border-radius: 10px;"></canvas>
             </div>
           </div>
         </div>
@@ -325,17 +344,6 @@
     <div class="tab-pane fade" id="sales" role="tabpanel">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0"><i class="bi bi-graph-up me-2"></i> Sales Performance Analytics</h4>
-        <div class="dropdown">
-          <button class="btn btn-outline-dark dropdown-toggle rounded-pill" type="button" id="reportPeriodDropdown" data-bs-toggle="dropdown">
-            <i class="bi bi-calendar-alt me-2"></i> Last 30 Days
-          </button>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-            <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
-            <li><a class="dropdown-item" href="#">Last Quarter</a></li>
-            <li><a class="dropdown-item" href="#">Custom Range</a></li>
-          </ul>
-        </div>
       </div>
 
       <!-- Summary Cards -->
@@ -345,8 +353,8 @@
             <div class="card-body">
               <h6 class="card-subtitle mb-2 text-muted">Total Revenue</h6>
               <h3 class="card-title text-primary">UGX {{ total_revenue|floatformat:2 }}</h3>
-              <p class="card-text small text-success">
-                <i class="bi bi-arrow-up"></i> {{ revenue_growth }}% vs previous period
+              <p class="card-text small {% if revenue_growth >= 0 %}text-success{% else %}text-danger{% endif %}">
+                <i class="bi bi-arrow-{% if revenue_growth >= 0 %}up{% else %}down{% endif %}"></i> {{ revenue_growth|floatformat:2 }}% vs previous
               </p>
             </div>
           </div>
@@ -356,7 +364,7 @@
             <div class="card-body">
               <h6 class="card-subtitle mb-2 text-muted">Gross Profit</h6>
               <h3 class="card-title text-success">UGX {{ gross_profit|floatformat:2 }}</h3>
-              <p class="card-text small">Margin: {{ gross_margin }}%</p>
+              <p class="card-text small">Margin: {{ gross_margin|floatformat:2 }}%</p>
             </div>
           </div>
         </div>
@@ -372,9 +380,11 @@
         <div class="col-md-3 mb-3">
           <div class="card border-0 shadow-sm rounded-3">
             <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">Return Rate</h6>
-              <h3 class="card-title text-danger">{{ return_rate }}%</h3>
-              <p class="card-text small">UGX {{ total_returns|floatformat:2 }} total</p>
+              <h6 class="card-subtitle mb-2 text-muted">Total Units Sold</h6>
+              <h3 class="card-title text-info">{{ total_units }}</h3>
+              <p class="card-text small {% if units_change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                <i class="bi bi-arrow-{% if units_change >= 0 %}up{% else %}down{% endif %}"></i> {{ units_change|floatformat:2 }}% vs previous
+              </p>
             </div>
           </div>
         </div>
@@ -383,12 +393,12 @@
       <!-- Sales Sub-Tabs -->
       <ul class="nav nav-tabs mb-3" id="salesSubTabs" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link tab-button active px-3 py-2 me-2" id="top-selling-tab" data-bs-toggle="pill" data-bs-target="#salesTopSellings" type="button" >
+          <button class="nav-link tab-button active px-3 py-2 me-2" id="top-selling-tab" data-bs-toggle="pill" data-bs-target="#salesTopSellings" type="button">
             <i class="bi bi-trophy me-2"></i> Top Performers
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link tab-button px-3 py-2 me-2" id="monthly-tab" data-bs-toggle="pill" data-bs-target="#salesMonthly" type="button" >
+          <button class="nav-link tab-button px-3 py-2 me-2" id="monthly-tab" data-bs-toggle="pill" data-bs-target="#salesMonthly" type="button">
             <i class="bi bi-calendar me-2"></i> Trend Analysis
           </button>
         </li>
@@ -398,7 +408,7 @@
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link tab-button px-3 py-2" id="profitability-tab" data-bs-toggle="pill" data-bs-target="#profitability" type="button" >
+          <button class="nav-link tab-button px-3 py-2" id="profitability-tab" data-bs-toggle="pill" data-bs-target="#profitability" type="button">
             <i class="bi bi-chart-pie me-2"></i> Profitability
           </button>
         </li>
@@ -408,14 +418,27 @@
         <!-- Top Selling Products -->
         <div class="tab-pane fade show active" id="salesTopSellings" role="tabpanel">
           <div class="row">
-            <div>
+            <div class="col-md-6">
+              <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header text-primary">
+                  <h5 class="mb-0">Top 5 Products Contribution</h5>
+                </div>
+                <div class="card-body">
+                  <canvas id="topProductsChart" height="250" style="background: #f8f9fa; border-radius: 10px;"></canvas>
+                  <div class="text-center mt-3">
+                    <p>Top 5: <span class="text-primary">{{ top5_percentage|floatformat:2 }}%</span> | Others: <span class="text-muted">{{ other_percentage|floatformat:2 }}%</span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
               <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header  text-dark d-flex justify-content-between align-items-center">
+                <div class="card-header text-primary">
                   <h5 class="mb-0">Top Selling Products</h5>
                 </div>
                 <div class="card-body">
                   <div class="table-responsive">
-                    <table id="example"  class="table table-striped" style="width:100%">
+                    <table id="topSellingTable" class="table table-striped" style="width:100%">
                       <thead class="table-light">
                         <tr>
                           <th>Rank</th>
@@ -457,12 +480,12 @@
         <!-- Monthly Sales Trend -->
         <div class="tab-pane fade" id="salesMonthly" role="tabpanel">
           <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-header  text-dark">
+            <div class="card-header text-primary">
               <h5 class="mb-0">Sales Trend Analysis</h5>
             </div>
             <div class="card-body">
               <div class="row mb-4">
-                <div >
+                <div class="col-md-12">
                   <div class="table-responsive">
                     <table class="table table-sm">
                       <thead>
@@ -476,10 +499,10 @@
                       <tbody>
                         <tr>
                           <td>Total Sales</td>
-                          <td>UGX {{ current_period_sales }}</td>
-                          <td>UGX {{ previous_period_sales }}</td>
+                          <td>UGX {{ current_period_sales|floatformat:2 }}</td>
+                          <td>UGX {{ previous_period_sales|floatformat:2 }}</td>
                           <td class="{% if sales_change >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {{ sales_change }}%
+                            {{ sales_change|floatformat:2 }}%
                           </td>
                         </tr>
                         <tr>
@@ -487,7 +510,7 @@
                           <td>{{ current_period_units }}</td>
                           <td>{{ previous_period_units }}</td>
                           <td class="{% if units_change >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {{ units_change }}%
+                            {{ units_change|floatformat:2 }}%
                           </td>
                         </tr>
                         <tr>
@@ -495,7 +518,7 @@
                           <td>UGX {{ current_avg_order|floatformat:2 }}</td>
                           <td>UGX {{ previous_avg_order|floatformat:2 }}</td>
                           <td class="{% if aov_change >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {{ aov_change }}%
+                            {{ aov_change|floatformat:2 }}%
                           </td>
                         </tr>
                       </tbody>
@@ -503,38 +526,7 @@
                   </div>
                 </div>
               </div>
-              <div class="table-responsive">
-                <table id="example"  class="table table-striped" style="width:100%">
-                  <thead class="table-light">
-                    <tr>
-                      <th>Month/Year</th>
-                      <th>Total Sales</th>
-                      <th>Orders</th>
-                      <th>Net Sales</th>
-                      <th>COGS</th>
-                      <th>Gross Profit</th>
-                      <th>Margin</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for report in monthly_sales %}
-                    <tr>
-                      <td>{{ report.month|date:"M Y" }}</td>
-                      <td>UGX {{ report.total_sales|floatformat:2 }}</td>
-                      <td>{{ report.order_count }}</td>
-                      <td>UGX {{ report.net_sales|floatformat:2 }}</td>
-                      <td>UGX {{ report.cogs|floatformat:2 }}</td>
-                      <td class="text-success">UGX {{ report.gross_profit|floatformat:2 }}</td>
-                      <td>
-                        <span class="badge bg-{% if report.margin >= 30 %}success{% elif report.margin >= 15 %}warning{% else %}danger{% endif %}">
-                          {{ report.margin|floatformat:1 }}%
-                        </span>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
+              <canvas id="monthlySalesChart" height="250" style="background: #f8f9fa; border-radius: 10px;"></canvas>
             </div>
           </div>
         </div>
@@ -542,12 +534,12 @@
         <!-- Daily Sales Details -->
         <div class="tab-pane fade" id="salesDaily" role="tabpanel">
           <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-header  text-dark d-flex justify-content-between align-items-center">
+            <div class="card-header text-primary">
               <h5 class="mb-0">Daily Transaction Report</h5>
             </div>
             <div class="card-body">
               <div class="table-responsive">
-                <table id="example" class="table table-striped" style="width:100%">
+                <table id="dailySalesTable" class="table table-striped" style="width:100%">
                   <thead>
                     <tr>
                       <th>Date</th>
@@ -558,26 +550,20 @@
                       <th>Cost</th>
                       <th>Revenue</th>
                       <th>Profit</th>
-                      <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {% for daily in daily_sales %}
                     <tr>
-                      <td>{{ daily.date|date:"M d, Y" }}</td>
-                      <td><a href="#" class="text-primary">{{ daily.order_id }}</a></td>
-                      <td>{{ daily.product }}</td>
+                      <td>{{ daily.order_date|date:"M d, Y" }}</td>
+                      <td><a href="#" class="text-primary">{{ daily.id }}</a></td>
+                      <td>{{ daily.product__name }}</td>
                       <td>{{ daily.quantity }}</td>
                       <td>UGX {{ daily.unit_price|floatformat:2 }}</td>
                       <td>UGX {{ daily.cost|floatformat:2 }}</td>
-                      <td>UGX {{ daily.revenue|floatformat:2 }}</td>
+                      <td>UGX {{ daily.total_price|floatformat:2 }}</td>
                       <td class="{% if daily.profit >= 0 %}text-success{% else %}text-danger{% endif %}">
                         UGX {{ daily.profit|floatformat:2 }}
-                      </td>
-                      <td>
-                        <span class="badge bg-{% if daily.status == 'completed' %}success{% elif daily.status == 'returned' %}danger{% else %}warning{% endif %}">
-                          {{ daily.status|title }}
-                        </span>
                       </td>
                     </tr>
                     {% endfor %}
@@ -587,27 +573,13 @@
                       <th colspan="3">Totals</th>
                       <th>{{ total_units }}</th>
                       <th></th>
-                      <th>UGX {{ total_cost|floatformat:2 }}</th>
+                      <th>UGX {{ total_cogs|floatformat:2 }}</th>
                       <th>UGX {{ total_revenue|floatformat:2 }}</th>
-                      <th>UGX {{ total_profit|floatformat:2 }}</th>
-                      <th></th>
+                      <th>UGX {{ gross_profit|floatformat:2 }}</th>
                     </tr>
                   </tfoot>
                 </table>
               </div>
-              <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center mt-3">
-                  <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1">Previous</a>
-                  </li>
-                  <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                  <li class="page-item"><a class="page-link" href="#">2</a></li>
-                  <li class="page-item"><a class="page-link" href="#">3</a></li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">Next</a>
-                  </li>
-                </ul>
-              </nav>
             </div>
           </div>
         </div>
@@ -616,60 +588,83 @@
         <div class="tab-pane fade" id="profitability" role="tabpanel">
           <div class="row">
             <div class="col-md-6">
-              <div class="card border-0  rounded-3 mb-4">
-                <div class="card-header  text-dark">
+              <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header text-primary">
                   <h5 class="mb-0">Profitability by Category</h5>
                 </div>
                 <div class="card-body">
-                  <canvas id="categoryProfitChart" height="250" style="background: #f8f9fa; border-radius: 10px;"></canvas>
+                  <div class="table-responsive">
+                    <table id="categoryProfitTable" class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>Category</th>
+                          <th>Revenue</th>
+                          <th>COGS</th>
+                          <th>Profit</th>
+                          <th>Margin</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for item in category_profit %}
+                        <tr>
+                          <td>{{ item.product__category__name }}</td>
+                          <td>UGX {{ item.revenue|floatformat:2 }}</td>
+                          <td>UGX {{ item.cogs|floatformat:2 }}</td>
+                          <td class="{% if item.profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            UGX {{ item.profit|floatformat:2 }}
+                          </td>
+                          <td>
+                            <span class="badge bg-{% if item.margin >= 30 %}success{% elif item.margin >= 15 %}warning{% else %}danger{% endif %}">
+                              {{ item.margin|floatformat:1 }}%
+                            </span>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
             <div class="col-md-6">
-              <div class="card border-0  rounded-3 mb-4">
-                <div class="card-header  text-dark">
-                  <h5 class="mb-0">Margin Distribution</h5>
+              <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header text-primary">
+                  <h5 class="mb-0">Product Profitability Matrix</h5>
                 </div>
                 <div class="card-body">
-                  <canvas id="marginDistributionChart" height="250" style="background: #f8f9fa; border-radius: 10px;"></canvas>
+                  <div class="table-responsive">
+                    <table id="profitabilityTable" class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>Product</th>
+                          <th>Revenue</th>
+                          <th>COGS</th>
+                          <th>Profit</th>
+                          <th>Margin</th>
+                          <th>Sales Volume</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for product in profitability_matrix %}
+                        <tr>
+                          <td>{{ product.product__name }}</td>
+                          <td>UGX {{ product.revenue|floatformat:2 }}</td>
+                          <td>UGX {{ product.cogs|floatformat:2 }}</td>
+                          <td class="{% if product.profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            UGX {{ product.profit|floatformat:2 }}
+                          </td>
+                          <td>
+                            <span class="badge bg-{% if product.margin >= 30 %}success{% elif product.margin >= 15 %}warning{% else %}danger{% endif %}">
+                              {{ product.margin|floatformat:1 }}%
+                            </span>
+                          </td>
+                          <td class="text-center">{{ product.volume }}</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-          <div class="card border-0 rounded-3">
-            <div class="card-header  text-dark">
-              <h5 class="mb-0">Product Profitability Matrix</h5>
-            </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>Revenue</th>
-                      <th>COGS</th>
-                      <th>Profit</th>
-                      <th>Margin</th>
-                      <th>Sales Volume</th>
-                      <th>Profit Contribution</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for product in profitability_matrix %}
-                    <tr>
-                      <td>{{product.product__name}}</td>
-                      <td>UGX {{ product.revenue|floatformat:2 }}</td>
-                      <td>UGX {{ product.cogs|floatformat:2 }}</td>
-                      <td class="{% if product.profit >= 0 %}text-success{% else %}text-danger{% endif %}">
-                        UGX {{ product.profit|floatformat:2 }}
-                      </td>
-                      <td>{{ product.margin|floatformat:1 }}%</td>
-                      <td class="text-center">{{ product.volume }}</td>
-                      <td>{{ product.contribution|floatformat:1 }}%</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
               </div>
             </div>
           </div>
@@ -677,15 +672,15 @@
       </div>
     </div>
 
-    <!-- Product Expiry  -->
+    <!-- Product Expiry Tab -->
     <div class="tab-pane fade" id="expiry" role="tabpanel">
-      <div class="card border-0  rounded-3">
-        <div class="card-header  text-dark">
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header text-primary">
           <h5 class="mb-0">Products Near Expiry</h5>
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-bordered">
+            <table id="expiryTable" class="table table-bordered">
               <thead class="table-light">
                 <tr>
                   <th>Product</th>
@@ -697,8 +692,15 @@
                 {% for exp in near_expiry %}
                 <tr>
                   <td>{{ exp.product__name }}</td>
-                  <td>{{ exp.expiry_date }}</td>
+                  <td>{{ exp.expiry_date|date:"M d, Y" }}</td>
                   <td>{{ exp.initial_quantity }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-center text-muted py-4">
+                    <i class="bi bi-check-circle fs-1 text-success"></i>
+                    <h5 class="mt-2">No products near expiry</h5>
+                  </td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -709,5 +711,143 @@
     </div>
   </div>
 </div>
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Inventory Trend Chart
+  new Chart(document.getElementById('inventoryTrendChart'), {
+    type: 'line',
+    data: {
+      labels: {{ inventory_trend_labels|safe }},
+      datasets: [{
+        label: 'Inventory Value (UGX)',
+        data: {{ inventory_trend_values|safe }},
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13, 110, 253, 0.2)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' },
+        title: { display: true, text: 'Inventory Value Over Time' }
+      },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: 'Value (UGX)' } },
+        x: { title: { display: true, text: 'Month' } }
+      }
+    }
+  });
 
+  // Category Chart
+  new Chart(document.getElementById('categoryChart'), {
+    type: 'pie',
+    data: {
+      labels: {{ category_names|safe }},
+      datasets: [{
+        label: 'Category Value',
+        data: {{ category_values|safe }},
+        backgroundColor: [
+          '#0d6efd', '#198754', '#dc3545', '#ffc107', '#6f42c1',
+          '#fd7e14', '#20c997', '#0dcaf0', '#adb5bd', '#6610f2'
+        ],
+        borderColor: '#ffffff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'right' },
+        title: { display: true, text: 'Category Inventory Distribution' }
+      }
+    }
+  });
+
+  // Top Products Chart
+  new Chart(document.getElementById('topProductsChart'), {
+    type: 'pie',
+    data: {
+      labels: {{ top_product_names|safe }},
+      datasets: [{
+        label: 'Revenue (UGX)',
+        data: {{ top_product_values|safe }},
+        backgroundColor: [
+          '#0d6efd', '#198754', '#dc3545', '#ffc107', '#6f42c1',
+          '#fd7e14', '#20c997', '#0dcaf0', '#adb5bd', '#6610f2'
+        ],
+        borderColor: '#ffffff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'right' },
+        title: { display: true, text: 'Top Products Revenue' }
+      }
+    }
+  });
+
+  // Monthly Sales Chart
+  new Chart(document.getElementById('monthlySalesChart'), {
+    type: 'line',
+    data: {
+      labels: {{ monthly_labels|safe }},
+      datasets: [
+        {
+          label: 'Sales (UGX)',
+          data: {{ monthly_sales|safe }},
+          borderColor: '#198754',
+          backgroundColor: 'rgba(25, 135, 84, 0.2)',
+          fill: true,
+          tension: 0.4
+        },
+        {
+          label: 'Profit (UGX)',
+          data: {{ monthly_profit_data|safe }},
+          borderColor: '#0dcaf0',
+          backgroundColor: 'rgba(13, 202, 240, 0.2)',
+          fill: true,
+          tension: 0.4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' },
+        title: { display: true, text: 'Monthly Sales and Profit Trends' }
+      },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: 'Value (UGX)' } },
+        x: { title: { display: true, text: 'Month' } }
+      }
+    }
+  });
+</script>
+
+<!-- DataTables Script -->
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $('#inventoryTable, #lowStockTable, #categoryTable, #topSellingTable, #dailySalesTable, #categoryProfitTable, #profitabilityTable, #expiryTable').DataTable({
+      responsive: true,
+      pageLength: 10,
+      order: [[0, 'asc']],
+      language: { search: "Filter:", searchPlaceholder: "Search table..." }
+    });
+  });
+</script>
+
+<style>
+  .card:hover { transform: translateY(-5px); }
+  .nav-link.tab-button { transition: background-color 0.3s, color 0.3s; }
+  .nav-link.tab-button.active { background-color: #0dcaf0; color: #fff; }
+  .nav-link.tab-button:hover { background-color: #e9ecef; }
+  .table-responsive { max-height: 500px; overflow-y: auto; }
+</style>
 {% endblock %}

@@ -8,19 +8,19 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded shadow-sm" style="background: linear-gradient(135deg, #ffffff 0%, #e9ecef 100%);">
         <div>
-            <h1 class="fw-bold mb-0 text-dark"><i class="bi bi-speedometer2 me-2"></i>  Dashboard</h1>
+            <h1 class="fw-bold mb-0 text-dark"><i class="bi bi-speedometer2 me-2"></i> Dashboard</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0" style="background: none;">
                     <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-dark text-decoration-none">Home</a></li>
-                    <li class="breadcrumb-item active text-primary">Dashboard</li>
+                    <li class="breadcrumb-item active text-primary" aria-current="page">Dashboard</li>
                 </ol>
             </nav>
         </div>
-        <div>
-            <button class="btn btn-outline-primary me-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#quickOrderModal">
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#quickOrderModal" aria-label="Place Quick Order">
                 <i class="bi bi-cart-plus me-2"></i> Quick Order
             </button>
-            <button class="btn btn-outline-success rounded-pill" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+            <button class="btn btn-outline-success rounded-pill" data-bs-toggle="modal" data-bs-target="#addCustomerModal" aria-label="Add New Customer">
                 <i class="bi bi-person-plus-fill me-2"></i> Add Customer
             </button>
         </div>
@@ -36,15 +36,15 @@
                 <div class="card-body">
                     <form id="filterForm" method="GET" action="{% url 'home' %}">
                         <div class="row g-3 align-items-end">
-                            <div class="col-md-3">
+                            <div class="col-md-3 col-sm-6">
                                 <label for="start_date" class="form-label fw-bold">Start Date</label>
                                 <input type="date" class="form-control rounded-3" id="start_date" name="start_date" value="{{ start_date }}">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3 col-sm-6">
                                 <label for="end_date" class="form-label fw-bold">End Date</label>
                                 <input type="date" class="form-control rounded-3" id="end_date" name="end_date" value="{{ end_date }}">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3 col-sm-6">
                                 <label for="reportPeriod" class="form-label fw-bold">Report Period</label>
                                 <select class="form-select rounded-3" id="reportPeriod" name="reportPeriod">
                                     <option value="daily" {% if report_period == 'daily' %}selected{% endif %}>Daily</option>
@@ -54,8 +54,8 @@
                                     <option value="yearly" {% if report_period == 'yearly' %}selected{% endif %}>Yearly</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-info w-100 rounded-3 mt-4"><i class="bi bi-check-circle-fill me-2"></i> Apply Filters</button>
+                            <div class="col-md-3 col-sm-6">
+                                <button type="submit" class="btn btn-info w-100 rounded-3 mt-md-4"><i class="bi bi-check-circle-fill me-2"></i> Apply Filters</button>
                             </div>
                         </div>
                     </form>
@@ -66,7 +66,7 @@
 
     <!-- Summary Cards -->
     <div class="row g-4 mb-5">
-        <div class="col-md-3 col-sm-6">
+        <div class="col-xl-3 col-md-4 col-sm-6">
             <div class="card shadow-sm h-100 border-0 rounded-3" style="border-left: 4px solid #0dcaf0;">
                 <div class="card-body d-flex align-items-center">
                     <i class="fas fa-shopping-cart fa-2x text-info me-3"></i>
@@ -77,7 +77,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-xl-3 col-md-4 col-sm-6">
             <div class="card shadow-sm h-100 border-0 rounded-3" style="border-left: 4px solid #28a745;">
                 <div class="card-body d-flex align-items-center">
                     <i class="fas fa-users fa-2x text-success me-3"></i>
@@ -88,7 +88,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-xl-3 col-md-4 col-sm-6">
             <div class="card shadow-sm h-100 border-0 rounded-3" style="border-left: 4px solid #17a2b8;">
                 <div class="card-body d-flex align-items-center">
                     <i class="fas fa-warehouse fa-2x text-info me-3"></i>
@@ -99,7 +99,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-xl-3 col-md-4 col-sm-6">
             <div class="card shadow-sm h-100 border-0 rounded-3" style="border-left: 4px solid #ffc107;">
                 <div class="card-body d-flex align-items-center">
                     <i class="fas fa-exclamation-triangle fa-2x text-warning me-3"></i>
@@ -110,7 +110,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-xl-3 col-md-4 col-sm-6">
             <div class="card shadow-sm h-100 border-0 rounded-3" style="border-left: 4px solid #343a40;">
                 <div class="card-body d-flex align-items-center">
                     <i class="fas fa-box fa-2x text-dark me-3"></i>
@@ -121,7 +121,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-xl-3 col-md-4 col-sm-6">
             <div class="card shadow-sm h-100 border-0 rounded-3" style="border-left: 4px solid #6c757d;">
                 <div class="card-body d-flex align-items-center">
                     <i class="fas fa-layer-group fa-2x text-secondary me-3"></i>
@@ -132,7 +132,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-xl-3 col-md-4 col-sm-6">
             <div class="card shadow-sm h-100 border-0 rounded-3" style="border-left: 4px solid #0dcaf0;">
                 <div class="card-body d-flex align-items-center">
                     <i class="fas fa-tools fa-2x text-info me-3"></i>
@@ -143,7 +143,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-xl-3 col-md-4 col-sm-6">
             <div class="card shadow-sm h-100 border-0 rounded-3" style="border-left: 4px solid #28a745;">
                 <div class="card-body d-flex align-items-center">
                     <i class="fas fa-dollar-sign fa-2x text-success me-3"></i>
@@ -154,7 +154,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-xl-3 col-md-4 col-sm-6">
             <div class="card shadow-sm h-100 border-0 rounded-3" style="border-left: 4px solid #dc3545;">
                 <div class="card-body d-flex align-items-center">
                     <i class="fas fa-chart-line fa-2x text-danger me-3"></i>
@@ -168,19 +168,24 @@
     </div>
 
     <!-- Charts -->
-    
-        <div class="col-md-12">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Monthly Sales & Profit</h5>
-                    <i class="bi bi-bar-chart-line-fill fs-4"></i>
+        <div class="col-md-12 g-4 mb-5">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header text-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i> Sales Trends</h5>
+                    <select id="periodFilter" class="form-select w-auto" onchange="updateChart()">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly" selected>Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
                 </div>
                 <div class="card-body">
-                    <canvas id="monthlySalesChart" height="200"></canvas>
+                    <canvas id="salesChart" height="200" style="background: #f8f9fa; border-radius: 10px;"></canvas>
                 </div>
             </div>
         </div>
-        <div class="row g-4 mb-5">
+    <div class="row g-4 mb-5"> 
         <div class="col-md-6">
             <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
@@ -258,20 +263,20 @@
                         <ul class="pagination justify-content-center">
                             {% if orders_page_obj.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?{% if request.GET.start_date %}start_date={{ start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ end_date }}&{% endif %}{% if request.GET.reportPeriod %}reportPeriod={{ request.GET.reportPeriod }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.customer %}customer={{ request.GET.customer }}&{% endif %}{% if request.GET.search %}search={{ search_query }}&{% endif %}page_size={{ page_size }}&orders_page={{ orders_page_obj.previous_page_number }}" aria-label="Previous">
-                                    <span aria-hidden="true">«</span>
+                                <a class="page-link" href="?{% if request.GET.start_date %}start_date={{ start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ end_date }}&{% endif %}{% if request.GET.reportPeriod %}reportPeriod={{ report_period }}&{% endif %}orders_page={{ orders_page_obj.previous_page_number }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
                             {% endif %}
                             {% for num in orders_page_obj.paginator.page_range %}
                             <li class="page-item {% if orders_page_obj.number == num %}active{% endif %}">
-                                <a class="page-link" href="?{% if request.GET.start_date %}start_date={{ start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ end_date }}&{% endif %}{% if request.GET.reportPeriod %}reportPeriod={{ request.GET.reportPeriod }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.customer %}customer={{ request.GET.customer }}&{% endif %}{% if request.GET.search %}search={{ search_query }}&{% endif %}page_size={{ page_size }}&orders_page={{ num }}">{{ num }}</a>
+                                <a class="page-link" href="?{% if request.GET.start_date %}start_date={{ start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ end_date }}&{% endif %}{% if request.GET.reportPeriod %}reportPeriod={{ report_period }}&{% endif %}orders_page={{ num }}">{{ num }}</a>
                             </li>
                             {% endfor %}
                             {% if orders_page_obj.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?{% if request.GET.start_date %}start_date={{ start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ end_date }}&{% endif %}{% if request.GET.reportPeriod %}reportPeriod={{ request.GET.reportPeriod }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.customer %}customer={{ request.GET.customer }}&{% endif %}{% if request.GET.search %}search={{ search_query }}&{% endif %}page_size={{ page_size }}&orders_page={{ orders_page_obj.next_page_number }}" aria-label="Next">
-                                    <span aria-hidden="true">»</span>
+                                <a class="page-link" href="?{% if request.GET.start_date %}start_date={{ start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ end_date }}&{% endif %}{% if request.GET.reportPeriod %}reportPeriod={{ report_period }}&{% endif %}orders_page={{ orders_page_obj.next_page_number }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
                                 </a>
                             </li>
                             {% endif %}
@@ -322,20 +327,20 @@
                         <ul class="pagination justify-content-center">
                             {% if low_stock_page_obj.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?{% if request.GET.start_date %}start_date={{ start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ end_date }}&{% endif %}{% if request.GET.reportPeriod %}reportPeriod={{ request.GET.reportPeriod }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.customer %}customer={{ request.GET.customer }}&{% endif %}{% if request.GET.search %}search={{ search_query }}&{% endif %}page_size={{ page_size }}&low_stock_page={{ low_stock_page_obj.previous_page_number }}" aria-label="Previous">
-                                    <span aria-hidden="true">«</span>
+                                <a class="page-link" href="?{% if request.GET.start_date %}start_date={{ start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ end_date }}&{% endif %}{% if request.GET.reportPeriod %}reportPeriod={{ report_period }}&{% endif %}low_stock_page={{ low_stock_page_obj.previous_page_number }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
                             {% endif %}
                             {% for num in low_stock_page_obj.paginator.page_range %}
                             <li class="page-item {% if low_stock_page_obj.number == num %}active{% endif %}">
-                                <a class="page-link" href="?{% if request.GET.start_date %}start_date={{ start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ end_date }}&{% endif %}{% if request.GET.reportPeriod %}reportPeriod={{ request.GET.reportPeriod }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.customer %}customer={{ request.GET.customer }}&{% endif %}{% if request.GET.search %}search={{ search_query }}&{% endif %}page_size={{ page_size }}&low_stock_page={{ num }}">{{ num }}</a>
+                                <a class="page-link" href="?{% if request.GET.start_date %}start_date={{ start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ end_date }}&{% endif %}{% if request.GET.reportPeriod %}reportPeriod={{ report_period }}&{% endif %}low_stock_page={{ num }}">{{ num }}</a>
                             </li>
                             {% endfor %}
                             {% if low_stock_page_obj.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?{% if request.GET.start_date %}start_date={{ start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ end_date }}&{% endif %}{% if request.GET.reportPeriod %}reportPeriod={{ request.GET.reportPeriod }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.customer %}customer={{ request.GET.customer }}&{% endif %}{% if request.GET.search %}search={{ search_query }}&{% endif %}page_size={{ page_size }}&low_stock_page={{ low_stock_page_obj.next_page_number }}" aria-label="Next">
-                                    <span aria-hidden="true">»</span>
+                                <a class="page-link" href="?{% if request.GET.start_date %}start_date={{ start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ end_date }}&{% endif %}{% if request.GET.reportPeriod %}reportPeriod={{ report_period }}&{% endif %}low_stock_page={{ low_stock_page_obj.next_page_number }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
                                 </a>
                             </li>
                             {% endif %}
@@ -511,5 +516,93 @@
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/datatables.net-buttons@3.1.2/js/buttons.html5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTables for Recent Orders
+    $('#recentOrdersTable').DataTable({
+        pageLength: 5,
+        order: [[0, 'desc']],
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+    });
+
+    // Initialize DataTables for Low Stock
+    $('#lowStockTable').DataTable({
+        pageLength: 5,
+        order: [[2, 'asc']],
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+    });
+
+    // Sales Trends Chart
+    let salesChart = null;
+    const ctx = document.getElementById('salesChart').getContext('2d');
+
+    function updateChart() {
+        const period = $('#periodFilter').val();
+
+        $.ajax({
+            
+            url:'',
+            type: 'GET',
+            data: { period: period },
+            success: function(response) {
+                const labels = response.labels;
+                const data = response.data;
+
+                if (salesChart) {
+                    salesChart.destroy();
+                }
+
+                salesChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Sales (UGX)',
+                            data: data,
+                            borderColor: '#0d6efd',
+                            backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: period.charAt(0).toUpperCase() + period.slice(1)
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Total Sales (UGX)'
+                                },
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+            },
+            error: function(xhr) {
+                console.error('Error fetching chart data:', xhr.responseText);
+            }
+        });
+    }
+
+    // Initial chart load
+    updateChart();
+});
+</script>
 <script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
