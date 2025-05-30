@@ -167,7 +167,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {% for item in inventory %}
+                    {% for item in inventory_data %}
                     <tr>
                       <td>{{ item.name }}</td>
                       <td>{{ item.category__name }}</td>
@@ -199,7 +199,7 @@
             </div>
             <div class="card-body">
               <div class="row mb-4">
-                <div class="col-md-3">
+                <div class="col-md-4">
                   <div class="card border-0 shadow-sm rounded-3">
                     <div class="card-body text-center py-3">
                       <h6 class="mb-1">Total Products</h6>
@@ -207,27 +207,19 @@
                     </div>
                   </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                   <div class="card border-0 shadow-sm rounded-3">
                     <div class="card-body text-center py-3">
                       <h6 class="mb-1">Low Stock Items</h6>
-                      <h3 class="text-danger mb-0">{{ low_stock_count }}</h3>
+                      <h3 class="text-danger mb-0">{{low_stock_count}}</h3>
                     </div>
                   </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                   <div class="card border-0 shadow-sm rounded-3">
                     <div class="card-body text-center py-3">
                       <h6 class="mb-1">Critical Stock</h6>
-                      <h3 class="text-danger mb-0">{{ critical_stock_count }}</h3>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-3">
-                  <div class="card border-0 shadow-sm rounded-3">
-                    <div class="card-body text-center py-3">
-                      <h6 class="mb-1">Average Reorder Qty</h6>
-                      <h3 class="text-info mb-0">{{ average_reorder_quantity|floatformat:2 }}</h3>
+                      <h3 class="text-danger mb-0">{{ critical_count }}</h3>
                     </div>
                   </div>
                 </div>
@@ -307,7 +299,7 @@
                         </tr>
                       </thead>
                       <tbody>
-                        {% for category in category %}
+                        {% for category in category_data %}
                         <tr>
                           <td>{{ category.name }}</td>
                           <td class="text-end">{{ category.product_count }}</td>
@@ -546,8 +538,8 @@
                       <th>Order ID</th>
                       <th>Product</th>
                       <th>Qty</th>
-                      <th>Unit Price</th>
-                      <th>Cost</th>
+                      <th>per Unit Price</th>
+                      <th>total Cost</th>
                       <th>Revenue</th>
                       <th>Profit</th>
                     </tr>
@@ -711,143 +703,5 @@
     </div>
   </div>
 </div>
-<!-- Chart.js Script -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  // Inventory Trend Chart
-  new Chart(document.getElementById('inventoryTrendChart'), {
-    type: 'line',
-    data: {
-      labels: {{ inventory_trend_labels|safe }},
-      datasets: [{
-        label: 'Inventory Value (UGX)',
-        data: {{ inventory_trend_values|safe }},
-        borderColor: '#0d6efd',
-        backgroundColor: 'rgba(13, 110, 253, 0.2)',
-        fill: true,
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'top' },
-        title: { display: true, text: 'Inventory Value Over Time' }
-      },
-      scales: {
-        y: { beginAtZero: true, title: { display: true, text: 'Value (UGX)' } },
-        x: { title: { display: true, text: 'Month' } }
-      }
-    }
-  });
 
-  // Category Chart
-  new Chart(document.getElementById('categoryChart'), {
-    type: 'pie',
-    data: {
-      labels: {{ category_names|safe }},
-      datasets: [{
-        label: 'Category Value',
-        data: {{ category_values|safe }},
-        backgroundColor: [
-          '#0d6efd', '#198754', '#dc3545', '#ffc107', '#6f42c1',
-          '#fd7e14', '#20c997', '#0dcaf0', '#adb5bd', '#6610f2'
-        ],
-        borderColor: '#ffffff',
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'right' },
-        title: { display: true, text: 'Category Inventory Distribution' }
-      }
-    }
-  });
-
-  // Top Products Chart
-  new Chart(document.getElementById('topProductsChart'), {
-    type: 'pie',
-    data: {
-      labels: {{ top_product_names|safe }},
-      datasets: [{
-        label: 'Revenue (UGX)',
-        data: {{ top_product_values|safe }},
-        backgroundColor: [
-          '#0d6efd', '#198754', '#dc3545', '#ffc107', '#6f42c1',
-          '#fd7e14', '#20c997', '#0dcaf0', '#adb5bd', '#6610f2'
-        ],
-        borderColor: '#ffffff',
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'right' },
-        title: { display: true, text: 'Top Products Revenue' }
-      }
-    }
-  });
-
-  // Monthly Sales Chart
-  new Chart(document.getElementById('monthlySalesChart'), {
-    type: 'line',
-    data: {
-      labels: {{ monthly_labels|safe }},
-      datasets: [
-        {
-          label: 'Sales (UGX)',
-          data: {{ monthly_sales|safe }},
-          borderColor: '#198754',
-          backgroundColor: 'rgba(25, 135, 84, 0.2)',
-          fill: true,
-          tension: 0.4
-        },
-        {
-          label: 'Profit (UGX)',
-          data: {{ monthly_profit_data|safe }},
-          borderColor: '#0dcaf0',
-          backgroundColor: 'rgba(13, 202, 240, 0.2)',
-          fill: true,
-          tension: 0.4
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'top' },
-        title: { display: true, text: 'Monthly Sales and Profit Trends' }
-      },
-      scales: {
-        y: { beginAtZero: true, title: { display: true, text: 'Value (UGX)' } },
-        x: { title: { display: true, text: 'Month' } }
-      }
-    }
-  });
-</script>
-
-<!-- DataTables Script -->
-<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-<script>
-  $(document).ready(function() {
-    $('#inventoryTable, #lowStockTable, #categoryTable, #topSellingTable, #dailySalesTable, #categoryProfitTable, #profitabilityTable, #expiryTable').DataTable({
-      responsive: true,
-      pageLength: 10,
-      order: [[0, 'asc']],
-      language: { search: "Filter:", searchPlaceholder: "Search table..." }
-    });
-  });
-</script>
-
-<style>
-  .card:hover { transform: translateY(-5px); }
-  .nav-link.tab-button { transition: background-color 0.3s, color 0.3s; }
-  .nav-link.tab-button.active { background-color: #0dcaf0; color: #fff; }
-  .nav-link.tab-button:hover { background-color: #e9ecef; }
-  .table-responsive { max-height: 500px; overflow-y: auto; }
-</style>
 {% endblock %}

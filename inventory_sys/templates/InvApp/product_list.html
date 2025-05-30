@@ -40,10 +40,8 @@
                                 <i class="bi bi-download me-2"></i>Download
                             </button>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="">Excel</a></li>
                                 <li><a class="dropdown-item" href="">PDF</a></li>
                                 <li><a class="dropdown-item" href="">CSV</a></li>
-                                <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="javascript:window.print()">Print</a></li>
                             </ul>
                         </div>
@@ -144,12 +142,19 @@
                                             <label for="name{{ product.product_id }}">Product Name</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="text" class="form-control" id="units{{ product.product_id }}" name="units" value="{{ product.units|default_if_none:'' }}" required>
-                                            <label for="units{{ product.product_id }}">Units</label>
-                                        </div>
-                                    </div>
+                                     <div class="col-md-6">
+                          <div class="form-floating">
+                            <select id="productUnits" name="units" class="form-select" required>
+                              <option value="" disabled selected>Select units</option>
+                              <option value="pcs">Pieces</option>
+                              <option value="kg">Kilograms</option>
+                              <option value="l">Liters</option>
+                              <option value="m">Meters</option>
+                              <option value="dozen">Dozen</option>
+                            </select>
+                          <label for="productUnits">Units</label>
+                        </div>
+                        </div>
                                     <div class="col-md-6">
                                         <div class="form-floating">
                                             <select class="form-select" id="categoryname{{ product.product_id }}" name="category_id" required>

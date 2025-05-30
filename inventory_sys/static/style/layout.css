@@ -142,3 +142,9 @@
     .modal-content {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
+/* Add to your CSS */
+.chart-container {
+    position: relative;
+    height: 400px;
+    width: 100%;
+}

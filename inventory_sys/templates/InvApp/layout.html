@@ -207,76 +207,6 @@
                     </div>
                 </li>
                 <li>
-                    
-<!-- Profile Modal -->
-<div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content rounded-3">
-            <form method="POST" action="" enctype="multipart/form-data" id="profileForm">
-                {% csrf_token %}
-                <div class="modal-header" style="background: linear-gradient(135deg, #0dcaf0 0%, #007bff 100%); color: #fff;">
-                    <h5 class="modal-title" id="profileModalLabel">
-                        <i class="bi bi-person-gear me-2"></i> Edit Profile
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <!-- Profile Picture -->
-                        <div class="col-md-4 text-center">
-                            <label class="form-label fw-bold">Profile Picture</label>
-                            <div class="mb-3">
-                                <img id="profilePreview" src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/avatar-placeholder.png' %}{% endif %}" alt="Profile Preview" class="rounded-circle shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">
-                            </div>
-                            <input type="file" name="profile_picture" id="profilePicture" class="form-control rounded-3" accept="image/*">
-                        </div>
-                        <!-- User Details -->
-                        <div class="col-md-8">
-                            <div class="mb-3">
-                                <label for="email" class="form-label fw-bold">Email</label>
-                                <input type="email" name="email" id="email" class="form-control rounded-3" value="{{ user.email }}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="username" class="form-label fw-bold">Username</label>
-                                <input type="text" name="username" id="username" class="form-control rounded-3" value="{{ user.username }}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label fw-bold">New Password (optional)</label>
-                                <input type="password" name="password" id="password" class="form-control rounded-3">
-                            </div>
-                            <div class="mb-3">
-                                <label for="confirm_password" class="form-label fw-bold">Confirm New Password</label>
-                                <input type="password" name="confirm_password" id="confirm_password" class="form-control rounded-3">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Error Messages -->
-                    {% if form.errors %}
-                        <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
-                            <ul class="mb-0">
-                                {% for field in form %}
-                                    {% for error in field.errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                {% endfor %}
-                                {% for error in form.non_field_errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success rounded-3">
-                        <i class="bi bi-check-circle-fill me-2"></i> Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
     </li>
         <li class="nav-item p-2">
             <button class="btn btn-sm btn-outline-light" id="fullscreen-toggle">
@@ -287,6 +217,75 @@
         </div>
     </div>
 </nav>
+              
+     <!-- Profile Modal -->
+      <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-3">
+                <form method="POST" action="{% url 'edit_profile' %}" enctype="multipart/form-data" id="profileForm">
+                    {% csrf_token %}
+                    <div class="modal-header" style="background: linear-gradient(135deg, #0dcaf0 0%, #007bff 100%); color: #fff;">
+                        <h5 class="modal-title" id="profileModalLabel">
+                            <i class="bi bi-person-gear me-2"></i> Edit Profile
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-4 text-center">
+                                <label for="profilePicture" class="form-label fw-bold">Profile Picture</label>
+                                <div class="mb-3">
+                                    <img id="profilePreview" src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/avatar-placeholder.png' %}{% endif %}" alt="Profile Preview" class="rounded-circle shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">
+                                </div>
+                                <input type="file" name="profile_picture" id="profilePicture" class="form-control rounded-3" accept="image/*">
+                            </div>
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label fw-bold">Email</label>
+                                    <input type="email" name="email" id="email" class="form-control rounded-3" value="{{ user.email }}" required aria-describedby="emailHelp">
+                                    <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="username" class="form-label fw-bold">Username</label>
+                                    <input type="text" name="username" id="username" class="form-control rounded-3" value="{{ user.username }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label fw-bold">New Password (optional)</label>
+                                    <input type="password" name="password" id="password" class="form-control rounded-3" aria-describedby="passwordHelp">
+                                    <div id="passwordHelp" class="form-text">Leave blank to keep current password.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirm_password" class="form-label fw-bold">Confirm New Password</label>
+                                    <input type="password" name="confirm_password" id="confirm_password" class="form-control rounded-3">
+                                </div>
+                            </div>
+                        </div>
+                        {% if form.errors %}
+                            <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                                <ul class="mb-0">
+                                    {% for field in form %}
+                                        {% for error in field.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success rounded-3">
+                            <i class="bi bi-check-circle-fill me-2"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 <main class="content">
     <div class="container-fluid">
@@ -304,6 +303,7 @@
 <script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="{% static 'js/ss.js' %}"></script>
 <script src="{% static 'js/screen.js' %}"></script>
 <script src="{% static 'js/order.js' %}"></script>
 <script src="{% static 'js/charts.js' %}"></script>
@@ -311,6 +311,7 @@
 <script src="{% static 'js/placeorder.js' %}"></script>
 <script src="{% static 'js/transaction.js' %}"></script>
 <script src="{% static 'js/stock.js' %}"></script>
+<script src="{% static 'js/scripts.js' %}"></script>
 <script src="{% static 'js/product.js' %}"></script>
 
 <script>

@@ -1,16 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-# from django.contrib.auth.decorators import login_required
-from django.core.serializers.json import DjangoJSONEncoder
-from django.db import models
-from django.db.models.functions import TruncMonth, TruncYear
+from django.db.models.functions import TruncMonth
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_http_methods
-from django.core.exceptions import EmptyResultSet
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.db import transaction
 from datetime import datetime, date
+from django.http import HttpRequest, HttpResponse
 from django.views.generic import View
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -26,13 +23,13 @@ from .forms import StockAdjustmentForm, DateRangeForm, OrderFilterForm
 from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 from django.http import JsonResponse
-from django.db.models import Sum, F,Avg,   Q, When, Value, Case,  FloatField,Count , ExpressionWrapper, CharField, IntegerField
+from django.db.models import Sum, F,FloatField,Count , ExpressionWrapper
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from django.contrib.auth.models import User
 from .forms import UserProfileForm
 from datetime import timedelta
-from django.db.models import Sum, Count, FloatField, FloatField, Subquery, OuterRef, Q
+from django.db.models import Sum, Count, FloatField, FloatField, Subquery, OuterRef
 from django.db.models.functions import  TruncMonth
 import json,logging
 
@@ -41,16 +38,15 @@ from .utils import (
     get_orders,
     get_adjustments,
     get_combined_activity,
-    get_sales_data,
     get_batch_data,
     get_total_sold_last_30_days,
     get_yearly_sales_and_avg_monthly_sales,
     get_suggested_reorder_quantity,
     get_expiring_batches_count
 )
-from django.http import HttpRequest, HttpResponse
 
 
+logger = logging.getLogger(__name__)
 def register_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -126,20 +122,92 @@ def confirm_logout(request):
 
 class DashboardBaseMixin:
     """Base mixin for dashboard-related functionality"""
+
     def get_date_range(self):
-        """Get default date range (last 30 days)"""
         today = timezone.now().date()
         return {
-            'default_start': today - timezone.timedelta(days=30),
+            'default_start': today - timedelta(days=30),
             'default_end': today
         }
 
     def parse_date(self, date_str, default):
-        """Parse date string or return default"""
         try:
             return timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
         except (ValueError, TypeError):
             return default
+
+    # def get_sales_data(self):
+    #     """Reusable sales data logic (returns dict of labels and data)"""
+    #     request = self.request
+    #     product_id = request.GET.get('product_id')
+    #     time_period = request.GET.get('time_period', 'monthly')
+        
+    #     if not product_id:
+    #         return {'error': 'Missing product_id'}
+
+    #     today = timezone.now().date()
+    #     sales_labels = []
+    #     sales_data = []
+
+    #     try:
+    #         is_all = product_id == "all"
+    #         if not is_all:
+    #             try:
+    #                 product = Product.objects.get(product_id=product_id)
+    #             except Product.DoesNotExist:
+    #                 return {'error': 'Product not found'}
+
+    #         def get_orders_filter(start, end):
+    #             filters = {'order_date__gte': start, 'order_date__lte': end}
+    #             if not is_all:
+    #                 filters['product'] = product
+    #             return Order.objects.filter(**filters)
+
+    #         if time_period == 'daily':
+    #             for i in range(29, -1, -1):
+    #                 day = today - timedelta(days=i)
+    #                 sales_labels.append(day.strftime("%b %d"))
+    #                 total = get_orders_filter(day, day).aggregate(total=Sum('quantity'))['total'] or 0
+    #                 sales_data.append(total)
+
+    #         elif time_period == 'weekly':
+    #             for i in range(11, -1, -1):
+    #                 week_start = today - timedelta(weeks=i+1, days=today.weekday()+1)
+    #                 week_end = week_start + timedelta(days=6)
+    #                 sales_labels.append(f"{week_start.strftime('%b %d')} - {week_end.strftime('%b %d')}")
+    #                 total = get_orders_filter(week_start, week_end).aggregate(total=Sum('quantity'))['total'] or 0
+    #                 sales_data.append(total)
+
+    #         elif time_period == 'quarterly':
+    #             for i in range(3, -1, -1):
+    #                 q_start = today - relativedelta(months=3*i)
+    #                 q_start = q_start.replace(day=1)
+    #                 q_end = (q_start + relativedelta(months=3)) - timedelta(days=1)
+    #                 sales_labels.append(f"Q{(q_start.month-1)//3 + 1} {q_start.year}")
+    #                 total = get_orders_filter(q_start, q_end).aggregate(total=Sum('quantity'))['total'] or 0
+    #                 sales_data.append(total)
+
+    #         elif time_period == 'yearly':
+    #             for i in range(4, -1, -1):
+    #                 year = today.year - i
+    #                 y_start = today.replace(year=year, month=1, day=1)
+    #                 y_end = today.replace(year=year, month=12, day=31)
+    #                 sales_labels.append(str(year))
+    #                 total = get_orders_filter(y_start, y_end).aggregate(total=Sum('quantity'))['total'] or 0
+    #                 sales_data.append(total)
+
+    #         else:  # monthly (default)
+    #             for i in range(5, -1, -1):
+    #                 m_start = (today - relativedelta(months=i)).replace(day=1)
+    #                 m_end = (m_start + relativedelta(months=1)) - timedelta(days=1)
+    #                 sales_labels.append(m_start.strftime("%b %Y"))
+    #                 total = get_orders_filter(m_start, m_end).aggregate(total=Sum('quantity'))['total'] or 0
+    #                 sales_data.append(total)
+
+    #         return {'labels': sales_labels, 'data': sales_data}
+
+    #     except Exception as e:
+    #         return {'error': str(e)}
 
 class HomeDashboardView(LoginRequiredMixin, DashboardBaseMixin, TemplateView):
     template_name = 'InvApp/home.html'
@@ -154,9 +222,10 @@ class HomeDashboardView(LoginRequiredMixin, DashboardBaseMixin, TemplateView):
         context.update({
             **self.get_core_metrics(),
             **self.get_stock_metrics(),
-            **self.get_sales_data(),
+            # **self.get_sales_data(),
             **self.get_stock_trends(),
             **self.get_paginated_items(),
+            
         })
         return context
 
@@ -197,6 +266,7 @@ class HomeDashboardView(LoginRequiredMixin, DashboardBaseMixin, TemplateView):
             'stock_adjustments': StockAdjustment.objects.filter(
                 created_at__date__range=[self.start_date, self.end_date]
             ).count(),
+            'products':Product.objects.all()
         }
 
     def get_stock_metrics(self):
@@ -221,29 +291,6 @@ class HomeDashboardView(LoginRequiredMixin, DashboardBaseMixin, TemplateView):
             batches__stock_date__range=[self.start_date, self.end_date]
         ).distinct()    
         return queryset
-
-    def get_sales_data(self):
-        """Generate monthly sales and profit data for charts"""
-        buying_price_subquery = Subquery(
-            ProductBatch.objects.filter(
-                product=OuterRef('product')
-            ).order_by('-stock_date').values('buying_price')[:1],
-            output_field=DecimalField()
-        )
-
-        monthly_sales = self.get_orders_queryset().annotate(
-            month=TruncMonth('order_date'),
-            buying_price=buying_price_subquery
-        ).values('month').annotate(
-            total_sales=Sum('final_total'),
-            total_profit=Sum(F('final_total') - (F('quantity') * F('buying_price')))
-        ).order_by('month')
-
-        return self.generate_time_series_data(
-            monthly_sales,
-            ['total_sales', 'total_profit'],
-            'month'
-        )
 
     def get_stock_trends(self):
         """Generate stock trend data for charts"""
@@ -413,44 +460,112 @@ def product_list(request):
         'category_id': category_id
     })
 
+def product_update(request, product_id):    
+    """Updates an existing product based on POST data."""
+    if request.method != 'POST':
+        messages.error(request, "Invalid request method.")
+        return redirect('product_list')
+
+    categories = Category.objects.all()
+    category_id = request.GET.get('category', '')
+    products = Product.objects.all().order_by('-product_id')
+    if category_id:
+        products = products.filter(category_id=category_id)
+
+    product_id = request.POST.get('product_id')
+    name = request.POST.get('name', '').strip()
+    category_id = request.POST.get('category_id')
+    selling_price_str = request.POST.get('selling_price', '').strip()
+    units = request.POST.get('units', '').strip()
+    reorder_quantity_str = request.POST.get('reorder_quantity', '').strip()
+    reorder_level_str = request.POST.get('reorder_level', '').strip()
+
+    if not product_id or not name or not category_id or not selling_price_str or not units:
+        messages.error(request, "Please fill in all required fields.")
+        return render(request, 'InvApp/product_list.html', {
+            'categories': categories,
+            'products': products,
+            'category_id': category_id
+        })
+
+    try:
+        product = Product.objects.get(product_id=product_id)
+        selling_price = float(selling_price_str)
+        if selling_price <= 0:
+            raise ValueError("Selling price must be greater than zero.")
+
+        reorder_quantity = int(reorder_quantity_str) if reorder_quantity_str else None
+        if reorder_quantity is not None and reorder_quantity < 0:
+            raise ValueError("Reorder quantity must be non-negative.")
+
+        reorder_level = int(reorder_level_str) if reorder_level_str else None
+        if reorder_level is not None and reorder_level < 0:
+            raise ValueError("Reorder level must be non-negative.")
+
+        category = Category.objects.get(id=category_id)
+
+        product.name = name
+        product.category = category
+        product.selling_price = selling_price
+        product.units = units
+        product.reorder_quantity = reorder_quantity
+        product.reorder_level = reorder_level
+        product.save()
+
+        messages.success(request, f"Product '{name}' updated successfully!")
+        redirect_url = reverse('product_list')
+        if category_id:
+            redirect_url += f'?category={category_id}'
+        return redirect(redirect_url)
+
+    except Product.DoesNotExist:
+        messages.error(request, "Selected product does not exist.")
+    except Category.DoesNotExist:
+        messages.error(request, "Selected category does not exist.")
+    except ValueError as ve:
+        messages.error(request, str(ve))
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+
+    return render(request, 'InvApp/product_list.html', {
+        'categories': categories,
+        'products': products,
+        'category_id': category_id
+    })
 
 def product_history(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
-    logger.info(f"Product: {product}, Type: {type(product)}")
+    logger.info(f"Viewing history for product: {product.name} (ID: {product_id})")
 
-    product_batches = get_product_batches(product)
-    orders = get_orders(product)
-    adjustments = get_adjustments(product)
+    # Get essential data
     today = timezone.now().date()
-
-    combined_activity = get_combined_activity(product_batches, product, request)
+    product_batches = get_product_batches(product)
     
-
-    # Get different sales data
-    # monthly_sales_labels, monthly_sales_data = get_sales_data(product, time_period='monthly')
-    # daily_sales_labels, daily_sales_data = get_sales_data(product, time_period='daily')
-    # weekly_sales_labels, weekly_sales_data = get_sales_data(product, time_period='weekly')
-    # quarterly_sales_labels, quarterly_sales_data = get_sales_data(product, time_period='quarterly')
-    # yearly_sales_labels, yearly_sales_data = get_sales_data(product, time_period='yearly')
-
+    # Get paginated activities
+    combined_activity = get_combined_activity(product_batches, product, request)
+    combined_activity_paginator = Paginator(combined_activity, 10)
+    combined_activity_page = request.GET.get('page', 1)
+    combined_activity = combined_activity_paginator.get_page(combined_activity_page)
+    
+    # Get paginated orders
+    orders = get_orders(product)
+    orders_paginator = Paginator(orders, 10)
+    orders_page = request.GET.get('page', 1)
+    orders = orders_paginator.get_page(orders_page)
+    
+    # Get paginated adjustments
+    adjustments = get_adjustments(product)
+    adjustments_paginator = Paginator(adjustments, 10)
+    adjustments_page = request.GET.get('page', 1)
+    adjustments = adjustments_paginator.get_page(adjustments_page)
+    
+    # Get metrics (optimized)
     batch_labels, batch_quantities = get_batch_data(product_batches)
     total_sold_last_30_days = get_total_sold_last_30_days(product, today)
     yearly_sales, avg_monthly_sales = get_yearly_sales_and_avg_monthly_sales(product, today)
     suggested_reorder_quantity = get_suggested_reorder_quantity(product)
     expiring_batches_count = get_expiring_batches_count(product_batches, today)
-
-    combined_activity_paginator = Paginator(combined_activity, 10)
-    combined_activity_page = request.GET.get('page', 1)
-    combined_activity = combined_activity_paginator.get_page(combined_activity_page)
-
-    orders_paginator = Paginator(orders, 10)
-    orders_page = request.GET.get('page', 1)
-    orders = orders_paginator.get_page(orders_page)
-
-    adjustments_paginator = Paginator(adjustments, 10)
-    adjustments_page = request.GET.get('page', 1)
-    adjustments = adjustments_paginator.get_page(adjustments_page)
-
+    
     context = {
         'product': product,
         'product_batches': product_batches,
@@ -462,16 +577,6 @@ def product_history(request, product_id):
         'yearly_sales': yearly_sales,
         'suggested_reorder_quantity': suggested_reorder_quantity,
         'expiring_batches_count': expiring_batches_count,
-        # 'monthly_sales_labels': monthly_sales_labels,
-        # 'monthly_sales_data': monthly_sales_data,
-        # 'daily_sales_labels': daily_sales_labels,
-        # 'daily_sales_data': daily_sales_data,
-        # 'weekly_sales_labels': weekly_sales_labels,
-        # 'weekly_sales_data': weekly_sales_data,
-        # 'quarterly_sales_labels': quarterly_sales_labels,
-        # 'quarterly_sales_data': quarterly_sales_data,
-        # 'yearly_sales_labels': yearly_sales_labels,
-        # 'yearly_sales_data': yearly_sales_data,
         'batch_labels': batch_labels,
         'batch_quantities': batch_quantities,
         'active_tab': request.GET.get('tab', 'activity'),
@@ -529,23 +634,6 @@ def customer_confirm_delete(request, customer_id):
         return redirect('customer_list')
     return render(request, 'Invapp/customer_confirm_delete.html', {'customer': customer})
 
-def product_update(request, product_id):
-    product = get_object_or_404(Product, product_id=product_id)
-    if request.method == 'POST':
-        form = ProductForm(request.POST, instance=product)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Product updated successfully!')
-            return redirect('product_list')
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field.capitalize()}: {error}")
-            return render(request, 'Invapp/product_update.html', {'product': product, 'form': form})
-
-    form = ProductForm(instance=product)
-    return render(request, 'Invapp/product_update.html', {'product': product, 'form': form})
-
 def product_confirm_delete(request, product_id):
     product = get_object_or_404(Product, product_id=product_id)
     if request.method == 'POST':
@@ -561,82 +649,76 @@ def get_selling_price(request, product_id):
     return JsonResponse({"selling_price": float(product.selling_price)})
 
 
-logger = logging.getLogger(__name__)
-@cache_page(60 * 15)
-@require_http_methods(["GET"])
 def get_sales_data(request):
+    product_id = request.GET.get('product_id')
+    time_period = request.GET.get('time_period', 'monthly')
+    
+    if not product_id:
+        return JsonResponse({'error': 'Missing product_id'}, status=400)
+
+    today = timezone.now().date()
+    sales_labels = []
+    sales_data = []
+
     try:
-        time_period = request.GET.get('time_period', 'monthly').lower()
-        today = timezone.now().date()
-        sales_labels = []
-        sales_data = []
+        is_all = product_id == "all"
+        if not is_all:
+            try:
+                product = Product.objects.get(product_id=product_id)
+            except Product.DoesNotExist:
+                return JsonResponse({'error': 'Product not found'}, status=404)
+
+        def get_orders_filter(start, end):
+            filters = {'order_date__gte': start, 'order_date__lte': end}
+            if not is_all:
+                filters['product'] = product
+            return Order.objects.filter(**filters)
 
         if time_period == 'daily':
-            # Last 30 days
-            for i in range(29, -1, -1):  # range(0, 30)
+            for i in range(29, -1, -1):
                 day = today - timedelta(days=i)
-                sales_labels.append(day.strftime("%Y-%m-%d"))
-                daily_sales = Order.objects.filter(
-                    order_date=day
-                ).aggregate(total=Sum('quantity'))['total'] or 0
-                sales_data.append(daily_sales)
-        
+                sales_labels.append(day.strftime("%b %d"))
+                total = get_orders_filter(day, day).aggregate(total=Sum('quantity'))['total'] or 0
+                sales_data.append(total)
+
         elif time_period == 'weekly':
-            # Last 52 weeks
-            for i in range(51, -1, -1):  # range(0, 52)
-                week_start = today - timedelta(weeks=i, days=today.weekday())
+            for i in range(11, -1, -1):
+                week_start = today - timedelta(weeks=i+1, days=today.weekday()+1)
                 week_end = week_start + timedelta(days=6)
-                sales_labels.append(f"Week {week_start.strftime('%Y-%m-%d')} - {week_end.strftime('%Y-%m-%d')}")
-                weekly_sales = Order.objects.filter(
-                    order_date__gte=week_start,
-                    order_date__lte=week_end
-                ).aggregate(total=Sum('quantity'))['total'] or 0
-                sales_data.append(weekly_sales)
-        
+                sales_labels.append(f"{week_start.strftime('%b %d')} - {week_end.strftime('%b %d')}")
+                total = get_orders_filter(week_start, week_end).aggregate(total=Sum('quantity'))['total'] or 0
+                sales_data.append(total)
+
         elif time_period == 'quarterly':
-            # Last 4 quarters
-            for i in range(3, -1, -1):  # range(0, 4)
-                quarter_start = today - relativedelta(months=(i+1)*3, day=1)
-                quarter_end = quarter_start + relativedelta(months=3) - timedelta(days=1)
-                sales_labels.append(f"Q{((quarter_start.month - 1) // 3) + 1} {quarter_start.year}")
-                quarterly_sales = Order.objects.filter(
-                    order_date__gte=quarter_start,
-                    order_date__lte=quarter_end
-                ).aggregate(total=Sum('quantity'))['total'] or 0
-                sales_data.append(quarterly_sales)
-        
+            for i in range(3, -1, -1):
+                q_start = today - relativedelta(months=3*i)
+                q_start = q_start.replace(day=1)
+                q_end = (q_start + relativedelta(months=3)) - timedelta(days=1)
+                sales_labels.append(f"Q{(q_start.month-1)//3 + 1} {q_start.year}")
+                total = get_orders_filter(q_start, q_end).aggregate(total=Sum('quantity'))['total'] or 0
+                sales_data.append(total)
+
         elif time_period == 'yearly':
-            # Last 10 years
-            for i in range(9, -1, -1):  # range(0, 10)
-                year_start = today.replace(year=today.year - i, month=1, day=1)
-                year_end = year_start.replace(year=year_start.year + 1, month=1, day=1) - timedelta(days=1)
-                sales_labels.append(str(year_start.year))
-                yearly_sales = Order.objects.filter(
-                    order_date__gte=year_start,
-                    order_date__lte=year_end
-                ).aggregate(total=Sum('quantity'))['total'] or 0
-                sales_data.append(yearly_sales)
-        
-        else:
-            # Default to monthly
-            for i in range(11, -1, -1):  # range(0, 12)
-                month_start = (today - relativedelta(months=i)).replace(day=1)
-                month_end = (month_start + relativedelta(months=1)) - timedelta(days=1)
-                sales_labels.append(month_start.strftime("%b %Y"))
-                monthly_sales = Order.objects.filter(
-                    order_date__gte=month_start,
-                    order_date__lte=month_end
-                ).aggregate(total=Sum('quantity'))['total'] or 0
-                sales_data.append(monthly_sales)
-        
-        return JsonResponse({
-            'labels': sales_labels,
-            'data': sales_data
-        })
+            for i in range(4, -1, -1):
+                year = today.year - i
+                y_start = today.replace(year=year, month=1, day=1)
+                y_end = today.replace(year=year, month=12, day=31)
+                sales_labels.append(str(year))
+                total = get_orders_filter(y_start, y_end).aggregate(total=Sum('quantity'))['total'] or 0
+                sales_data.append(total)
+
+        else:  # monthly (default)
+            for i in range(5, -1, -1):
+                m_start = (today - relativedelta(months=i)).replace(day=1)
+                m_end = (m_start + relativedelta(months=1)) - timedelta(days=1)
+                sales_labels.append(m_start.strftime("%b %Y"))
+                total = get_orders_filter(m_start, m_end).aggregate(total=Sum('quantity'))['total'] or 0
+                sales_data.append(total)
+
+        return JsonResponse({'labels': sales_labels, 'data': sales_data})
 
     except Exception as e:
-        logger.error(f"Error in get_sales_data: {str(e)}")
-        return JsonResponse({'error': 'Internal server error'}, status=500)   
+        return JsonResponse({'error': str(e)}, status=500)
 
 def get_stock_data(request):
     products = Product.objects.all().only('name', 'quantity_in_stock')
@@ -999,28 +1081,28 @@ def stock_view(request: HttpRequest) -> HttpResponse:
 
     stock_alerts = get_stock_alerts()
 
-    # top_products = Stock.objects.values(
-    #     'product__name'
-    # ).annotate(
-    #     total=Sum('total_stock')
-    # ).order_by('-total')[:10]
+    top_products = Stock.objects.values(
+        'product__name'
+    ).annotate(
+        total=Sum('total_stock')
+    ).order_by('-total')[:10]
     
-    # category_dist = Stock.objects.values(
-    #     'product__category__name'
-    # ).annotate(
-    #     count=Count('id'),
-    #     total_stock=Sum('total_stock')
-    # ).order_by('-count')
+    category_dist = Stock.objects.values(
+        'product__category__name'
+    ).annotate(
+        count=Count('id'),
+        total_stock=Sum('total_stock')
+    ).order_by('-count')
 
     product_batches = annotate_batch_status(ProductBatch.objects.all().select_related('product', 'supplier'))
     total_products = Product.objects.count()
     low_stock_items = len([a for a in stock_alerts if a['status'] == 'low'])
     critical_stock_items = len([a for a in stock_alerts if a['status'] == 'critical'])
     
-    # total_stock_value = sum(
-    #     stock.total_stock * stock.product.selling_price 
-    #     for stock in Stock.objects.select_related('product')
-    # )
+    total_stock_value = sum(
+        stock.total_stock * stock.product.selling_price 
+        for stock in Stock.objects.select_related('product')
+    )
 
     context = {
         'stocks': page_obj,
@@ -1034,16 +1116,15 @@ def stock_view(request: HttpRequest) -> HttpResponse:
         'total_products': total_products,
         'low_stock_items': low_stock_items,
         'critical_stock_items': critical_stock_items,
-        # 'total_stock_value': total_stock_value,
-        # 'product_names': [p['product__name'] for p in top_products],
-        # 'stock_levels': [p['total'] for p in top_products],
-        # 'category_names': [c['product__category__name'] for c in category_dist],
-        # 'category_counts': [c['count'] for c in category_dist],
-        # 'category_stock': [c['total_stock'] for c in category_dist],
+        'total_stock_value': total_stock_value,
+        'product_names': [p['product__name'] for p in top_products],
+        'stock_levels': [p['total'] for p in top_products],
+        'category_names': [c['product__category__name'] for c in category_dist],
+        'category_counts': [c['count'] for c in category_dist],
+        'category_stock': [c['total_stock'] for c in category_dist],
     }
     return render(request, 'InvApp/stock.html', context)
 
-logger = logging.getLogger(__name__)
 def add_stock(request):
     if request.method == 'POST':
         form = AddStockForm(request.POST)
@@ -1110,11 +1191,7 @@ def add_stock(request):
     }
     return render(request, 'InvApp/stock.html', context)
 
-logger = logging.getLogger(__name__)
 def order_page(request: HttpRequest) -> HttpResponse:
-    """
-    View to display stock information with filters and alerts.
-    """
     form = OrderFilterForm(request.GET)
     if form.is_valid():
         start_date = form.cleaned_data['start_date']
@@ -1123,6 +1200,7 @@ def order_page(request: HttpRequest) -> HttpResponse:
         status = form.cleaned_data['status']
         payment_method = form.cleaned_data['payment_method']
         sort_by = form.cleaned_data['sort_by']
+        orders = Order.objects.all()
         try:
             page_size = int(form.cleaned_data['page_size']) or 10
             if page_size <= 0: 
@@ -1185,8 +1263,6 @@ def order_page(request: HttpRequest) -> HttpResponse:
             'page_sizes': form.fields['page_size'].choices,
         }
         return render(request, 'InvApp/order_page.html', context)
-
-logger = logging.getLogger(__name__)
 
 def place_order(request: HttpRequest):
     if request.method == 'POST':
@@ -1285,9 +1361,6 @@ def place_order(request: HttpRequest):
 
     return redirect('order_page')
 
-
-logger = logging.getLogger(__name__)
-
 class BulkUpdateOrdersView(View):
     def post(self, request):
         order_ids = request.POST.getlist('order_ids')
@@ -1322,8 +1395,6 @@ class BulkUpdateOrdersView(View):
 
         return redirect('order_page')
 
-
-logger = logging.getLogger(__name__)
 def export_orders_csv(request):
     field_mappings = {
         'Order ID': 'id',
@@ -1344,27 +1415,27 @@ def export_orders_csv(request):
     return export_csv(request, Order, queryset, field_mappings, 'orders')
 
 # def export_products_csv(request):
-#     field_mappings = {
-#         'Product ID': 'id',
-#         'Name': 'name',
-#         'Category': 'category',
-#         'Price': 'price',
-#         'Stock Quantity': 'quantity_in_stock',
-#         'Description': 'description'
-#     }
-#     queryset = Product.objects.all()
-#     return export_csv(request, Product, queryset, field_mappings, 'products')
+    field_mappings = {
+        'Product ID': 'id',
+        'Name': 'name',
+        'Category': 'category',
+        'Price': 'price',
+        'Stock Quantity': 'quantity_in_stock',
+        'Description': 'description'
+    }
+    queryset = Product.objects.all()
+    return export_csv(request, Product, queryset, field_mappings, 'products')
 
 # def export_customers_csv(request):
-#     field_mappings = {
-#         'Customer ID': 'id',
-#         'Name': 'name',
-#         'Email': 'email',
-#         'Phone': 'phone',
-#         'Address': 'address'
-#     }
-#     queryset = Customer.objects.all()
-#     return export_csv(request, Customer, queryset, field_mappings, 'customers')
+    field_mappings = {
+        'Customer ID': 'id',
+        'Name': 'name',
+        'Email': 'email',
+        'Phone': 'phone',
+        'Address': 'address'
+    }
+    queryset = Customer.objects.all()
+    return export_csv(request, Customer, queryset, field_mappings, 'customers')
 
 
 def get_latest_buying_price_subquery():
@@ -1398,7 +1469,7 @@ def process_inventory_data(batch_values, total_inventory_value):
     return [
         {
             'name': item['product__name'],
-            'sku': item['product__product_id'],
+            # 'sku': item['product__product_id'],
             'quantity_in_stock': item['quantity'],
             'unit_cost': item['buying_price'],
             'total_value': item['total_value'],
@@ -1418,15 +1489,13 @@ def get_low_stock_items():
         'reorder_level', 'reorder_quantity', 'critical_level'
     )
     critical_count = low_stock.filter(quantity_in_stock__lt=F('critical_level')).count()
-    return low_stock, critical_count
+    low_stock_count = low_stock.count() 
+    return low_stock, critical_count, low_stock_count
 
 def calculate_total_products():
     """Counts total products."""
     return Product.objects.count()
 
-def calculate_average_reorder_quantity():
-    """Calculates average reorder quantity."""
-    return Product.objects.aggregate(avg_reorder=Avg('reorder_quantity'))['avg_reorder'] or 0.0
 def calculate_category_data(total_inventory_value):
     return Category.objects.annotate(
         product_count=Count('products'),
@@ -1515,21 +1584,6 @@ def calculate_revenue_growth(total_revenue, previous_revenue):
     """Calculates revenue growth percentage."""
     return ((total_revenue - previous_revenue) / previous_revenue * 100) if previous_revenue else 0.0
 
-# def calculate_cogs_and_gross_profit(orders,total_revenue, buying_price_subquery):
-#     """Calculates COGS, gross profit, and gross margin."""
-#     total_cogs = orders.annotate(
-#         buying_price=buying_price_subquery
-#     ).aggregate(
-#         total_cost=Sum(
-#             ExpressionWrapper(
-#                 F('quantity') * F('buying_price'),
-#                 output_field=FloatField()
-#             )
-#         )
-#     )['total_cost'] or 0.0
-#     gross_profit = total_revenue - total_cogs
-#     gross_margin = (gross_profit / total_revenue * 100) if total_revenue else 0.0
-#     return total_cogs, gross_profit, gross_margin
 def calculate_cogs_and_gross_profit(orders, buying_price_subquery, total_revenue):
     total_cogs = orders.annotate(
         buying_price=buying_price_subquery
@@ -1745,9 +1799,9 @@ def calculate_category_profit(orders, buying_price_subquery):
     ]
 
 def get_near_expiry_products(today):
-    """Fetches products expiring within the next year."""
+    """Fetches products expiring within the next month."""
     return ProductBatch.objects.filter(
-        expiry_date__range=[today, today + timezone.timedelta(days=365)]
+        expiry_date__range=[today, today + timezone.timedelta(days=30)]
     ).select_related('product').values(
         'product__name', 'expiry_date', 'initial_quantity'
     ).order_by('expiry_date')
@@ -1756,23 +1810,21 @@ def report_analysis(request):
     # Define time frames
     today = timezone.now()
     thirty_days_ago = today - timedelta(days=30)
-    sixty_days_ago = today - timedelta(days=60)
+    # sixty_days_ago = today - timedelta(days=60)
     twelve_months_ago = today - relativedelta(months=12)
 
     # Get buying price subquery
     buying_price_subquery = get_latest_buying_price_subquery()
-
-    # Inventory metrics
+    # 
     batch_values = calculate_batch_values(buying_price_subquery)
     total_inventory_value = calculate_total_inventory_value(batch_values)
     inventory_data = process_inventory_data(batch_values, total_inventory_value)
-    low_stock, critical_count = get_low_stock_items()
+    low_stock,low_stock_count , critical_count= get_low_stock_items()
     total_products = calculate_total_products()
-    avg_reorder_quantity = calculate_average_reorder_quantity()
+    # avg_reorder_quantity = calculate_average_reorder_quantity()
     category_data = calculate_category_data(total_inventory_value)
     processed_category_data = process_category_data(category_data)
     inventory_labels, inventory_values = calculate_inventory_trend(today, twelve_months_ago)
-
     # Sales metrics
     recent_orders = get_recent_orders(thirty_days_ago)
     total_revenue = calculate_total_revenue(recent_orders)
@@ -1799,12 +1851,14 @@ def report_analysis(request):
         'inventory_data': inventory_data,
         'low_stock': low_stock,
         'critical_count': critical_count,
+        'low_stock_count':low_stock_count ,
         'total_products': total_products,
-        'avg_reorder_quantity': avg_reorder_quantity,
+        'total_inventory_value':total_inventory_value,
+        # 'avg_reorder_quantity': avg_reorder_quantity,
         'category_data': processed_category_data,
         'inventory_trend_labels': inventory_labels,
         'inventory_trend_values': inventory_values,
-        'recent_orders': recent_orders,
+        # 'recent_orders': recent_orders,
         'total_revenue': total_revenue,
         'revenue_growth': revenue_growth,
         'total_cogs': total_cogs,

@@ -9,7 +9,7 @@ from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 from django.db.models import Sum
-from .models import Order, Stock, StockAdjustment, ProductBatch
+from .models import Order, StockAdjustment, ProductBatch, Product
 
 
 logger = logging.getLogger(__name__)
@@ -51,81 +51,6 @@ def export_csv(request, model, queryset, field_mappings, filename_prefix):
     else:
         logger.error(f"Form validation errors: {form.errors}")
         return JsonResponse({'errors': form.errors}, status=400)
-    
-
-
-logger = logging.getLogger(__name__)
-
-def get_sales_data(product, time_period='monthly'):
-    today = timezone.now().date()
-    sales_labels = []
-    sales_data = []
-
-    if time_period == 'daily':
-        # Last 30 days
-        for i in range(29, -1, -1):  # range(0, 30)
-            day = today - timedelta(days=i)
-            sales_labels.append(day.strftime("%Y-%m-%d"))
-            daily_sales = Order.objects.filter(
-                product=product,
-                order_date=day
-            ).aggregate(total=Sum('quantity'))['total'] or 0
-            sales_data.append(daily_sales)
-    
-    elif time_period == 'weekly':
-        # Last 52 weeks
-        for i in range(51, -1, -1):  # range(0, 52)
-            week_start = today - timedelta(weeks=i, days=today.weekday())
-            week_end = week_start + timedelta(days=6)
-            sales_labels.append(f"Week {week_start.strftime('%Y-%m-%d')} - {week_end.strftime('%Y-%m-%d')}")
-            weekly_sales = Order.objects.filter(
-                product=product,
-                order_date__gte=week_start,
-                order_date__lte=week_end
-            ).aggregate(total=Sum('quantity'))['total'] or 0
-            sales_data.append(weekly_sales)
-    
-    elif time_period == 'quarterly':
-        # Last 4 quarters
-        for i in range(3, -1, -1):  # range(0, 4)
-            quarter_start = today - relativedelta(months=(i+1)*3, day=1)
-            quarter_end = quarter_start + relativedelta(months=3) - timedelta(days=1)
-            sales_labels.append(f"Q{((quarter_start.month - 1) // 3) + 1} {quarter_start.year}")
-            quarterly_sales = Order.objects.filter(
-                product=product,
-                order_date__gte=quarter_start,
-                order_date__lte=quarter_end
-            ).aggregate(total=Sum('quantity'))['total'] or 0
-            sales_data.append(quarterly_sales)
-    
-    elif time_period == 'yearly':
-        # Last 10 years
-        for i in range(9, -1, -1):  # range(0, 10)
-            year_start = today.replace(year=today.year - i, month=1, day=1)
-            year_end = year_start.replace(year=year_start.year + 1, month=1, day=1) - timedelta(days=1)
-            sales_labels.append(str(year_start.year))
-            yearly_sales = Order.objects.filter(
-                product=product,
-                order_date__gte=year_start,
-                order_date__lte=year_end
-            ).aggregate(total=Sum('quantity'))['total'] or 0
-            sales_data.append(yearly_sales)
-    
-    else:
-        # Default to monthly
-        for i in range(11, -1, -1):  # range(0, 12)
-            month_start = (today - relativedelta(months=i)).replace(day=1)
-            month_end = (month_start + relativedelta(months=1)) - timedelta(days=1)
-            sales_labels.append(month_start.strftime("%b %Y"))
-            monthly_sales = Order.objects.filter(
-                product=product,
-                order_date__gte=month_start,
-                order_date__lte=month_end
-            ).aggregate(total=Sum('quantity'))['total'] or 0
-            sales_data.append(monthly_sales)
-    
-    return sales_labels, sales_data    
-
 
 def get_product_batches(product):
     return ProductBatch.objects.filter(product=product).select_related('product', 'supplier').order_by('-stock_date')

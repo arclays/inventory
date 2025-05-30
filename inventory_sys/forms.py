@@ -18,28 +18,6 @@ class CustomerForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'required': True}),
         }       
 
-
-# class ProductForm(forms.ModelForm):
-#     class Meta:
-#         model = Product
-#         fields = ['name', 'quantity_in_stock', 'units', 'category', 
-#                  'selling_price', 'reorder_quantity', 'reorder_level']
-#         widgets = {
-#             'category': forms.Select(),
-#             'name': forms.TextInput(),
-#             'quantity_in_stock': forms.NumberInput(attrs={'min': 0}),
-#             'units': forms.Select(),
-#             'selling_price': forms.NumberInput(attrs={'min': 0, 'step': '0.01'}),
-#             'reorder_quantity': forms.NumberInput(attrs={'min': 0}),
-#             'reorder_level': forms.NumberInput(attrs={'min': 0}),
-#         }
-
-#     def clean_name(self):
-#         name = self.cleaned_data.get('name')
-#         if Product.objects.filter(name__iexact=name).exists():
-#             raise forms.ValidationError(f"Product '{name}' already exists!")
-#         return name
-
 class UserProfileForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, required=False, label="New Password")
     confirm_password = forms.CharField(widget=forms.PasswordInput, required=False, label="Confirm New Password")

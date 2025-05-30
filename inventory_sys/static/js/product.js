@@ -70,3 +70,5 @@
       document.getElementById('categoryFilter').value = '';
       updateSearchResults();
     });
+
+
