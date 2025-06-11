@@ -5,20 +5,24 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from django.contrib import messages
+from uuid import uuid4
 from django.db import transaction
 from datetime import datetime, date
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, Http404
 from django.views.generic import View
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import DecimalField
+# from django.db.models import DecimalField
+from collections import defaultdict
+from django.utils import timezone
+from .models import Order, OrderItem
 from .forms import CustomerForm, AddStockForm 
 from .utils import export_csv
 from django.urls import reverse
 from .models import Customer, Product, Order, Category, Supplier
 from django.http import HttpResponse
 from django.utils import timezone
-from .models import Order, Stock, StockAdjustment, ProductBatch
+from .models import Order, Stock, StockAdjustment, ProductBatch , Receipt
 from .forms import StockAdjustmentForm, DateRangeForm, OrderFilterForm
 from decimal import Decimal
 from dateutil.relativedelta import relativedelta
@@ -44,7 +48,6 @@ from .utils import (
     get_suggested_reorder_quantity,
     get_expiring_batches_count
 )
-
 
 logger = logging.getLogger(__name__)
 def register_view(request):
@@ -80,7 +83,8 @@ def login_view(request):
             next_url = request.POST.get('next') or request.GET.get('next') or reverse('home')
             return redirect(next_url)
         else:
-            return render(request, 'Invapp/login.html', {'error': 'Invalid credentials'})
+            # Redirect to register page instead of showing an error
+            return redirect('register')  
 
     next_url = request.GET.get('next', '')
     return render(request, 'Invapp/login.html', {'next': next_url})
@@ -649,6 +653,52 @@ def get_selling_price(request, product_id):
     return JsonResponse({"selling_price": float(product.selling_price)})
 
 
+def order_detail_api(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        items = order.items.all()  # using related_name='items' in OrderItem model
+
+        data = {
+            "order_id": order.id,
+            "order_date": order.order_date.strftime('%Y-%m-%d %H:%M'),
+            "payment_method": order.payment_method,
+            "final_total": float(order.final_total),
+            "customer": {
+                "name": order.customer.name if order.customer else "N/A",
+                "contact": order.customer.phone if order.customer else "N/A"
+            },
+            "items": [
+                {
+                    "product": {
+                        "name": item.product.name
+                    },
+                    "batch_sku": item.batch_sku,
+                    "quantity": item.quantity,
+                    "unit": item.unit,
+                    "price_per_unit": float(item.price_per_unit),
+                    "discount": float(item.discount),
+                    "total_price": float(item.total_price),
+                }
+                for item in items
+            ]
+        }
+
+        return JsonResponse(data)
+
+    except Order.DoesNotExist:
+        raise Http404("Order not found")
+
+def receipt_page(request, receipt_number):
+    receipt = get_object_or_404(Receipt, receipt_number=receipt_number)
+    orders = receipt.orders.all()
+      
+    total_amount = sum(order.total_price for order in orders)
+    return render(request, 'receipt_template.html', {
+        'receipt': receipt,
+        'orders': orders,
+        "total_amount": total_amount
+    })
+
 def get_sales_data(request):
     product_id = request.GET.get('product_id')
     time_period = request.GET.get('time_period', 'monthly')
@@ -815,7 +865,8 @@ def calculate_stock_transactions(products, selected_date, prev_date):
         })
 
     total_opening_stock = sum(t['opening_stock'] for t in stock_transactions)
-    return stock_transactions, total_stock_in, total_stock_out, total_adjustments, total_opening_stock
+    closing_stock = (total_stock_in + total_opening_stock) - total_stock_out
+    return stock_transactions, total_stock_in, total_stock_out,closing_stock, total_adjustments, total_opening_stock
 
 def report_page(request: HttpRequest) -> HttpResponse:
     """Generate a report page with stock transactions and other metrics."""
@@ -825,7 +876,6 @@ def report_page(request: HttpRequest) -> HttpResponse:
     
     stock_adjustments_count = StockAdjustment.objects.filter(created_at__date=selected_date).count()
 
-    # Fetch products and product batches
     selected_category_id = request.GET.get('category', None)
     products = Product.objects.select_related('category').all()
     product_batches = ProductBatch.objects.all()
@@ -835,7 +885,7 @@ def report_page(request: HttpRequest) -> HttpResponse:
         products = products.filter(category_id=selected_category_id)
 
     # Calculate stock transactions
-    stock_transactions, total_stock_in, total_stock_out, total_adjustments, total_opening_stock = calculate_stock_transactions(products, selected_date, prev_date)
+    stock_transactions, total_stock_in, closing_stock,total_stock_out, total_adjustments, total_opening_stock = calculate_stock_transactions(products, selected_date, prev_date)
 
     orders = Order.objects.filter(order_date=selected_date)
     total_customers = orders.values('customer').distinct().count()
@@ -847,6 +897,7 @@ def report_page(request: HttpRequest) -> HttpResponse:
     all_zeros = all([
         total_opening_stock == 0,
         total_stock_in == 0,
+        closing_stock ==0,
         total_stock_out == 0,
         total_adjustments == 0,
         total_cash_made == 0,
@@ -863,6 +914,7 @@ def report_page(request: HttpRequest) -> HttpResponse:
         'total_opening_stock': total_opening_stock,
         'total_stock_in': total_stock_in,
         'total_stock_out': total_stock_out,
+        'closing_stock':closing_stock,
         'total_adjustments': total_adjustments,
         'total_customers': total_customers,
         'total_orders': total_orders,
@@ -1066,7 +1118,6 @@ def stock_view(request: HttpRequest) -> HttpResponse:
     View to display stock information with filters and alerts.
     """
     start_date, end_date = parse_date_range(request)
-
     stocks = Stock.objects.filter(
         stock_date__range=[start_date, end_date]
     ).select_related('product', 'product__category').order_by('-stock_date')
@@ -1222,6 +1273,18 @@ def order_page(request: HttpRequest) -> HttpResponse:
         if payment_method:
             orders = orders.filter(payment_method=payment_method)
 
+          # Apply sorting
+        if sort_by in ['id', 'customer__name', 'product__name', 'quantity', 'price_per_unit', 'total_price', 'discount', 'final_total', 'order_date', 'status']:
+            orders = orders.order_by(sort_by)
+        else:
+            orders = orders.order_by('-id')  # Default sort
+
+        # Group orders by order_id
+        grouped_orders = defaultdict(list)
+        for order in orders:
+            grouped_orders[order.id].append(order)
+    
+
         # orders = orders.order_by(sort_by)
         orders = orders.order_by('order_date')
 
@@ -1251,7 +1314,8 @@ def order_page(request: HttpRequest) -> HttpResponse:
             'page_sizes': form.fields['page_size'].choices,
             'current_page_size': page_size,
             'sort_by': sort_by,
-            'form': form
+            'form': form,
+            'grouped_orders': dict(grouped_orders),
         }
         return render(request, 'InvApp/order_page.html', context)
     else:
@@ -1264,102 +1328,253 @@ def order_page(request: HttpRequest) -> HttpResponse:
         }
         return render(request, 'InvApp/order_page.html', context)
 
-def place_order(request: HttpRequest):
+from django.core.exceptions import ValidationError
+
+
+def place_order(request):
     if request.method == 'POST':
-        customer_id = request.POST.get('orderCustomer')
-        products = request.POST.getlist('products[]')
-        order_quantities = request.POST.getlist('orderQuantity[]')
-        units = request.POST.getlist('units[]')
-        price_per_units = request.POST.getlist('price_per_unit[]')
-        total_prices = request.POST.getlist('totalPrice[]')
-        batch_ids = request.POST.getlist('batch_sku[]')
-        discounts = request.POST.getlist('productDiscount[]')
-        order_date = request.POST.get('orderDate', date.today())
-        final_total = request.POST.get('finalTotal', 0)
-
         try:
-            customer = Customer.objects.get(id=customer_id)
-        except Customer.DoesNotExist:
-            messages.error(request, "Selected customer does not exist.")
-            return redirect('order_page')
+            with transaction.atomic():  # Ensure all operations succeed or fail together
+                # Extract form data
+                customer_id = request.POST.get('orderCustomer')
+                order_date = request.POST.get('orderDate')
+                payment_method = request.POST.get('paymentMethod')
+                final_total = request.POST.get('finalTotal')
+                products = request.POST.getlist('products[]')
+                quantities = request.POST.getlist('orderQuantity[]')
+                units = request.POST.getlist('units[]')
+                prices = request.POST.getlist('price_per_unit[]')
+                discounts = request.POST.getlist('productDiscount[]')
+                total_prices = request.POST.getlist('totalPrice[]')
 
-        payment_method = request.POST.get('paymentMethod', 'cash')
-        errors = []
+                # Validate inputs
+                if not (customer_id and order_date and payment_method and final_total and products):
+                    raise ValidationError("All required fields must be provided.")
 
-        for i in range(len(products)):
-            try:
-                product_id = products[i]
-                unit_id = units[i]
-                batch_id = batch_ids[i]
-
+                # Get customer
                 try:
-                    unit_price = float(price_per_units[i] or 0.0)
-                    total_price = float(total_prices[i] or 0.0)
-                    quantity = int(order_quantities[i] or 0)
-                    discount = float(discounts[i] or 0.0)
-                except (ValueError, TypeError):
-                    errors.append(f"Invalid input for product {product_id}.")
-                    continue
+                    customer = Customer.objects.get(id=customer_id)
+                except Customer.DoesNotExist:
+                    raise ValidationError("Invalid customer selected.")
 
-                try:
-                    product = Product.objects.get(product_id=product_id)
-                except Product.DoesNotExist:
-                    errors.append(f"Product with ID {product_id} does not exist.")
-                    continue
-
-                try:
-                    batch = ProductBatch.objects.get(id=batch_id)
-                except ProductBatch.DoesNotExist:
-                    errors.append(f"Batch with ID {batch_id} does not exist.")
-                    batch = None
-
-                if quantity <= 0:
-                    errors.append(f"Invalid quantity for product {product.name}.")
-                    continue
-
-                if product.quantity_in_stock < quantity:
-                    errors.append(f"Insufficient stock for product {product.name}. Available: {product.quantity_in_stock}, Requested: {quantity}")
-                    continue
-
-                if batch and batch.current_quantity < quantity:
-                    errors.append(f"Insufficient quantity in batch {batch.batch_sku}. Available: {batch.current_quantity}, Requested: {quantity}")
-                    continue
-
-                # Create Order
-                Order.objects.create(
+                # Create Receipt
+                receipt = Receipt.objects.create(
                     customer=customer,
-                    product=product,
-                    batch_sku=batch,
-                    quantity=quantity,
-                    price_per_unit=unit_price,
-                    total_price=total_price,
-                    units=unit_id,
-                    payment_method=payment_method,
-                    discount=discount,
-                    order_date=order_date,
-                    final_total=final_total,
+                    total_amount=Decimal(final_total)
                 )
 
-                # Update stock
-                product.quantity_in_stock -= quantity
-                product.save()
+                # Create Order
+                order = Order.objects.create(
+                    receipt=receipt,
+                    order_date=order_date,
+                    payment_method=payment_method,
+                    final_total=Decimal(final_total)
+                )
 
-                if batch:
-                    batch.current_quantity -= quantity
-                    batch.save()
+                # Create OrderItems
+                for i in range(len(products)):
+                    product_id = products[i]
+                    batch_id = request.POST.getlist('batch_sku[]')[i] or None
+                    quantity = quantities[i]
+                    unit = units[i]
+                    price = prices[i]
+                    discount = discounts[i]
+                    total_price = total_prices[i]
 
-            except Exception as e:
-                errors.append(f"Error processing product {product_id}: {str(e)}")
-                continue
-        if errors:
-            for error in errors:
-                messages.error(request, error)
-            return redirect('order_page')
+                    try:
+                        product = Product.objects.get(product_id=product_id)
+                    except Product.DoesNotExist:
+                        raise ValidationError(f"Product with ID {product_id} does not exist.")
 
-        messages.success(request, "Order placed successfully!")
-        return redirect('order_page')
+                    batch = None
+                    if batch_id:
+                        try:
+                            batch = ProductBatch.objects.get(id=batch_id)
+                        except ProductBatch.DoesNotExist:
+                            raise ValidationError(f"Batch with ID {batch_id} does not exist.")
 
+                    # Validate quantity and stock
+                    if int(quantity) <= 0:
+                        raise ValidationError(f"Invalid quantity for product {product.name}.")
+                    if batch and int(quantity) > batch.current_quantity:
+                        raise ValidationError(f"Insufficient stock in batch {batch.batch_sku}.")
+                    if not batch and int(quantity) > product.quantity_in_stock:
+                        raise ValidationError(f"Insufficient stock for product {product.name}.")
+
+                    # Create OrderItem
+                    OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        batch_sku=batch,
+                        quantity=int(quantity),
+                        unit=unit,
+                        price_per_unit=Decimal(price),
+                        discount=Decimal(discount),
+                        total_price=Decimal(total_price)
+                    )
+
+                    # Update stock
+                    if batch:
+                        batch.current_quantity -= int(quantity)
+                        batch.save()
+                    product.quantity_in_stock -= int(quantity)
+                    product.save()
+
+                messages.success(request, f"Order placed successfully with Receipt {receipt.receipt_number}")
+                return redirect('place_order')
+
+        except ValidationError as e:
+            messages.error(request, f"Error placing order: {str(e)}")
+        except Exception as e:
+            messages.error(request, f"An unexpected error occurred: {str(e)}")
+        return redirect('place_order')
     return redirect('order_page')
+
+    # # GET request: Render the form
+    # customers = Customer.objects.all()
+    # products = Product.objects.all()
+    # product_batches = ProductBatch.objects.all()
+    # payment_methods = [
+    #     ('cash', 'Cash'),
+    #     ('credit', 'Credit'),
+    #     ('mobile', 'Mobile Payment'),
+    # ]
+    # context = {
+    #     'customers': customers,
+    #     'products': products,
+    #     'product_batches': product_batches,
+    #     'payment_methods': payment_methods,
+    # }
+    # return render(request, 'InvApp/order_page.html', context)
+
+# def place_order(request):
+#     if request.method == 'POST':
+#         customer_id = request.POST.get('orderCustomer')
+#         products = request.POST.getlist('products[]')
+#         order_quantities = request.POST.getlist('orderQuantity[]')
+#         units = request.POST.getlist('units[]')
+#         price_per_units = request.POST.getlist('price_per_unit[]')
+#         batch_ids = request.POST.getlist('batch_sku[]')
+#         discounts = request.POST.getlist('productDiscount[]')
+#         order_date_str = request.POST.get('orderDate')
+#         payment_method = request.POST.get('paymentMethod', 'cash')
+
+#         # Validate inputs
+#         if not customer_id or not products or not order_quantities or not units or not price_per_units:
+#             messages.error(request, "Missing required fields.")
+#             return redirect('order_page')
+
+#         try:
+#             customer = Customer.objects.get(id=customer_id)
+#         except Customer.DoesNotExist:
+#             messages.error(request, "Selected customer does not exist.")
+#             return redirect('order_page')
+
+#         try:
+#             order_date = datetime.strptime(order_date_str, '%Y-%m-%d').date()
+#         except (ValueError, TypeError):
+#             messages.error(request, "Invalid order date.")
+#             return redirect('order_page')
+
+#         errors = []
+#         saved_orders = []
+
+#         # Create Receipt
+#         receipt = Receipt.objects.create(
+#             customer=customer,
+#             total_amount=Decimal(final_total)
+#                 )
+
+#         with transaction.atomic():
+#             final_total = 0
+#             for i in range(len(products)):
+#                 product_id = products[i]
+#                 unit = units[i]
+#                 batch_id = batch_ids[i] if batch_ids[i] else None
+#                 try:
+#                     quantity = int(order_quantities[i])
+#                     unit_price = float(price_per_units[i])
+#                     discount = float(discounts[i] or 0)
+#                 except (ValueError, TypeError):
+#                     errors.append(f"Invalid input for product {i + 1}: Quantity, price, or discount.")
+#                     continue
+
+#                 if quantity <= 0:
+#                     errors.append(f"Invalid quantity for product {i + 1}.")
+#                     continue
+
+#                 try:
+#                     product = Product.objects.get(product_id=product_id)
+#                 except Product.DoesNotExist:
+#                     errors.append(f"Product with ID {product_id} does not exist.")
+#                     continue
+
+#                 batch = None
+#                 if batch_id:
+#                     try:
+#                         batch = ProductBatch.objects.get(id=batch_id, product=product)
+#                     except ProductBatch.DoesNotExist:
+#                         errors.append(f"Batch with ID {batch_id} does not exist for product {product.name}.")
+#                         continue
+
+#                 if product.quantity_in_stock < quantity:
+#                     errors.append(f"Insufficient stock for product {product.name}. Available: {product.quantity_in_stock}, Requested: {quantity}")
+#                     continue
+
+#                 if batch and batch.current_quantity < quantity:
+#                     errors.append(f"Insufficient quantity in batch {batch.batch_sku}. Available: {batch.current_quantity}, Requested: {quantity}")
+#                     continue
+
+#                 # total_price =  ( quantity * unit_price *discount )/ 100
+#                 total_price = ((quantity * unit_price ) - ((quantity * unit_price) * (discount/ 100.00)))
+#                 final_total += total_price
+
+#                 # Create Order
+#                 order = Order(
+#                     customer=customer,
+#                     product=product,
+#                     batch_sku=batch,
+#                     quantity=quantity,
+#                     price_per_unit=unit_price,
+#                     total_price=total_price,
+#                     units=unit,
+#                     payment_method=payment_method,
+#                     discount=discount,
+#                     order_date=order_date,
+#                     final_total=total_price, 
+#                     # receipt_number=receipt_number,
+#                     receipt=receipt,
+#                 )
+#                 saved_orders.append(order)
+
+#             if errors:
+#                 for error in errors:
+#                     messages.error(request, error)
+#                 return redirect('order_page')
+
+#             # Save orders and update stock
+#             for order in saved_orders:
+#                 order.save()
+#                 order.product.quantity_in_stock -= order.quantity
+#                 order.product.save()
+#                 if order.batch_sku:
+#                     order.batch_sku.current_quantity -= order.quantity
+#                     order.batch_sku.save()
+
+#         messages.success(request, f"Order placed successfully with Receipt {receipt.receipt_number}")
+#         return redirect('place_order')
+#     return redirect('order_page')
+
+
+def view_transactions(request):
+    receipt_number = request.GET.get('receipt_number')
+    receipt = None
+    if receipt_number:
+        try:
+            receipt = Receipt.objects.get(receipt_number=receipt_number)
+        except Receipt.DoesNotExist:
+            messages.error(request, "Receipt not found.")
+    return render(request, 'transactions.html', {'receipt': receipt})
 
 class BulkUpdateOrdersView(View):
     def post(self, request):

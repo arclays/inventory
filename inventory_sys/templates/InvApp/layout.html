@@ -137,6 +137,12 @@
                 <span>Orders</span>
             </a>
         </li>
+         <li class="nav-item mb-2">
+            <a class="nav-link d-flex align-items-center text-dark {% if 'transactions' in request.path %}active{% endif %}" href="{% url 'transactions' %}">
+                <i class="bi bi-cart3 fs-5 me-2 text-primary"></i>
+                <span>Transactions</span>
+            </a>
+        </li>
         <li class="nav-item mb-2">
             <a class="nav-link d-flex align-items-center text-dark {% if 'stock' in request.path %}active{% endif %}"
                data-bs-toggle="collapse"

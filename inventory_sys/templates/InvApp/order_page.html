@@ -9,6 +9,10 @@
     <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style="background: linear-gradient(135deg, #fdfdfd 0%, #5d5d61 100%); color: #fff;">
         <h2 class="m-0 text-dark"><i class="bi bi-cart-fill me-2"></i> Orders on {{ selected_date }}</h2>
         <div class="d-flex align-items-center">
+                <!-- Button to trigger modal -->
+         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#receiptsModal">
+           <i class="bi bi-receipt me-2"></i> View Receipts
+         </button>
             <a href="{% url 'export_orders_csv' %}?orderDate={{ selected_date }}" class="btn btn-outline-light rounded-3 me-2">
                 <i class="bi bi-download me-2"></i> Export CSV
             </a>
@@ -24,39 +28,43 @@
         <div class="card-body">
             <form method="GET" action="{% url 'order_page' %}">
                 <div class="row g-3 align-items-end">
+                    <!-- Date Range -->
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Date Range</label>
+                        <label for="startDate" class="form-label fw-bold">Date Range</label>
                         <div class="input-group">
-                            <input type="date" class="form-control rounded-3" id="startDate" name="startDate" value="{{ selected_date_start }}">
+                            <input type="date" class="form-control rounded-3" id="startDate" name="start_date" value="{{ selected_date_start|default_if_none:'' }}" aria-label="Start date">
                             <span class="input-group-text">to</span>
-                            <input type="date" class="form-control rounded-3" id="endDate" name="endDate" value="{{ selected_date_end }}">
+                            <input type="date" class="form-control rounded-3" id="endDate" name="end_date" value="{{ selected_date_end|default_if_none:'' }}" aria-label="End date">
                         </div>
                     </div>
+                    <!-- Customer -->
                     <div class="col-md-2">
                         <label for="customer" class="form-label fw-bold">Customer</label>
-                        <select id="customer" name="customer" class="form-select rounded-3">
+                        <select id="customer" name="customer" class="form-select rounded-3" aria-label="Select customer">
                             <option value="">All Customers</option>
                             {% for customer in customers %}
-                                <option value="{{ customer.id }}" {% if customer.id|stringformat:"s" == request.GET.customer %}selected{% endif %}>
+                                <option value="{{ customer.id }}" {% if customer.id|stringformat:'s' == request.GET.customer %}selected{% endif %}>
                                     {{ customer.name }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
+                    <!-- Status -->
                     <div class="col-md-2">
                         <label for="status" class="form-label fw-bold">Status</label>
-                        <select id="status" name="status" class="form-select rounded-3">
+                        <select id="status" name="status" class="form-select rounded-3" aria-label="Select status">
                             <option value="">All Statuses</option>
-                            {% for status in status_choices %}
-                                <option value="{{ status }}" {% if status == request.GET.status %}selected{% endif %}>
-                                    {{ status|title }}
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if value|stringformat:'s' == request.GET.status %}selected{% endif %}>
+                                    {{ label }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
+                    <!-- Payment Method -->
                     <div class="col-md-2">
                         <label for="payment_method" class="form-label fw-bold">Payment Method</label>
-                        <select id="payment_method" name="payment_method" class="form-select rounded-3">
+                        <select id="payment_method" name="payment_method" class="form-select rounded-3" aria-label="Select payment method">
                             <option value="">All Methods</option>
                             {% for method in payment_methods %}
                                 <option value="{{ method }}" {% if method == request.GET.payment_method %}selected{% endif %}>
@@ -65,8 +73,11 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <!-- Submit Button -->
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-success rounded-3 w-100"><i class="bi bi-funnel-fill me-2"></i> Apply Filters</button>
+                        <button type="submit" class="btn btn-success rounded-3 w-100">
+                            <i class="bi bi-funnel-fill me-2"></i> Apply Filters
+                        </button>
                     </div>
                 </div>
             </form>
@@ -81,7 +92,7 @@
                     <i class="bi bi-people-fill fs-2 text-primary me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Total Customers</h6>
-                        <h3 class="fw-bold mb-0">{{ total_customers }}</h3>
+                        <h3 class="fw-bold mb-0 count-up" data-target="{{ total_customers|default:0 }}">{{ total_customers|default:0 }}</h3>
                     </div>
                 </div>
             </div>
@@ -92,7 +103,7 @@
                     <i class="bi bi-cart-fill fs-2 text-primary me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Total Orders</h6>
-                        <h3 class="fw-bold mb-0 count-up" data-target="{{ total_orders }}">{{ total_orders }}</h3>
+                        <h3 class="fw-bold mb-0 count-up" data-target="{{ total_orders|default:0 }}">{{ total_orders|default:0 }}</h3>
                     </div>
                 </div>
             </div>
@@ -103,7 +114,7 @@
                     <i class="bi bi-boxes fs-2 text-primary me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Total Quantity</h6>
-                        <h3 class="fw-bold mb-0 count-up" data-target="{{ total_quantity }}">{{ total_quantity }}</h3>
+                        <h3 class="fw-bold mb-0 count-up" data-target="{{ total_quantity|default:0 }}">{{ total_quantity|default:0 }}</h3>
                     </div>
                 </div>
             </div>
@@ -111,10 +122,10 @@
         <div class="col-md-3 mb-3">
             <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
                 <div class="card-body d-flex align-items-center">
-                    <i class="bi bi-currency-shillings fs-2 text-primary me-3"></i>
+                    <i class="bi bi-currency-dollar fs-2 text-primary me-3"></i>
                     <div>
                         <h6 class="text-muted mb-0">Total Earnings</h6>
-                        <h3 class="fw-bold mb-0 count-up" data-target="{{ total_cash_made }}">UGX: {{ total_cash_made|floatformat:1 }}</h3>
+                        <h3 class="fw-bold mb-0 count-up" data-target="{{ total_cash_made|default:0 }}">UGX: {{ total_cash_made|floatformat:1|default:'0.0' }}</h3>
                     </div>
                 </div>
             </div>
@@ -126,18 +137,21 @@
         {% csrf_token %}
         <div class="card border-0 shadow-sm rounded-3 mb-4">
             <div class="card-header text-dark d-flex justify-content-between align-items-center">
-                
                 <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i> Orders List</h5>
                 <div>
-                    <select name="action" class="form-select rounded-3 d-inline-block w-auto me-2" id="bulkAction">
+                    <select name="action" class="form-select rounded-3 d-inline-block w-auto me-2" id="bulkAction" aria-label="Select bulk action">
                         <option value="">Select Action</option>
                         <option value="update_status">Update Status</option>
                         <option value="delete">Delete</option>
                     </select>
-                    <select name="new_status" class="form-select rounded-3 d-inline-block w-auto me-2" id="newStatus" style="display: none;">
-                       {% for value, display in status_choices %}
-                        <option value="{{ value }}">{{ display }}</option>
-                       {% endfor %}
+                    <select name="new_status" class="form-select rounded-3 d-inline-block w-auto me-2" id="newStatus" style="display: none;" aria-label="Select new status">
+                        {% if status_choices %}
+                            {% for value, display in status_choices %}
+                                <option value="{{ value }}">{{ display }}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="">No status options available</option>
+                        {% endif %}
                     </select>
                     <button type="submit" class="btn btn-success rounded-3" id="applyBulkAction" disabled>
                         <i class="bi bi-check-circle-fill me-2"></i> Apply
@@ -145,79 +159,128 @@
                 </div>
             </div>
             <div class="card-body">
-                <!-- Order Table -->
                 <div class="table-responsive">
-                        <table id="example" class="table table-striped" style="width:100%">
+                    <table id="example" class="table table-striped" style="width:100%">
                         <thead class="table-light">
                             <tr>
-                                <th><input type="checkbox" id="selectAll"></th>
-                                <th><a href="?sort_by=id" class="text-primary">Order ID</a></th>
-                                <th><a href="?sort_by=customer__name" class="text-primary">Customer</a></th>
-                                <th><a href="?sort_by=product__name" class="text-primary">Product</a></th>
+                                <th>
+                                    <label for="selectAll" class="visually-hidden">Select All</label>
+                                    <input type="checkbox" id="selectAll">
+                                </th>
+                                <th><a href="?sort_by=id" class="text-primary" aria-sort="none">Order ID</a></th>
+                                <th><a href="?sort_by=customer__name" class="text-primary" aria-sort="none">Customer</a></th>
+                                <th><a href="?sort_by=product__name" class="text-primary" aria-sort="none">Product</a></th>
                                 <th>Batch/SKU</th>
-                                <th><a href="?sort_by=quantity" class="text-primary">Quantity</a></th>
+                                <th><a href="?sort_by=quantity" class="text-primary" aria-sort="none">Quantity</a></th>
                                 <th>Units</th>
-                                <th><a href="?sort_by=price_per_unit" class="text-primary">Price/Unit</a></th>
-                                <th><a href="?sort_by=total_price" class="text-primary">Total Price</a></th>
+                                <th><a href="?sort_by=price_per_unit" class="text-primary" aria-sort="none">Price/Unit</a></th>
+                                <th><a href="?sort_by=total_price" class="text-primary" aria-sort="none">Total Price</a></th>
                                 <th>Payment Method</th>
-                                <th><a href="?sort_by=discount" class="text-primary">Discount (%)</a></th>
-                                <th><a href="?sort_by=final_total" class="text-primary">Final Total</a></th>
-                                <th><a href="?sort_by=order_date" class="text-primary">Order Date</a></th>
-                                <th><a href="?sort_by=status" class="text-primary">Status</a></th>
+                                <th><a href="?sort_by=discount" class="text-primary" aria-sort="none">Discount (%)</a></th>
+                                <th><a href="?sort_by=final_total" class="text-primary" aria-sort="none">Final Total</a></th>
+                                <th><a href="?sort_by=order_date" class="text-primary" aria-sort="none">Order Date</a></th>
+                                <th><a href="?sort_by=status" class="text-primary" aria-sort="none">Status</a></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for order in orders %}
-                            <tr>
-                                <td><input type="checkbox" name="order_ids" value="{{ order.id }}" class="order-checkbox"></td>
-                                <td>{{ order.id|default:"N/A" }}</td>
-                                <td>{{ order.customer.name|default:"N/A" }}</td>
-                                <td>{{ order.product.name|default:"N/A" }}</td>
-                                <td>
-                                    {% if order.batch_sku %}
-                                        {{ order.batch_sku.batch_sku }}
-                                    {% else %}
-                                        <span class="text-muted">N/A</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ order.quantity|default:0 }}</td>
-                                <td>{{ order.units|default:"N/A" }}</td>
-                                <td>{{ order.price_per_unit|floatformat:2|default:"0.00" }}</td>
-                                <td>{{ order.total_price|floatformat:2|default:"0.00" }}</td>
-                                <td>{{ order.payment_method|title|default:"N/A" }}</td>
-                                <td>{{ order.discount|floatformat:1|default:"0.0" }}%</td>
-                                <td>{{ order.final_total|floatformat:2|default:"0.00" }}</td>
-                                <td>{{ order.order_date|date:"Y-m-d"|default:"N/A" }}</td>
-                                <td>
-                                    <span class="badge bg-{% if order.status == 'completed' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'canceled' %}danger{% else %}secondary{% endif %} rounded-pill">
-                                        {{ order.get_status_display|default:"N/A" }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            {% endfor %}
+                            {% if grouped_orders %}
+                                {% for order_id, group in grouped_orders.items %}
+                                    {% for order in group %}
+                                        <tr>
+                                            {% if forloop.first %}
+                                                <td rowspan="{{ group|length }}">
+                                                    <input type="checkbox" name="order_ids[]" value="{{ order_id }}" class="order-checkbox">
+                                                </td>
+                                                <td rowspan="{{ group|length }}">
+                                                    {% if order.id %}
+                                                       
+                                                            {{ order.id|default_if_none:"N/A" }}
+                                                    {% else %}
+                                                        <span class="text-muted">No Order ID</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td rowspan="{{ group|length }}">{{ order.customer.name|default_if_none:"N/A" }}</td>
+                                            {% endif %}
+                                            <td>{{ order.product.name|default_if_none:"N/A" }}</td>
+                                            <td>
+                                                {% if order.batch_sku %}
+                                                    {{ order.batch_sku.batch_sku|default_if_none:"N/A" }}
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ order.quantity|default:0 }}</td>
+                                            <td>{{ order.units|default_if_none:"N/A" }}</td>
+                                            <td>{{ order.price_per_unit|floatformat:2|default:"0.00" }}</td>
+                                            <td>{{ order.total_price|floatformat:2|default:"0.00" }}</td>
+                                            {% if forloop.first %}
+                                                <td rowspan="{{ group|length }}">{{ order.payment_method|title|default_if_none:"N/A" }}</td>
+                                                <td rowspan="{{ group|length }}">{{ order.discount|floatformat:1|default:"0.0" }}%</td>
+                                                <td rowspan="{{ group|length }}">{{ order.final_total|floatformat:2|default:"0.00" }}</td>
+                                                <td rowspan="{{ group|length }}">{{ order.order_date|date:"Y-m-d"|default_if_none:"N/A" }}</td>
+                                                <td rowspan="{{ group|length }}">
+                                                    <span class="badge bg-{% if order.status == 'completed' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'canceled' %}danger{% else %}secondary{% endif %} rounded-pill">
+                                                        {{ order.get_status_display|default_if_none:"N/A" }}
+                                                    </span>
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="14" class="text-center">No orders found.</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="14" class="text-center">No orders found.</td>
+                                </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </form>
-
+     <!-- Success Alert -->
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <h4 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i> Order Placed Successfully!</h4>
+                    <p>Your receipt number is: <strong>{{ message.message|slice:"28:" }}</strong></p>
+                    <p>Use this number to track your transaction.</p>
+                    <a href="{% url 'place_order' %}" class="btn btn-primary rounded-3"><i class="bi bi-cart-plus-fill me-2"></i> Place Another Order</a>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% elif message.tags == 'error' %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
     <!-- Place Order Modal -->
     <div class="modal fade" id="placeOrderModal" tabindex="-1" aria-labelledby="placeOrderModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content rounded-3">
-                <form method="POST" action="{% url 'place_order' %}">
+                <form method="POST" action="{% url 'place_order' %}" id="placeOrderForm">
                     {% csrf_token %}
                     <div class="modal-header" style="background: linear-gradient(135deg, #0dcaf0 0%, #007bff 100%); color: #fff;">
                         <h5 class="modal-title" id="placeOrderModalLabel"><i class="bi bi-cart-plus-fill me-2"></i> Place New Order</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close order modal"></button>
                     </div>
                     <div class="modal-body">
                         <!-- Customer Selection -->
+                           <div class="mb-4">
+                        <label for="receiptNumber" class="form-label fw-bold">Receipt Number</label>
+                        <input type="text" id="receiptNumber" name="receiptNumber" class="form-control rounded-3" readonly value="REC-{{ '000000' | random_uuid_prefix }}" aria-label="Receipt number">
+                    </div>
+
                         <div class="mb-4">
                             <label for="orderCustomer" class="form-label fw-bold">Customer</label>
-                            <select id="orderCustomer" name="orderCustomer" class="form-select rounded-3" required>
+                            <select id="orderCustomer" name="orderCustomer" class="form-select rounded-3" required aria-label="Select customer">
                                 <option value="">Select Customer</option>
                                 {% for customer in customers %}
                                     <option value="{{ customer.id }}">{{ customer.name }}</option>
@@ -231,7 +294,7 @@
                                 <div class="row g-3">
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">Product</label>
-                                        <select name="products[]" class="form-select rounded-3 product-select" required>
+                                        <select name="products[]" class="form-select rounded-3 product-select" required aria-label="Select product">
                                             <option value="">Select Product</option>
                                             {% for product in products %}
                                                 <option value="{{ product.product_id }}" data-price="{{ product.selling_price|default:0.0 }}">
@@ -240,7 +303,7 @@
                                             {% endfor %}
                                         </select>
                                     </div>
-                                    <div class="col-md-3">
+                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">Batch/SKU (Optional)</label>
                                         <select name="batch_sku[]" class="form-select rounded-3 batch-sku-select">
                                             <option value="">No Batch</option>
@@ -251,11 +314,11 @@
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label fw-bold">Quantity</label>
-                                        <input type="number" name="orderQuantity[]" class="form-control rounded-3 quantity" min="1" required />
+                                        <input type="number" name="orderQuantity[]" class="form-control rounded-3 quantity" min="1" required aria-label="Quantity" />
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label fw-bold">Unit</label>
-                                        <select name="units[]" class="form-select rounded-3 unit" required>
+                                        <select name="units[]" class="form-select rounded-3 unit" required aria-label="Select unit">
                                             <option value="piece">Piece</option>
                                             <option value="dozen">Dozen</option>
                                             <option value="box">Box</option>
@@ -264,15 +327,15 @@
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label fw-bold">Price/Unit</label>
-                                        <input type="number" name="price_per_unit[]" class="form-control rounded-3 price-per-unit" step="0.01" required />
+                                        <input type="number" name="price_per_unit[]" class="form-control rounded-3 price-per-unit" step="0.01" required aria-label="Price per unit" />
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label fw-bold">Discount (%)</label>
-                                        <input type="number" name="productDiscount[]" class="form-control rounded-3 discount" min="0" max="100" value="0" step="0.1" />
+                                        <input type="number" name="productDiscount[]" class="form-control rounded-3 discount" min="0" max="100" value="0" step="0.1" aria-label="Discount percentage" />
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label fw-bold">Total Price</label>
-                                        <input type="number" name="totalPrice[]" class="form-control rounded-3 total-price" readonly />
+                                        <input type="number" name="totalPrice[]" class="form-control rounded-3 total-price" step="0.01" readonly aria-label="Total price" />
                                     </div>
                                     <div class="col-md-2 d-flex align-items-end">
                                         <button type="button" class="btn btn-danger rounded-3 remove-product w-100"><i class="bi bi-trash-fill"></i> Remove</button>
@@ -287,13 +350,13 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label for="orderDate" class="form-label fw-bold">Order Date</label>
-                                <input type="date" id="orderDate" name="orderDate" class="form-control rounded-3" value="{{ selected_date }}" required>
+                                <input type="date" id="orderDate" name="orderDate" class="form-control rounded-3" value="{{ selected_date }}" required aria-label="Order date">
                             </div>
                             <div class="col-md-4">
                                 <label for="paymentMethod" class="form-label fw-bold">Payment Method</label>
-                                <select id="paymentMethod" name="paymentMethod" class="form-select rounded-3" required>
+                                <select id="paymentMethod" name="paymentMethod" class="form-select rounded-3" required aria-label="Select payment method">
                                     {% for value, label in payment_methods %}
-                                    <option value="{{ value }}">{{ label }}</option>
+                                        <option value="{{ value }}">{{ label }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -301,7 +364,7 @@
                                 <label for="finalTotal" class="form-label fw-bold">Final Total</label>
                                 <div class="input-group">
                                     <span class="input-group-text rounded-3">UGX</span>
-                                    <input type="number" id="finalTotal" name="finalTotal" class="form-control rounded-3" readonly>
+                                    <input type="number" id="finalTotal" name="finalTotal" class="form-control rounded-3" step="0.01" readonly aria-label="Final total">
                                 </div>
                             </div>
                         </div>
@@ -324,6 +387,59 @@
                         <button type="submit" class="btn btn-success rounded-3"><i class="bi bi-check-circle-fill me-2"></i> Place Order</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+     <!-- Receipts Modal -->
+    <div class="modal fade" id="receiptsModal" tabindex="-1" aria-labelledby="receiptsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h2 class="modal-title" id="receiptsModalLabel"><i class="bi bi-receipt me-2"></i> Receipts List</h2>
+                    <button type="button" class="btn-close btn-close-white no-print" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="receipts-container">
+                        <!-- Date Filter -->
+                        <div class="mb-4 d-flex align-items-center no-print">
+                            <label for="dateFilter" class="form-label me-2 fw-bold">Filter by Date:</label>
+                            <input type="date" id="dateFilter" class="form-control date-filter" value="{{ current_date|date:'Y-m-d' }}">
+                            <button class="btn btn-outline-primary ms-2" onclick="filterReceipts()"><i class="bi bi-funnel me-2"></i> Filter</button>
+                        </div>
+
+                        <!-- Receipts Table -->
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Receipt Date</th>
+                                    <th>Customer</th>
+                                    <th>Receipt Number</th>
+                                </tr>
+                            </thead>
+                            <tbody id="receiptsTableBody">
+                                {% for receipt in receipts %}
+                                <tr>
+                                    <td>{{ receipt.order_date|date:"Y-m-d" }}</td>
+                                    <td>{{ receipt.customer.name }}</td>
+                                    <td>
+                                        <a href="{% url 'receipt_detail' receipt_number=receipt.receipt_number %}" class="badge bg-primary badge-btn">
+                                            {{ receipt.receipt_number }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No receipts found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer no-print">
+                    <button class="btn print-button" onclick="window.print()"><i class="bi bi-printer-fill me-2"></i> Print Receipts List</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>

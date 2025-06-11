@@ -33,8 +33,10 @@ urlpatterns = [
     path('orders/export/', views.export_orders_csv, name='export_orders_csv'),
     path('report_analysis/', views.report_analysis, name='report_analysis'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
-    # path('export_dashboard_csv/', views.export_dashboard_csv, name='export_dashboard_csv'),
-    
+    path('api/orders/<int:order_id>/', views.order_detail_api, name='order_detail_api'),
+    path('receipt/<int:order_id>/', views.receipt_page, name='receipt_page'),
+    path('transactions/', views.view_transactions, name='view_transactions'),
+    # path('export_dashboard_csv/', views.export_dashboard_csv, name='export_dashboard_csv'),  
 ]
  
 

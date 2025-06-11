@@ -1,0 +1,43 @@
+{% extends "InvApp/layout.html" %}
+{% load static %}
+
+{% block title %}Transactions{% endblock %}
+
+{% block content %}
+  <div class="container mt-5">
+        <h1>Transaction Details</h1>
+        <form method="GET" class="mb-4">
+            <div class="input-group">
+                <input type="text" name="receipt_number" class="form-control" placeholder="Enter Receipt Number" aria-label="Receipt number">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% if receipt %}
+            <h2>Receipt: {{ receipt.receipt_number }}</h2>
+            <p>Customer: {{ receipt.customer.name }}</p>
+            <p>Total Amount: UGX {{ receipt.total_amount }}</p>
+            <h3>Orders</h3>
+            {% for order in receipt.orders.all %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5>Order #{{ order.id }}</h5>
+                        <p>Date: {{ order.order_date }}</p>
+                        <p>Payment Method: {{ order.payment_method }}</p>
+                        <p>Final Total: UGX {{ order.final_total }}</p>
+                        <h6>Items</h6>
+                        <ul>
+                            {% for item in order.items.all %}
+                                <li>{{ item.quantity }} {{ item.unit }} of {{ item.product.name }} (Price: UGX {{ item.total_price }})</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+{% endblock %}

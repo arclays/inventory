@@ -28,7 +28,7 @@
                         {% else %}
                             <span class="text-warning">low</span>
                         {% endif %}
-                        ({{ alert.current_stock }} left, min: {{ alert.product.min_stock_level }})
+                        ({{ alert.current_stock }} left)
                     </div>
                 </div>
             </div>
@@ -336,7 +336,9 @@
                             <!-- Expiry Date -->
                             <div class="col-md-6">
                                 <label for="expiryDate" class="form-label fw-bold">Expiry Date</label>
-                                <input type="date" id="expiryDate" name="expiryDate" class="form-control rounded-3" min="{% now 'Y-m-d' %}">
+                                <!-- <input type="date" id="expiryDate" name="expiryDate" class="form-control rounded-3" min="{% now 'Y-m-d' %}"> -->
+                                <input type="date" id="expiryDate" name="expiry_date" class="form-control rounded-3" min="{% now 'Y-m-d' %}">
+
                             </div>
                         </div>
                     </div>

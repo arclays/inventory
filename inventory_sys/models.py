@@ -1,8 +1,11 @@
 from django.db import models
+from uuid import uuid4
+import uuid
+from datetime import date
 from django.utils import timezone
 from django.db.models import F
 from django.db import transaction
-from django.core.validators import MinLengthValidator, RegexValidator
+from django.core.validators import  RegexValidator
 from django.contrib.auth.models import User
 
 class UserProfile(models.Model):
@@ -67,14 +70,14 @@ class Product(models.Model):
 
 class ProductBatch(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='batches')
-    batch_sku = models.CharField(max_length=50, unique=True, null=True, blank=True)
-    expiry_date = models.DateField(null=True, blank=True)
+    batch_sku = models.CharField(max_length=50, unique=True, null=True, blank=True) 
     initial_quantity = models.PositiveIntegerField()
     current_quantity = models.PositiveIntegerField()
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='batches')
     buying_price = models.DecimalField(max_digits=10, decimal_places=2)
     manufacture_date = models.DateField(null=True, blank=True)
     stock_date = models.DateField(default=timezone.now)
+    expiry_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.product.name} - {self.batch_sku or 'No SKU'}"
@@ -107,61 +110,6 @@ class Customer(models.Model):
     class Meta:
         ordering = ['name']
 
-class Order(models.Model):
-    PAYMENT_METHODS = [
-        ('cash', 'Cash'),
-        ('credit_card', 'Credit Card'),
-        ('mobile_money', 'Mobile Money'),
-        ('bank_transfer', 'Bank Transfer'),
-    ]
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('completed', 'Completed'),
-        ('canceled', 'Canceled'),
-    ]
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='orders')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='orders')
-    quantity = models.PositiveIntegerField()
-    batch_sku = models.ForeignKey(ProductBatch, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
-    units = models.CharField(max_length=10, default='pcs')
-    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
-    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2) 
-    final_total = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default='cash')
-    order_date = models.DateField(default=timezone.now)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-
-    def save(self, *args, **kwargs):
-        """Calculate price_per_unit, total_price, and final_total before saving."""
-        if not self.price_per_unit:
-            self.price_per_unit = self.product.selling_price
-
-        # total_price = self.quantity * self.price_per_unit
-        # self.final_total = total_price * (1 - self.discount / 100)
-        self.total_price = float((self.quantity * self.price_per_unit ) - ((self.quantity * self.price_per_unit) * ( self.discount/ 100.00)))
-        self.final_total = 0  # Initialize final_total to 0
-        self.final_total = + float(self.total_price)  
-
-        # Validate stock availability
-        if self.quantity > self.product.quantity_in_stock:
-            raise ValueError("Order quantity exceeds available stock.")
-
-        super().save(*args, **kwargs)
-
-        # Update product stock
-        with transaction.atomic():
-            product = Product.objects.select_for_update().get(pk=self.product.pk)
-            product.quantity_in_stock -= self.quantity
-            product.save()
-
-    def __str__(self):
-        return f"Order {self.id} by {self.customer.name}"
-
-    class Meta:
-        ordering = ['-order_date']
-
 
 class StockAdjustment(models.Model):
     ADJUSTMENT_TYPES = (
@@ -191,3 +139,101 @@ class StockAdjustment(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        
+
+class Receipt(models.Model):
+    receipt_number = models.CharField(max_length=20, unique=True, editable=False)
+    customer = models.ForeignKey('Customer', on_delete=models.SET_NULL, null=True, related_name='receipts')
+    created_at = models.DateTimeField(auto_now_add=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    def save(self, *args, **kwargs):
+        if not self.receipt_number:
+            self.receipt_number = f"REC-{str(uuid.uuid4())[:6].upper()}"  # Generate unique receipt number
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Receipt {self.receipt_number}"
+
+    class Meta:
+        # Added Meta class for clarity and to set default ordering by creation date
+        ordering = ['-created_at']
+
+class Order(models.Model):
+    PAYMENT_METHODS = [
+        ('cash', 'Cash'),
+        ('credit_card', 'Credit Card'),
+        ('mobile_money', 'Mobile Money'),
+        ('bank_transfer', 'Bank Transfer'),
+    ]
+    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE, related_name='orders')
+    # Changed default to date.today to match DateField (timezone.now returns datetime)
+    order_date = models.DateField(default=date.today)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default='cash')
+    final_total = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"Order {self.id} for Receipt {self.receipt.receipt_number}"
+
+    class Meta:
+        # Added Meta class to order by order_date descending
+        ordering = ['-order_date']
+
+class OrderItem(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('canceled', 'Canceled'),
+    ]
+    # Replaced customer ForeignKey with order ForeignKey to align with Order model
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='order_items')
+    batch_sku = models.ForeignKey('ProductBatch', on_delete=models.SET_NULL, null=True, blank=True, related_name='order_items')
+    quantity = models.PositiveIntegerField()
+    # Renamed units to unit for consistency with previous discussions
+    unit = models.CharField(max_length=10, default='pcs')
+    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
+    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    def save(self, *args, **kwargs):
+        """
+        Calculate price_per_unit and total_price before saving, and update stock.
+        Validates stock availability for product and batch_sku (if applicable).
+        """
+        # Set price_per_unit from product if not provided
+        if not self.price_per_unit:
+            self.price_per_unit = self.product.selling_price
+
+        # Calculate total_price using Decimal to avoid float precision issues
+        self.total_price = float((self.quantity * self.price_per_unit ) - ((self.quantity * self.price_per_unit) * ( self.discount/ 100.00)))
+        self.final_total = 0  # Initialize final_total to 0
+        self.final_total = + float(self.total_price)      
+
+        # Validate stock availability
+        if self.quantity > self.product.quantity_in_stock:
+            raise ValueError(f"Order quantity {self.quantity} exceeds available stock {self.product.quantity_in_stock} for {self.product.name}.")
+        if self.batch_sku and self.quantity > self.batch_sku.current_quantity:
+            raise ValueError(f"Order quantity {self.quantity} exceeds batch stock {self.batch_sku.current_quantity} for {self.batch_sku.batch_sku}.")
+
+        super().save(*args, **kwargs)
+
+        # Update product and batch stock atomically
+        with transaction.atomic():
+            product = Product.objects.select_for_update().get(pk=self.product.pk)
+            product.quantity_in_stock -= self.quantity
+            product.save()
+            if self.batch_sku:
+                batch = ProductBatch.objects.select_for_update().get(pk=self.batch_sku.pk)
+                batch.current_quantity -= self.quantity
+                batch.save()
+
+    def __str__(self):
+        # Updated to reflect OrderItem's relationship with Order and Product
+        return f"{self.quantity} {self.unit} of {self.product.name} in Order {self.order.id}"
+
+    class Meta:
+        # Consolidated Meta class, using order__order_date for ordering
+        ordering = ['order__order_date']        

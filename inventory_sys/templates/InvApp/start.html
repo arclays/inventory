@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders List</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Bulk Actions Form -->
+    <form method="POST" action="{% url 'bulk_update_orders' %}" id="bulkActionForm">
+        {% csrf_token %}
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="card-header text-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i> Orders List</h5>
+                <div>
+                    <select name="action" class="form-select rounded-3 d-inline-block w-auto me-2" id="bulkAction" aria-label="Select bulk action">
+                        <option value="">Select Action</option>
+                        <option value="update_status">Update Status</option>
+                        <option value="delete">Delete</option>
+                    </select>
+                    <select name="new_status" class="form-select rounded-3 d-inline-block w-auto me-2" id="newStatus" style="display: none;" aria-label="Select new status">
+                        {% if status_choices %}
+                            {% for value, display in status_choices %}
+                                <option value="{{ value }}">{{ display }}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="">No status options available</option>
+                        {% endif %}
+                    </select>
+                    <button type="submit" class="btn btn-success rounded-3" id="applyBulkAction" disabled>
+                        <i class="bi bi-check-circle-fill me-2"></i> Apply
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Order Table -->
+                <div class="table-responsive">
+                    <table id="example" class="table table-striped" style="width:100%">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    <label for="selectAll" class="visually-hidden">Select All</label>
+                                    <input type="checkbox" id="selectAll">
+                                </th>
+                                <th><a href="?sort_by=id" class="text-primary" aria-sort="none">Order ID</a></th>
+                                <th><a href="?sort_by=customer__name" class="text-primary" aria-sort="none">Customer</a></th>
+                                <th><a href="?sort_by=product__name" class="text-primary" aria-sort="none">Product</a></th>
+                                <th>Batch/SKU</th>
+                                <th><a href="?sort_by=quantity" class="text-primary" aria-sort="none">Quantity</a></th>
+                                <th>Units</th>
+                                <th><a href="?sort_by=price_per_unit" class="text-primary" aria-sort="none">Price/Unit</a></th>
+                                <th><a href="?sort_by=total_price" class="text-primary" aria-sort="none">Total Price</a></th>
+                                <th>Payment Method</th>
+                                <th><a href="?sort_by=discount" class="text-primary" aria-sort="none">Discount (%)</a></th>
+                                <th><a href="?sort_by=final_total" class="text-primary" aria-sort="none">Final Total</a></th>
+                                <th><a href="?sort_by=order_date" class="text-primary" aria-sort="none">Order Date</a></th>
+                                <th><a href="?sort_by=status" class="text-primary" aria-sort="none">Status</a></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if grouped_orders %}
+                                {% for order_id, group in grouped_orders.items %}
+                                    {% for order in group %}
+                                        <tr>
+                                            {% if forloop.first %}
+                                                <td rowspan="{{ group|length }}">
+                                                    <input type="checkbox" name="order_ids[]" value="{{ order_id }}" class="order-checkbox">
+                                                </td>
+                                                <td rowspan="{{ group|length }}">
+                                                    {% if order.id %}
+                                                        <a href="{% url 'receipt_page' order.id %}" class="btn btn-primary btn-sm mt-1">
+                                                            {{ order.id|default_if_none:"N/A" }} Print Receipt
+                                                        </a>
+                                                    {% else %}
+                                                        <span class="text-muted">No Order ID</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td rowspan="{{ group|length }}">{{ order.customer.name|default_if_none:"N/A" }}</td>
+                                            {% endif %}
+                                            <td>{{ order.product.name|default_if_none:"N/A" }}</td>
+                                            <td>
+                                                {% if order.batch_sku %}
+                                                    {{ order.batch_sku.batch_sku|default_if_none:"N/A" }}
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ order.quantity|default:0 }}</td>
+                                            <td>{{ order.units|default_if_none:"N/A" }}</td>
+                                            <td>{{ order.price_per_unit|floatformat:2|default:"0.00" }}</td>
+                                            <td>{{ order.total_price|floatformat:2|default:"0.00" }}</td>
+                                            {% if forloop.first %}
+                                                <td rowspan="{{ group|length }}">{{ order.payment_method|title|default_if_none:"N/A" }}</td>
+                                                <td rowspan="{{ group|length }}">{{ order.discount|floatformat:1|default:"0.0" }}%</td>
+                                                <td rowspan="{{ group|length }}">{{ order.final_total|floatformat:2|default:"0.00" }}</td>
+                                                <td rowspan="{{ group|length }}">{{ order.order_date|date:"Y-m-d"|default_if_none:"N/A" }}</td>
+                                                <td rowspan="{{ group|length }}">
+                                                    <span class="badge bg-{% if order.status == 'completed' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'canceled' %}danger{% else %}secondary{% endif %} rounded-pill">
+                                                        {{ order.get_status_display|default_if_none:"N/A" }}
+                                                    </span>
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="14" class="text-center">No orders found.</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="14" class="text-center">No orders found.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- JavaScript Dependencies -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            const table = $('#example').DataTable({
+                "pageLength": 10,
+                "responsive": true,
+                "order": [[1, 'desc']] // Default sort by Order ID
+            });
+
+            // Handle Select All checkbox
+            $('#selectAll').on('change', function() {
+                $('.order-checkbox').prop('checked', this.checked);
+                toggleApplyButton();
+            });
+
+            // Handle individual checkbox changes
+            $('.order-checkbox').on('change', function() {
+                if (!this.checked) {
+                    $('#selectAll').prop('checked', false);
+                } else if ($('.order-checkbox:checked').length === $('.order-checkbox').length) {
+                    $('#selectAll').prop('checked', true);
+                }
+                toggleApplyButton();
+            });
+
+            // Handle bulk action selection
+            $('#bulkAction').on('change', function() {
+                const action = $(this).val();
+                if (action === 'update_status') {
+                    $('#newStatus').show();
+                } else {
+                    $('#newStatus').hide();
+                }
+                toggleApplyButton();
+            });
+
+            // Handle new status selection
+            $('#newStatus').on('change', toggleApplyButton);
+
+            // Toggle Apply button state
+            function toggleApplyButton() {
+                const action = $('#bulkAction').val();
+                const hasChecked = $('.order-checkbox:checked').length > 0;
+                const isValidStatus = action !== 'update_status' || (action === 'update_status' && $('#newStatus').val());
+
+                $('#applyBulkAction').prop('disabled', !(action && hasChecked && isValidStatus));
+            }
+
+            // Handle form submission with confirmation for delete action
+            $('#bulkActionForm').on('submit', function(e) {
+                const action = $('#bulkAction').val();
+                if (action === 'delete') {
+                    if (!confirm('Are you sure you want to delete the selected orders? This action cannot be undone.')) {
+                        e.preventDefault();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+{% extends "InvApp/layout.html" %}
+{% load static %}
+
+{% block title %}Orders{% endblock %}
+
+{% block content %}
+<div class="container-fluid pt-3 fs-6">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style="background: linear-gradient(135deg, #fdfdfd 0%, #5d5d61 100%); color: #fff;">
+        <h2 class="m-0 text-dark"><i class="bi bi-cart-fill me-2"></i> Orders on {{ selected_date }}</h2>
+        <div class="d-flex align-items-center">
+            <a href="{% url 'export_orders_csv' %}?orderDate={{ selected_date }}" class="btn btn-outline-light rounded-3 me-2">
+                <i class="bi bi-download me-2"></i> Export CSV
+            </a>
+            <button class="btn btn-outline-light rounded-3" data-bs-toggle="modal" data-bs-target="#placeOrderModal">
+                <i class="bi bi-plus-circle-fill me-2"></i> New Order
+            </button>
+            <img src="{% static 'images/logo-sm.png' %}" alt="Logo" style="height: 40px; opacity: 0.9; margin-left: 15px;">
+        </div>
+    </div>
+    <!-- Filters and Search -->
+<div class="card border-0 shadow-sm rounded-3 mb-4" style="background: #f8f9fa;">
+    <div class="card-body">
+        <form method="GET" action="{% url 'order_page' %}">
+            <div class="row g-3 align-items-end">
+                <!-- Date Range -->
+                <div class="col-md-4">
+                    <label for="startDate" class="form-label fw-bold">Date Range</label>
+                    <div class="input-group">
+                        <input type="date" class="form-control rounded-3" id="startDate" name="start_date" value="{{ selected_date_start|default_if_none:'' }}">
+                        <span class="input-group-text">to</span>
+                        <input type="date" class="form-control rounded-3" id="endDate" name="end_date" value="{{ selected_date_end|default_if_none:'' }}">
+                    </div>
+                </div>
+                <!-- Customer -->
+                <div class="col-md-2">
+                    <label for="customer" class="form-label fw-bold">Customer</label>
+                    <select id="customer" name="customer" class="form-select rounded-3">
+                        <option value="">All Customers</option>
+                        {% for customer in customers %}
+                            <option value="{{ customer.id }}" {% if customer.id|stringformat:'s' == request.GET.customer %}selected{% endif %}>
+                                {{ customer.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Status -->
+                <div class="col-md-2">
+                    <label for="status" class="form-label fw-bold">Status</label>
+                    <select id="status" name="status" class="form-select rounded-3">
+                        <option value="">All Statuses</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if value|stringformat:'s' == request.GET.status %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Payment Method -->
+                <div class="col-md-2">
+                    <label for="payment_method" class="form-label fw-bold">Payment Method</label>
+                    <select id="payment_method" name="payment_method" class="form-select rounded-3">
+                        <option value="">All Methods</option>
+                        {% for method in payment_methods %}
+                            <option value="{{ method }}" {% if method == request.GET.payment_method %}selected{% endif %}>
+                                {{ method|title }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Submit Button -->
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success rounded-3 w-100">
+                        <i class="bi bi-funnel-fill me-2"></i> Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+     </div>
+    </div>
+    <!-- </div> -->
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-people-fill fs-2 text-primary me-3"></i>
+                    <div>
+                        <h6 class="text-muted mb-0">Total Customers</h6>
+                        <h3 class="fw-bold mb-0">{{ total_customers }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-cart-fill fs-2 text-primary me-3"></i>
+                    <div>
+                        <h6 class="text-muted mb-0">Total Orders</h6>
+                        <h3 class="fw-bold mb-0 count-up" data-target="{{ total_orders }}">{{ total_orders }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-boxes fs-2 text-primary me-3"></i>
+                    <div>
+                        <h6 class="text-muted mb-0">Total Quantity</h6>
+                        <h3 class="fw-bold mb-0 count-up" data-target="{{ total_quantity }}">{{ total_quantity }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100" style="background: #f8f9fa; transition: transform 0.3s;">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-currency-shillings fs-2 text-primary me-3"></i>
+                    <div>
+                        <h6 class="text-muted mb-0">Total Earnings</h6>
+                        <h3 class="fw-bold mb-0 count-up" data-target="{{ total_cash_made }}">UGX: {{ total_cash_made|floatformat:1 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Actions Form -->
+      
+    <!-- Bulk Actions Form -->
+    <form method="POST" action="{% url 'bulk_update_orders' %}" id="bulkActionForm">
+        {% csrf_token %}
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="card-header text-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i> Orders List</h5>
+                <div>
+                    <select name="action" class="form-select rounded-3 d-inline-block w-auto me-2" id="bulkAction" aria-label="Select bulk action">
+                        <option value="">Select Action</option>
+                        <option value="update_status">Update Status</option>
+                        <option value="delete">Delete</option>
+                    </select>
+                    <select name="new_status" class="form-select rounded-3 d-inline-block w-auto me-2" id="newStatus" style="display: none;" aria-label="Select new status">
+                        {% if status_choices %}
+                            {% for value, display in status_choices %}
+                                <option value="{{ value }}">{{ display }}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="">No status options available</option>
+                        {% endif %}
+                    </select>
+                    <button type="submit" class="btn btn-success rounded-3" id="applyBulkAction" disabled>
+                        <i class="bi bi-check-circle-fill me-2"></i> Apply
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Order Table -->
+                <div class="table-responsive">
+                    <table id="example" class="table table-striped" style="width:100%">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    <label for="selectAll" class="visually-hidden">Select All</label>
+                                    <input type="checkbox" id="selectAll">
+                                </th>
+                                <th><a href="?sort_by=id" class="text-primary" aria-sort="none">Order ID</a></th>
+                                <th><a href="?sort_by=customer__name" class="text-primary" aria-sort="none">Customer</a></th>
+                                <th><a href="?sort_by=product__name" class="text-primary" aria-sort="none">Product</a></th>
+                                <th>Batch/SKU</th>
+                                <th><a href="?sort_by=quantity" class="text-primary" aria-sort="none">Quantity</a></th>
+                                <th>Units</th>
+                                <th><a href="?sort_by=price_per_unit" class="text-primary" aria-sort="none">Price/Unit</a></th>
+                                <th><a href="?sort_by=total_price" class="text-primary" aria-sort="none">Total Price</a></th>
+                                <th>Payment Method</th>
+                                <th><a href="?sort_by=discount" class="text-primary" aria-sort="none">Discount (%)</a></th>
+                                <th><a href="?sort_by=final_total" class="text-primary" aria-sort="none">Final Total</a></th>
+                                <th><a href="?sort_by=order_date" class="text-primary" aria-sort="none">Order Date</a></th>
+                                <th><a href="?sort_by=status" class="text-primary" aria-sort="none">Status</a></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if grouped_orders %}
+                                {% for order_id, group in grouped_orders.items %}
+                                    {% for order in group %}
+                                        <tr>
+                                            {% if forloop.first %}
+                                                <td rowspan="{{ group|length }}">
+                                                    <input type="checkbox" name="order_ids[]" value="{{ order_id }}" class="order-checkbox">
+                                                </td>
+                                                <td rowspan="{{ group|length }}">
+                                                    {% if order.id %}
+                                                        <a href="{% url 'receipt_page' order.id %}" class="btn btn-primary btn-sm mt-1">
+                                                            {{ order.id|default_if_none:"N/A" }} Print Receipt
+                                                        </a>
+                                                    {% else %}
+                                                        <span class="text-muted">No Order ID</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td rowspan="{{ group|length }}">{{ order.customer.name|default_if_none:"N/A" }}</td>
+                                            {% endif %}
+                                            <td>{{ order.product.name|default_if_none:"N/A" }}</td>
+                                            <td>
+                                                {% if order.batch_sku %}
+                                                    {{ order.batch_sku.batch_sku|default_if_none:"N/A" }}
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ order.quantity|default:0 }}</td>
+                                            <td>{{ order.units|default_if_none:"N/A" }}</td>
+                                            <td>{{ order.price_per_unit|floatformat:2|default:"0.00" }}</td>
+                                            <td>{{ order.total_price|floatformat:2|default:"0.00" }}</td>
+                                            {% if forloop.first %}
+                                                <td rowspan="{{ group|length }}">{{ order.payment_method|title|default_if_none:"N/A" }}</td>
+                                                <td rowspan="{{ group|length }}">{{ order.discount|floatformat:1|default:"0.0" }}%</td>
+                                                <td rowspan="{{ group|length }}">{{ order.final_total|floatformat:2|default:"0.00" }}</td>
+                                                <td rowspan="{{ group|length }}">{{ order.order_date|date:"Y-m-d"|default_if_none:"N/A" }}</td>
+                                                <td rowspan="{{ group|length }}">
+                                                    <span class="badge bg-{% if order.status == 'completed' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'canceled' %}danger{% else %}secondary{% endif %} rounded-pill">
+                                                        {{ order.get_status_display|default_if_none:"N/A" }}
+                                                    </span>
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="14" class="text-center">No orders found.</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="14" class="text-center">No orders found.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+    <!-- Place Order Modal -->
+    <div class="modal fade" id="placeOrderModal" tabindex="-1" aria-labelledby="placeOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-3">
+                <form method="POST" action="{% url 'place_order' %}">
+                    {% csrf_token %}
+                    <div class="modal-header" style="background: linear-gradient(135deg, #0dcaf0 0%, #007bff 100%); color: #fff;">
+                        <h5 class="modal-title" id="placeOrderModalLabel"><i class="bi bi-cart-plus-fill me-2"></i> Place New Order</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Customer Selection -->
+                        <div class="mb-4">
+                            <label for="orderCustomer" class="form-label fw-bold">Customer</label>
+                            <select id="orderCustomer" name="orderCustomer" class="form-select rounded-3" required>
+                                <option value="">Select Customer</option>
+                                {% for customer in customers %}
+                                    <option value="{{ customer.id }}">{{ customer.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Product Items -->
+                        <div id="product-container">
+                            <div class="product-item mb-4 border p-3 rounded-3" style="background: #f8f9fa;">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Product</label>
+                                        <select name="products[]" class="form-select rounded-3 product-select" required>
+                                            <option value="">Select Product</option>
+                                            {% for product in products %}
+                                                <option value="{{ product.product_id }}" data-price="{{ product.selling_price|default:0.0 }}">
+                                                    {{ product.name }} (Stock: {{ product.quantity_in_stock }} {{ product.units }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Batch/SKU (Optional)</label>
+                                        <select name="batch_sku[]" class="form-select rounded-3 batch-sku-select">
+                                            <option value="">No Batch</option>
+                                            {% for batch in product_batches %}
+                                                <option value="{{ batch.id }}">{{ batch.batch_sku }} (Stock: {{ batch.current_quantity }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Quantity</label>
+                                        <input type="number" name="orderQuantity[]" class="form-control rounded-3 quantity" min="1" required />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Unit</label>
+                                        <select name="units[]" class="form-select rounded-3 unit" required>
+                                            <option value="piece">Piece</option>
+                                            <option value="dozen">Dozen</option>
+                                            <option value="box">Box</option>
+                                            <option value="carton">Carton</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Price/Unit</label>
+                                        <input type="number" name="price_per_unit[]" class="form-control rounded-3 price-per-unit" step="0.01" required />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Discount (%)</label>
+                                        <input type="number" name="productDiscount[]" class="form-control rounded-3 discount" min="0" max="100" value="0" step="0.1" />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Total Price</label>
+                                        <input type="number" name="totalPrice[]" class="form-control rounded-3 total-price" readonly />
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-danger rounded-3 remove-product w-100"><i class="bi bi-trash-fill"></i> Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add Product Button -->
+                        <button type="button" id="add-product" class="btn btn-info rounded-3 w-100 mb-4"><i class="bi bi-plus-circle-fill me-2"></i> Add Another Product</button>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="orderDate" class="form-label fw-bold">Order Date</label>
+                                <input type="date" id="orderDate" name="orderDate" class="form-control rounded-3" value="{{ selected_date }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="paymentMethod" class="form-label fw-bold">Payment Method</label>
+                                <select id="paymentMethod" name="paymentMethod" class="form-select rounded-3" required>
+                                    {% for value, label in payment_methods %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="finalTotal" class="form-label fw-bold">Final Total</label>
+                                <div class="input-group">
+                                    <span class="input-group-text rounded-3">UGX</span>
+                                    <input type="number" id="finalTotal" name="finalTotal" class="form-control rounded-3" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Messages -->
+                        {% if messages %}
+                            <div class="mt-3">
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+                                        <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% else %}exclamation-triangle-fill{% endif %} me-2"></i>
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success rounded-3"><i class="bi bi-check-circle-fill me-2"></i> Place Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+<div class="container mt-5">
+        <h1 class="text-success"><i class="bi bi-check-circle-fill me-2"></i> Order Placed Successfully!</h1>
+        <p>Your receipt number is: <strong>{{ receipt_number }}</strong></p>
+        <p>Use this number to track your transaction.</p>
+        <a href="{% url 'place_order' %}" class="btn btn-primary rounded-3"><i class="bi bi-cart-plus-fill me-2"></i> Place Another Order</a>
+    </div>
+    
+class Receipt(models.Model):
+    receipt_number = models.CharField(max_length=20, unique=True, editable=False)
+    customer = models.ForeignKey('Customer', on_delete=models.SET_NULL, null=True, related_name='receipts')
+    created_at = models.DateTimeField(auto_now_add=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    def save(self, *args, **kwargs):
+        if not self.receipt_number:
+            self.receipt_number = f"REC-{str(uuid.uuid4())[:6].upper()}"  # e.g., REC-ABC123
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Receipt {self.receipt_number}"
+
+class Order(models.Model):
+    PAYMENT_METHODS = [
+        ('cash', 'Cash'),
+        ('credit_card', 'Credit Card'),
+        ('mobile_money', 'Mobile Money'),
+        ('bank_transfer', 'Bank Transfer'),
+    ]
+    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE, related_name='orders')
+    order_date = models.DateField(default=timezone.now)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default='cash')
+    final_total = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"Order {self.id} for Receipt {self.receipt.receipt_number}"
+
+
+class OrderItem(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('canceled', 'Canceled'),
+    ]
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='orders')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='orders')
+    quantity = models.PositiveIntegerField()
+    batch_sku = models.ForeignKey(ProductBatch, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    units = models.CharField(max_length=10, default='pcs')
+    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
+    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2) 
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+  
+    class Meta:
+        ordering = ['order__order_date']  # Order by the related Order's order_date
+        
+    def __str__(self):
+     return f"Order for Receipt {self.receipt.receipt_number}"
+    def save(self, *args, **kwargs):
+        """Calculate price_per_unit, total_price, and final_total before saving."""
+        if not self.price_per_unit:
+            self.price_per_unit = self.product.selling_price
+        self.total_price = float((self.quantity * self.price_per_unit ) - ((self.quantity * self.price_per_unit) * ( self.discount/ 100.00)))
+        self.final_total = 0  # Initialize final_total to 0
+        self.final_total = + float(self.total_price)  
+
+        # Validate stock availability
+        if self.quantity > self.product.quantity_in_stock:
+            raise ValueError("Order quantity exceeds available stock.")
+
+        super().save(*args, **kwargs)
+
+        # Update product stock
+        with transaction.atomic():
+            product = Product.objects.select_for_update().get(pk=self.product.pk)
+            product.quantity_in_stock -= self.quantity
+            product.save()
+
+    def __str__(self):
+        return f"Order {self.id} by {self.customer.name}"
+
+    class Meta:
+        ordering = ['-order_date']
